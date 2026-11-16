@@ -1,7 +1,7 @@
 #!/bin/sh
-# acquaint pre-push guard, installed by `acquaint sync init`.
+# __NAME__ pre-push guard, installed by `__COMMAND__ init`.
 #
-# Refuses to push this profile store anywhere except the private GitHub repository it
+# Refuses to push this __STORE__ store anywhere except the private GitHub repository it
 # was set up for. Every one of these must hold, or nothing is pushed:
 #   - the push goes through the remote named origin (not a URL, not another remote);
 #   - origin has exactly one url, the one recorded at init, and no pushurl that differs;
@@ -15,11 +15,11 @@
 
 remote_name="$1"
 push_url="$2"
-repo=$(git config --get acquaint.repo)
-expected=$(git config --get acquaint.remote)
+repo=$(git config --get __NAME__.repo)
+expected=$(git config --get __NAME__.remote)
 
 refuse() {
-  echo "acquaint: $1; refusing to push profile data." >&2
+  echo "__NAME__: $1; refusing to push __SUBJECT__." >&2
   exit 1
 }
 
@@ -27,7 +27,7 @@ lower() {
   printf '%s' "$1" | tr 'A-Z' 'a-z'
 }
 
-[ -n "$repo" ] && [ -n "$expected" ] || refuse "no sync configuration (acquaint.repo, acquaint.remote)"
+[ -n "$repo" ] && [ -n "$expected" ] || refuse "no sync configuration (__NAME__.repo, __NAME__.remote)"
 [ "$remote_name" = "origin" ] || refuse "pushes go through origin only, not '$remote_name'"
 [ "$(git config --get-all remote.origin.url)" = "$expected" ] || refuse "origin must have exactly one url, '$expected'"
 pushurls=$(git config --get-all remote.origin.pushurl)

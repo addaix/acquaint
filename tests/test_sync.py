@@ -532,3 +532,55 @@ def test_a_scoped_push_of_a_deleted_record_can_be_retried_and_a_clean_push_is_no
     (store_root / "people" / "grace-example").mkdir(parents=True)
     (store_root / "people" / "grace-example" / "PROFILE.md").write_text("---\nname: g\n---\n")
     assert sync.push(store_root, entities=["people/grace-example"], run=gh)["pushed"]
+
+
+OTHER_APP = sync.SyncNamespace(name="notes-app", command="notes sync", subject="notes", description="notes (private)", gitignore="cache/\n")
+
+
+@posix_only
+def test_another_app_can_reuse_the_mechanism_through_a_namespace(store_root, github, scripted_gh):
+    gh = FakeGh(exists=False)
+    result = sync.init(store_root, REPO, namespace=OTHER_APP, run=gh)
+    assert result["pushed"] and ["gh", "repo", "create", REPO, "--private", "--description", "notes (private)"] in gh.calls
+    assert _git("config", "--get", "notes-app.repo", cwd=store_root).stdout.strip() == REPO
+    assert _git("config", "--get", "acquaint.repo", cwd=store_root).stdout.strip() == ""
+    assert _git("log", "-1", "--format=%s", cwd=store_root).stdout.strip() == "notes-app: initialise store"
+    assert (store_root / ".gitignore").read_text() == "cache/\n"
+    hook = sync._hook_path(store_root, gh).read_text()
+    assert "notes-app.repo" in hook and "acquaint" not in hook and "__" not in hook
+    assert sync.status(store_root, namespace=OTHER_APP, run=gh)["hook_installed"]
+    with pytest.raises(AcquaintError, match="not set up by `acquaint sync init`"):
+        sync.status(store_root, run=gh)  # the default namespace does not see another app's configuration
+
+
+@posix_only
+def test_a_namespace_names_its_own_commands_in_errors(store_root, github, scripted_gh):
+    with pytest.raises(AcquaintError, match="`notes sync init --repo"):
+        sync.push(store_root, namespace=OTHER_APP, run=FakeGh())
+    assert "acquaint sync init" in sync.status(store_root)["note"]
+    assert "notes sync init" in sync.status(store_root, namespace=OTHER_APP)["note"]
+    assert "acquaint.repo" in sync.ACQUAINT.hook_text()
+
+
+def test_the_default_namespace_renders_the_hook_every_existing_store_has_installed():
+    """Stores set up before the namespace existed hold this exact text; a changed byte would mark every guard inactive."""
+    from pathlib import Path
+
+    assert sync.ACQUAINT.hook_text() == (Path(__file__).parent / "pre_push_v1.sh").read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {"name": "my_app"},
+        {"name": "1app"},
+        {"subject": "$(touch x)"},
+        {"subject": 'a"; touch x; echo "'},
+        {"command": "app `sync`"},
+        {"store": "line\nbreak"},
+        {"subject": "__NAME__"},
+    ],
+)
+def test_a_namespace_cannot_carry_what_the_shell_or_git_would_misread(fields):
+    with pytest.raises(AcquaintError):
+        sync.SyncNamespace(**fields)
