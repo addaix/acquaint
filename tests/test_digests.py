@@ -259,3 +259,49 @@ def test_headings_and_section_spans_agree_with_sections():
     assert headings(body) == [(2, 2, "A"), (6, 3, "sub"), (7, 1, "Aside"), (8, 2, "B")]
     assert section_spans(body) == {"A": (2, 7), "B": (8, 12)}
     assert list(section_spans(body)) == list(sections(body))
+
+
+def test_checked_is_recorded_apart_from_through_and_moves_back_only_with_force(store, put):
+    from acquaint.digests import swept
+
+    ada = _ada(store, put)
+    assert find_digest(ada, REF)["checked"] is None and swept(ada) == {"whatsapp": None}
+    done = mark_digest(ada, REF, checked="2026-11-09T08:00:00+01:00", today="2026-11-09")
+    assert done["checked"] == "2026-11-09T08:00:00+01:00" and done["through"] == {}
+    with pytest.raises(AcquaintError, match="needs force"):
+        mark_digest(ada, REF, checked="2026-11-08T08:00:00+01:00")
+    with pytest.raises(AcquaintError, match="say what to record"):
+        mark_digest(ada, REF)
+    mark_digest(ada, REF, through="2026-11-03T19:00:00+01:00", checked="2026-11-10T08:00:00+01:00")
+    assert find_digest(ada, REF)["checked"] == "2026-11-10T08:00:00+01:00"
+    assert find_digest(ada, REF)["through"]["content"] == "2026-11-03T19:00:00+01:00"
+    assert [p for p in digest_problems(ada[find_digest(ada, REF)["file"]]) if p[0] == "error"] == []
+
+
+def test_a_sweep_stamps_every_digest_of_a_channel_and_creates_the_named_missing_ones(store, put):
+    from acquaint.digests import swept, sweep_digests
+
+    org = put(store, "orgs/example-org", meta={"name": "Example Org"})
+    new_digest(org, "slack:general")
+    new_digest(org, "whatsapp:ops")
+    done = sweep_digests(org, "slack", "2026-11-09T08:00:00Z", refs=["slack:general", "slack:random"])
+    assert done["created"] == ["slack:random"] and sorted(done["stamped"]) == ["slack:general", "slack:random"]
+    assert swept(org) == {"slack": "2026-11-09T08:00:00Z", "whatsapp": None}
+    assert find_digest(org, "slack:random")["through"] == {}, "a quiet channel is checked, not processed"
+    sweep_digests(org, "slack", "2026-11-12T08:00:00Z", refs=["slack:random"])
+    mark_digest(org, "slack:general", checked="2026-11-13T08:00:00Z")
+    assert swept(org)["slack"] == "2026-11-12T08:00:00Z", "the oldest checked, since a sweep is as complete as its stalest channel"
+    with pytest.raises(AcquaintError, match="not of the channel"):
+        sweep_digests(org, "slack", "2026-11-14T00:00:00Z", refs=["github:x/y"])
+    with pytest.raises(AcquaintError, match="no digest of the channel"):
+        sweep_digests(org, "github", "2026-11-14T00:00:00Z")
+
+
+def test_the_sweep_tools(tmp_path, monkeypatch):
+    monkeypatch.setenv("ACQUAINT_DATA_DIR", str(tmp_path / "data"))
+    tools.new("org", "Example Org")
+    done = tools.digest_sweep("example-org", "slack", checked="2026-11-09T08:00:00Z", refs=["slack:general", "slack:random"])
+    assert done["ok"] and done["created"] == ["slack:general", "slack:random"]
+    listed = tools.digest("example-org")
+    assert listed["swept"] == {"slack": "2026-11-09T08:00:00Z"} and "checked 2026-11-09T08:00:00Z" in listed["text"]
+    assert tools.digest_mark("example-org", "slack:general", checked="2026-11-10T00:00:00Z")["summary"].endswith("checked 2026-11-10T00:00:00Z")

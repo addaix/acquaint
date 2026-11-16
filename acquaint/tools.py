@@ -26,7 +26,7 @@ from acquaint import sync as _sync
 from acquaint.brief import compose_brief
 from acquaint.deslop import lint_text, recipient_card
 from acquaint.digests import digests as _digests
-from acquaint.digests import append_batch, find_digest, mark_digest, new_digest
+from acquaint.digests import append_batch, find_digest, mark_digest, new_digest, sweep_digests, swept
 from acquaint.disclosure import disclose as _disclose
 from acquaint.edit import append_observation, forget_entity, new_entity, rename_entity
 from acquaint.lint import lint_store
@@ -52,6 +52,7 @@ __all__ = [
     "digest_append",
     "digest_mark",
     "digest_new",
+    "digest_sweep",
     "disclosure",
     "forget",
     "lint",
@@ -878,13 +879,14 @@ def digest(entity: str, ref: str | None = None, *, data_dir: str | None = None) 
     if ref is None:
         listed = _digests(found)
         lines = [
-            f"{d['ref']}: content through {d['through'].get('content', '(nothing)')}, style through {d['through'].get('style', '(nothing)')} · {d['path']}"
+            f"{d['ref']}: content through {d['through'].get('content', '(nothing)')}, style through {d['through'].get('style', '(nothing)')}, checked {d['checked'] or '(never)'} · {d['path']}"
             for d in listed
         ]
         return {
             "ok": True,
             "id": found.slug,
             "digests": listed,
+            "swept": swept(found),
             "summary": f"{len(listed)} digest(s) for {found.slug}",
             "text": "\n".join(lines) or f"no digests for {found.slug}",
         }
@@ -920,20 +922,40 @@ def digest_mark(
     entity: str,
     ref: str,
     *,
-    through: str,
+    through: str | None = None,
+    checked: str | None = None,
     scope: str = "content",
     force: bool = False,
     data_dir: str | None = None,
 ) -> dict:
-    """Record that a conversation has been processed through ``through`` (the ISO time of the last message processed), for ``scope`` (``content`` or ``style``). Moving a watermark back needs ``force``."""
+    """Record that a conversation has been processed through ``through`` (the ISO time of the last message processed), for ``scope`` (``content`` or ``style``), and/or that it was last read at ``checked`` (ISO time; a quiet channel has no new message, so ``through`` cannot say it was looked at). Moving either back needs ``force``."""
     store = _store(data_dir)
     found = mark_digest(
-        Entity(store, find_entity(store, entity)), ref, through, scope=scope, force=force
+        Entity(store, find_entity(store, entity)), ref, through, checked=checked, scope=scope, force=force
+    )
+    said = [f"{scope} processed through {through} (was {found['previous'] or 'nothing'})" if through else "", f"checked {checked}" if checked else ""]
+    return {"ok": True, **found, "summary": f"{ref}: {'; '.join(x for x in said if x)}"}
+
+
+def digest_sweep(
+    entity: str,
+    channel: str,
+    *,
+    checked: str,
+    refs: list[str] | None = None,
+    archive: str = "correspond",
+    force: bool = False,
+    data_dir: str | None = None,
+) -> dict:
+    """Record a sweep of a channel (``slack``, ``whatsapp``, ...): stamp ``checked`` (ISO time the sweep read them) on every digest of that channel, quiet ones included, after creating a digest for each of ``refs`` (conversation references ``<channel>:...``) that has none. ``digest`` then reports ``swept``: the oldest ``checked`` per channel."""
+    store = _store(data_dir)
+    found = sweep_digests(
+        Entity(store, find_entity(store, entity)), channel, checked, refs=refs or (), archive=archive, force=force
     )
     return {
         "ok": True,
         **found,
-        "summary": f"{ref}: {scope} processed through {through} (was {found['previous'] or 'nothing'})",
+        "summary": f"{channel} checked {checked}: {len(found['stamped'])} digest(s) stamped, {len(found['created'])} created",
     }
 
 
@@ -996,6 +1018,7 @@ TOOLS = [
     digest_new,
     digest_append,
     digest_mark,
+    digest_sweep,
 ]
 
 #: What each tool changes, for surfaces that must decide what to expose or confirm.
@@ -1025,4 +1048,5 @@ SIDE_EFFECTS = {
     "digest_new": "create",
     "digest_append": "rewrite",
     "digest_mark": "rewrite",
+    "digest_sweep": "rewrite",
 }
