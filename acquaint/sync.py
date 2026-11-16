@@ -291,7 +291,9 @@ def _configured(root: Path, run: Runner, ns: SyncNamespace) -> tuple[str, str]:
 _MARKER_PATTERNS = (r"^<{7}( |$)", r"^={7}$", r"^>{7}( |$)")
 
 
-def _git_z(root: Path, run: Runner, *args: str, ok: tuple[int, ...] = (0,), what: str) -> list[str]:
+def _git_z(
+    root: Path, run: Runner, *args: str, ok: tuple[int, ...] = (0,), what: str
+) -> list[str]:
     """NUL-separated output of a git command, so any file name comes back exactly (git quotes odd names otherwise)."""
     done = run(["git", *args], cwd=root)
     if done.returncode not in ok:
@@ -313,7 +315,15 @@ def _conflicted(
     commit, so a record committed earlier with a quoted block is not re-judged on every
     push); ``allow``ed paths are let through.
     """
-    unmerged = _git_z(root, run, "diff", "--name-only", "-z", "--diff-filter=U", what="listing unmerged files")
+    unmerged = _git_z(
+        root,
+        run,
+        "diff",
+        "--name-only",
+        "-z",
+        "--diff-filter=U",
+        what="listing unmerged files",
+    )
     if not markers or paths == []:
         return sorted(unmerged)
     grep = [e for pattern in _MARKER_PATTERNS for e in ("-e", pattern)]
@@ -363,7 +373,9 @@ def _allowed(root: Path, allow: Sequence[str]) -> frozenset[str]:
     for entry in allow:
         name = PurePosixPath(entry.replace("\\", "/")).as_posix()
         if not (root / name).is_file():
-            raise AcquaintError(f"--allow-markers {entry!r}: no such file in the store (a store-relative path like people/ada-lovelace/PROFILE.md, or a record id taken for a path?)")
+            raise AcquaintError(
+                f"--allow-markers {entry!r}: no such file in the store (a store-relative path like people/ada-lovelace/PROFILE.md, or a record id taken for a path?)"
+            )
         paths.add(name)
     return frozenset(paths)
 
@@ -781,7 +793,9 @@ def pull(
             "plan": [f"git pull --rebase --autostash origin {BRANCH}"],
         }
     _require_private(repo, run, namespace)
-    _refuse_conflicts(root, run, doing="pull", markers=False)  # unmerged entries only: marker text in a committed record is push's business
+    _refuse_conflicts(
+        root, run, doing="pull", markers=False
+    )  # unmerged entries only: marker text in a committed record is push's business
     _ok(
         run,
         ["git", "pull", "-q", "--rebase", "--autostash", "origin", BRANCH],
