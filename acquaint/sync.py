@@ -221,6 +221,33 @@ def _configured(root: Path, run: Runner) -> tuple[str, str]:
     return repo, remote
 
 
+# A conflicted file holds all three markers; requiring all of them spares a record that merely quotes one.
+_MARKER_PATTERNS = (r"^<{7}( |$)", r"^={7}$", r"^>{7}( |$)")
+
+
+def _conflicted(root: Path, run: Runner) -> list[str]:
+    """Paths left unresolved in the working tree: unmerged index entries, or text files that still hold conflict markers."""
+    unmerged = _lines(root, run, "-c", "core.quotePath=false", "diff", "--name-only", "--diff-filter=U")
+    grep = [e for pattern in _MARKER_PATTERNS for e in ("-e", pattern)]
+    found = run(
+        ["git", "-c", "core.quotePath=false", "grep", "--untracked", "-I", "-l", "--all-match", "-E", *grep],
+        cwd=root,
+    )
+    if found.returncode > 1:  # 1 is "no match"; anything else means the check itself failed
+        raise AcquaintError(f"could not scan {root} for conflict markers: {(found.stderr or '').strip()}")
+    marked = [line for line in (found.stdout or "").splitlines() if line.strip()]
+    return sorted({*unmerged, *marked})
+
+
+def _refuse_conflicts(root: Path, run: Runner, *, doing: str) -> None:
+    paths = _conflicted(root, run)
+    if paths:
+        raise AcquaintError(
+            f"refusing to {doing}: unresolved conflicts in {', '.join(paths)}. "
+            "Resolve them in the data root (a kept `git stash` may hold your edits), then try again"
+        )
+
+
 def _hook_path(root: Path, run: Runner) -> Path:
     effective = Path(
         _ok(
@@ -420,13 +447,19 @@ def push(
         if line
     ]
     if dry_run:
-        return {"repo": repo, "dry_run": True, "would_commit": len(changed)}
+        return {
+            "repo": repo,
+            "dry_run": True,
+            "would_commit": len(changed),
+            "conflicted": _conflicted(root, run),
+        }
     if not _hook_active(root, run):
         raise AcquaintError(
             f"the pre-push guard is not active in {root} (moved data root, a changed core.hooksPath, or a hook that is not executable); "
             f"run `acquaint sync init --repo {repo} --existing-only` first"
         )
     _require_private(repo, run)
+    _refuse_conflicts(root, run, doing="commit and push")
     committed = False
     if changed:
         _ok(run, ["git", "add", "-A"], cwd=root, what="git add")
@@ -486,12 +519,15 @@ def pull(
             "plan": [f"git pull --rebase --autostash origin {BRANCH}"],
         }
     _require_private(repo, run)
+    _refuse_conflicts(root, run, doing="pull")
     _ok(
         run,
         ["git", "pull", "-q", "--rebase", "--autostash", "origin", BRANCH],
         cwd=root,
         what="git pull",
     )
+    # `git pull --autostash` exits 0 when re-applying the stash conflicts, leaving markers.
+    _refuse_conflicts(root, run, doing="finish the pull")
     head = _ok(
         run, ["git", "rev-parse", "--short", "HEAD"], cwd=root, what="git rev-parse"
     )
