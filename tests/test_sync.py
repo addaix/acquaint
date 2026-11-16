@@ -403,3 +403,132 @@ def test_a_record_that_only_quotes_one_marker_or_is_binary_does_not_block_push(s
     (folder / "blob.bin").write_bytes(b"\x00\n<<<<<<< x\n=======\n>>>>>>> y\n")
     assert sync.push(store_root, dry_run=True, run=gh)["conflicted"] == []
     assert sync.push(store_root, run=gh)["pushed"]
+
+
+def _two_dirty_records(store_root, gh):
+    sync.init(store_root, REPO, run=gh)
+    for slug in ("ada-lovelace", "grace-example"):
+        folder = store_root / "people" / slug
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / "PROFILE.md").write_text(f"---\nname: {slug}\nnote: changed\n---\n")
+    return store_root / "people"
+
+
+def _pushed_files(bare):
+    return set(_git("--git-dir", str(bare), "ls-tree", "-r", "--name-only", "main").stdout.split())
+
+
+@posix_only
+def test_a_scoped_push_commits_only_the_named_records(store_root, github, scripted_gh):
+    gh = FakeGh()
+    people = _two_dirty_records(store_root, gh)
+    (store_root / "_tombstones.yaml").write_text("tombstones: []\n")
+    result = sync.push(store_root, entities=["people/ada-lovelace"], message="ada only", run=gh)
+    assert result["pushed"] and result["entities"] == ["people/ada-lovelace"]
+    files = _pushed_files(github[URL])
+    assert "people/ada-lovelace/PROFILE.md" in files and "_tombstones.yaml" in files
+    assert "people/grace-example/PROFILE.md" not in files
+    status = _git("status", "--porcelain", cwd=store_root).stdout
+    assert "people/grace-example" in status and "people/ada-lovelace" not in status
+    assert (people / "grace-example" / "PROFILE.md").read_text().endswith("changed\n---\n")
+    # the other record stays out of the way of the next scoped push, and of a pull
+    assert sync.push(store_root, entities=["people/grace-example"], run=gh)["pushed"]
+    assert "people/grace-example/PROFILE.md" in _pushed_files(github[URL])
+
+
+@posix_only
+def test_an_unscoped_push_refuses_a_message_that_leaves_a_record_unnamed(store_root, github, scripted_gh):
+    gh = FakeGh()
+    _two_dirty_records(store_root, gh)
+    with pytest.raises(AcquaintError, match="does not name people/grace-example"):
+        sync.push(store_root, message="ada-lovelace: new aka", run=gh)
+    assert "people/grace-example/PROFILE.md" not in _pushed_files(github[URL])
+    plan = sync.push(store_root, message="ada-lovelace: new aka", dry_run=True, run=gh)
+    assert plan["unnamed_in_message"] == ["people/grace-example"] and plan["entities"] == ["people/ada-lovelace", "people/grace-example"]
+    assert sync.push(store_root, message="ada-lovelace: new aka", everything=True, run=gh)["committed"]
+    assert sync.push(store_root, message="ada-lovelace and grace-example", run=gh)["pushed"]
+
+
+@posix_only
+def test_the_default_message_lists_the_records_and_needs_no_naming(store_root, github, scripted_gh):
+    gh = FakeGh()
+    _two_dirty_records(store_root, gh)
+    assert sync.push(store_root, run=gh)["committed"]
+    assert "ada-lovelace, grace-example" in _git("log", "-1", "--format=%s", cwd=store_root).stdout
+
+
+@posix_only
+def test_a_scoped_push_rejects_anything_but_an_existing_record_folder(store_root, github, scripted_gh):
+    gh = FakeGh()
+    sync.init(store_root, REPO, run=gh)
+    for bad in ("people", "people/ada/../../x", "../people/a", "people/a/b", "people/..", "./people", "people/."):
+        with pytest.raises(AcquaintError, match="record folder"):
+            sync.push(store_root, entities=[bad], run=gh)
+    with pytest.raises(AcquaintError, match="no record folder people/typo"):
+        sync.push(store_root, entities=["/people/typo/"], run=gh)
+    assert sync.push(store_root, entities=["/people/ada-lovelace/"], run=gh)["entities"] == []
+
+
+def test_a_record_is_named_only_by_its_whole_id():
+    assert sync._is_named("people/ada", "ada: new aka") and sync._is_named("people/ada", "Update for Ada.")
+    assert not sync._is_named("people/ada", "trip to canada") and not sync._is_named("people/ada", "ada-lovelace: aka")
+
+
+@posix_only
+def test_a_scoped_push_pushes_before_reporting_a_conflict_in_another_records_edits(tmp_path, store_root, github, scripted_gh):
+    gh = FakeGh()
+    people = _two_dirty_records(store_root, gh)
+    sync.push(store_root, everything=True, run=gh)
+    other = tmp_path / "other-clone"
+    assert _git("clone", "-q", "--branch", "main", URL, str(other)).returncode == 0
+    (other / "people" / "grace-example" / "PROFILE.md").write_text("---\nname: grace-example\nnote: remote\n---\n")
+    _git("commit", "-aqm", "remote edit", cwd=other)
+    assert _git("push", "-q", "origin", "main", cwd=other).returncode == 0
+    (people / "grace-example" / "PROFILE.md").write_text("---\nname: grace-example\nnote: local\n---\n")  # uncommitted
+    (people / "ada-lovelace" / "PROFILE.md").write_text("---\nname: Ada Lovelace\nnote: newer\n---\n")
+    with pytest.raises(AcquaintError, match="your commits were pushed.*people/grace-example/PROFILE.md"):
+        sync.push(store_root, entities=["people/ada-lovelace"], run=gh)
+    assert "newer" in _git("--git-dir", str(github[URL]), "show", "main:people/ada-lovelace/PROFILE.md").stdout
+
+
+@posix_only
+def test_the_tool_scopes_by_id_and_a_dry_run_says_when_it_would_refuse(tmp_path, github, scripted_gh, monkeypatch):
+    from acquaint import tools
+
+    monkeypatch.setenv("ACQUAINT_DATA_DIR", str(tmp_path / "data"))
+    tools.new("person", "Ada Lovelace")
+    tools.new("person", "Grace Example")
+    gh, real = FakeGh(), sync.run_command
+    fake = lambda args, *, cwd=None: gh(args, cwd=cwd) if args[0] == "gh" else real(args, cwd=cwd)  # noqa: E731
+    for fn in (sync.init, sync.push, sync.pull, sync.status, sync.visibility, sync.sole_access):
+        monkeypatch.setattr(fn, "__kwdefaults__", {**(fn.__kwdefaults__ or {}), "run": fake})
+    sync.init(tmp_path / "data", REPO)
+    tools.remember("ada-lovelace", "likes tea", kind="preference", source="note")
+    tools.remember("grace-example", "likes coffee", kind="preference", source="note")
+    plan = tools.sync_push(message="ada-lovelace: tea", dry_run=True)
+    assert plan["summary"].startswith("would refuse") and "grace-example" in plan["summary"]
+    done = tools.sync_push(["person:ada-lovelace"], message="ada-lovelace: tea")
+    assert done["pushed"] and done["entities"] == ["people/ada-lovelace"]
+    assert "people/grace-example" in _git("status", "--porcelain", "-uall", cwd=tmp_path / "data").stdout
+
+
+@posix_only
+def test_a_scoped_push_of_a_deleted_record_can_be_retried_and_a_clean_push_is_not_failed_by_old_markers(tmp_path, store_root, github, scripted_gh):
+    gh = FakeGh()
+    sync.init(store_root, REPO, run=gh)
+    shutil.rmtree(store_root / "people" / "ada-lovelace")
+    _git("config", "core.hooksPath", str(tmp_path / "x"), cwd=store_root)  # the first attempt fails at the guard
+    with pytest.raises(AcquaintError, match="guard is not active"):
+        sync.push(store_root, entities=["people/ada-lovelace"], run=gh)
+    sync.init(store_root, REPO, create=False, run=gh)  # re-installs the guard; commits the deletion
+    assert sync.push(store_root, entities=["people/ada-lovelace"], run=gh)["pushed"]  # known from history
+    # a committed file that merely holds markers (pushed with raw git elsewhere) does not fail a clean push
+    other = tmp_path / "other-clone"
+    assert _git("clone", "-q", "--branch", "main", URL, str(other)).returncode == 0
+    (other / "old.md").write_text("<<<<<<< a\nx\n=======\ny\n>>>>>>> b\n")
+    _git("add", "-A", cwd=other)
+    _git("commit", "-qm", "markers", cwd=other)
+    assert _git("push", "-q", "origin", "main", cwd=other).returncode == 0
+    (store_root / "people" / "grace-example").mkdir(parents=True)
+    (store_root / "people" / "grace-example" / "PROFILE.md").write_text("---\nname: g\n---\n")
+    assert sync.push(store_root, entities=["people/grace-example"], run=gh)["pushed"]

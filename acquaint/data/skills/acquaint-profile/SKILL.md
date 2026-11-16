@@ -140,7 +140,7 @@ acquaint sync status --json     # read auto_commit and auto_commit_reason
 - **`auto_commit: true`**: the store is a private repository owned by the operator, with the operator as its only collaborator, so nobody else can read it. Commit and push now, with a message naming the records and what changed, and tell the operator the commit; `git revert` undoes it.
 
   ```bash
-  acquaint sync push -m "acquaint: <id>, <id> — <what changed>"
+  acquaint sync push <id> <id> -m "acquaint: <id>, <id> — <what changed>"   # only your records: others may be mid-edit
   ```
 
 - **otherwise** (not synced, not private, an organisation's repository, other collaborators or a pending invitation, or the check failed): show the operator the whole diff and apply it only once they approve it. If the store is synced, leave the changes uncommitted so `git diff` in the data root is the review, and quote `auto_commit_reason` so they know why.
