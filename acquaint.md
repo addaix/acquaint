@@ -1,4 +1,4 @@
-> built 2026-11-16 06:26 UTC from 8d97441 (main) · acquaint 0.0.27. Details: build_info.json
+> built 2026-11-16 06:36 UTC from 0c3694c (main) · acquaint 0.0.28. Details: build_info.json
 
 # index.html.md
 
@@ -56,7 +56,7 @@ The same twenty-one functions are the Python API (`acquaint.tools`), the CLI, an
 
 | Verb                                                                                                                                                                                                                | Does                                                                                                                                                                                                                                                                                                                                                         |
 |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `who NAME [-f FIELD] [-b]`                                                                                                                                                                                          | one field (`email`, `aka`, `label`, `tier`, any frontmatter key, a dotted `clear` fact such as `name.full`), the identity block, or the whole entry file; lists candidates instead of guessing                                                                                                                                                               |
+| `who NAME [-f FIELD] [-b]` (`self` names the one person marked `operator: true` in its PROFILE.md frontmatter, for commands that take a name; the ones that rewrite or remove a record need the exact id)           | one field (`email`, `aka`, `label`, `tier`, any frontmatter key, a dotted `clear` fact such as `name.full`), the identity block, or the whole entry file; lists candidates instead of guessing                                                                                                                                                               |
 | `resolve HANDLE`                                                                                                                                                                                                    | `github:octocat`, `email:…` → the person, with the evidence; a handle without its platform, a match by name only, or an inactive identity is reported, never acted on                                                                                                                                                                                        |
 | `check TEXT`                                                                                                                                                                                                        | before publishing: one person written as two (“Ada or Lovelace”), shared names, unknown names                                                                                                                                                                                                                                                                |
 | `reach PERSON [--purpose --urgency --project --message-type --topic]`                                                                                                                                               | ordered channels: the person’s own rules > the operator’s rules > project norms > observed habits > defaults                                                                                                                                                                                                                                                 |
@@ -2710,16 +2710,18 @@ True
 
 # About this build
 
-This documentation was built on **2026-11-16 06:26 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/8d974412ddbc9274d8d09258ff3d83e35436fd22"><code>8d97441</code></a> on branch <code>main</code>, for **acquaint 0.0.27** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 06:36 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/0c3694c7603db9214eb3cde6d69d077134f762e5"><code>0c3694c</code></a> on branch <code>main</code>, for **acquaint 0.0.28** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.28) is behind the latest release on PyPI (0.0.29): `pip install acquaint` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                            |
 |---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/8d974412ddbc9274d8d09258ff3d83e35436fd22"><code>8d974412ddbc9274d8d09258ff3d83e35436fd22</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/0c3694c7603db9214eb3cde6d69d077134f762e5"><code>0c3694c7603db9214eb3cde6d69d077134f762e5</code></a> |
 | Branch              | <code>main</code>                                                                                                                                          |
 | Tags at this commit | none                                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                      |
@@ -2730,9 +2732,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/acquaint</code>                                                           |
-| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43816525193">43816525193</a>  |
+| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43817671819">43817671819</a>  |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>8d974412ddbc9274d8d09258ff3d83e35436fd22</code> (in the history of the built commit) |
+| Event commit | <code>0c3694c7603db9214eb3cde6d69d077134f762e5</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2757,13 +2759,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/acquaint/0.0.27/">0.0.27</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/acquaint/0.0.29/">0.0.29</a>, newer than the documented version (0.0.28).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/acquaint && cd acquaint
-git checkout 8d974412ddbc9274d8d09258ff3d83e35436fd22
+git checkout 0c3694c7603db9214eb3cde6d69d077134f762e5
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
