@@ -392,3 +392,14 @@ def test_push_refuses_a_record_that_holds_conflict_markers(store_root, github, s
     (store_root / "people" / "ada-lovelace" / "PROFILE.md").write_text("<<<<<<< Updated upstream\nx\n=======\ny\n>>>>>>> Stashed changes\n")
     with pytest.raises(AcquaintError, match="unresolved conflicts"):
         sync.push(store_root, run=gh)
+
+
+@posix_only
+def test_a_record_that_only_quotes_one_marker_or_is_binary_does_not_block_push(store_root, github, scripted_gh):
+    gh = FakeGh()
+    sync.init(store_root, REPO, run=gh)
+    folder = store_root / "people" / "ada-lovelace"
+    (folder / "quote.md").write_text("> >>>>>>> a deeply nested email quote\n")
+    (folder / "blob.bin").write_bytes(b"\x00\n<<<<<<< x\n=======\n>>>>>>> y\n")
+    assert sync.push(store_root, dry_run=True, run=gh)["conflicted"] == []
+    assert sync.push(store_root, run=gh)["pushed"]
