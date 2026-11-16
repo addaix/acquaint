@@ -288,16 +288,29 @@ def _append_under(body: str, section: str, heading: str, lines: Sequence[str]) -
     if span is None:
         raise AcquaintError(f"the digest has no `## {section}` section")
     first, nxt = span
-    if any(first < n < nxt and level == 3 and title == normalize_title(heading) for n, level, title in headings(body)):
+    if any(
+        first < n < nxt and level == 3 and title == normalize_title(heading)
+        for n, level, title in headings(body)
+    ):
         raise AcquaintError(f"`## {section}` already has a `### {heading}` batch")
     total = len(body.split("\n"))
-    if nxt > total and visible_lines(body + "\nx")[-1][2]:  # an unclosed fence hides every later heading, so it runs to the end
-        raise AcquaintError(f"`## {section}` ends inside an unclosed code fence; close it first, or the batch would be invisible to lint")
+    if (
+        nxt > total and visible_lines(body + "\nx")[-1][2]
+    ):  # an unclosed fence hides every later heading, so it runs to the end
+        raise AcquaintError(
+            f"`## {section}` ends inside an unclosed code fence; close it first, or the batch would be invisible to lint"
+        )
     rows = body.split("\n")
     kept = rows[first : nxt - 1]
     while kept and not kept[-1].strip():
         kept.pop()
-    block = ["", f"### {heading}", "", *(f"- {line}" for line in lines), ""]  # blank line before the next section, or the final newline
+    block = [
+        "",
+        f"### {heading}",
+        "",
+        *(f"- {line}" for line in lines),
+        "",
+    ]  # blank line before the next section, or the final newline
     return "\n".join(rows[:first] + kept + block + rows[nxt - 1 :])
 
 

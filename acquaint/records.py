@@ -363,7 +363,13 @@ def headings(text: str) -> list[tuple[int, int, str]]:
     for number, line, in_code in _lines(text):
         match = None if in_code else _HEADING_RE.match(line)
         if match:
-            found.append((number, len(match.group("hashes")), normalize_title(match.group("title"))))
+            found.append(
+                (
+                    number,
+                    len(match.group("hashes")),
+                    normalize_title(match.group("title")),
+                )
+            )
     return found
 
 
