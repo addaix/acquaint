@@ -1,4 +1,4 @@
-> built 2026-11-16 06:08 UTC from c8c49da (main) · acquaint 0.0.26. Details: build_info.json
+> built 2026-11-16 06:26 UTC from 8d97441 (main) · acquaint 0.0.27. Details: build_info.json
 
 # index.html.md
 
@@ -39,6 +39,7 @@ people/ada-lovelace/
   rules.yaml                    channel rules: when → do (channel, and the address
                                 when the channel is addressed by conversation), who set it, source
   links.yaml                    affiliations: project, org, group; role; period
+  facts.yaml                    typed facts (name.full, titles.current, ...), each with a label, source and date; `clear` ones appear in the brief, `who -f name.full` reads one
   style.md                      the writing card: AI tolerance, register, do, don't, blocklist, exemplars
   views.md                      positions and standing objections, sourced
   sources.md                    where their writing lives, how authorship was verified
@@ -55,7 +56,7 @@ The same twenty-one functions are the Python API (`acquaint.tools`), the CLI, an
 
 | Verb                                                                                                                                                                                                                | Does                                                                                                                                                                                                                                                                                                                                                         |
 |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `who NAME [-f FIELD] [-b]`                                                                                                                                                                                          | one field (`email`, `aka`, `label`, `tier`, any frontmatter key), the identity block, or the whole entry file; lists candidates instead of guessing                                                                                                                                                                                                          |
+| `who NAME [-f FIELD] [-b]`                                                                                                                                                                                          | one field (`email`, `aka`, `label`, `tier`, any frontmatter key, a dotted `clear` fact such as `name.full`), the identity block, or the whole entry file; lists candidates instead of guessing                                                                                                                                                               |
 | `resolve HANDLE`                                                                                                                                                                                                    | `github:octocat`, `email:…` → the person, with the evidence; a handle without its platform, a match by name only, or an inactive identity is reported, never acted on                                                                                                                                                                                        |
 | `check TEXT`                                                                                                                                                                                                        | before publishing: one person written as two (“Ada or Lovelace”), shared names, unknown names                                                                                                                                                                                                                                                                |
 | `reach PERSON [--purpose --urgency --project --message-type --topic]`                                                                                                                                               | ordered channels: the person’s own rules > the operator’s rules > project norms > observed habits > defaults                                                                                                                                                                                                                                                 |
@@ -527,6 +528,93 @@ The tombstone matching any of these identifiers, if such an entity was forgotten
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 
+# _autosummary/acquaint.facts.html.md
+
+# acquaint.facts
+
+Facts: the small exact things agents keep asking for, as a typed file on the record they belong to.
+
+An optional `facts.yaml` in any entity folder holds one current value per field, each
+with the disclosure label acquaint already uses, its source and its dates:
+
+```yaml
+schema: acquaint/facts/v1
+facts:
+  name.full: {value: "Ada Lovelace", label: clear, source: "self: \"I write it Ada Lovelace\"", recorded: 2026-11-09}
+  titles.current:
+    value: "Analyst"
+    label: clear
+    source: https://example.org/about
+    recorded: 2026-11-09
+    valid_from: 2023-01-01
+    review_by: 2027-05-09
+    status: current            # current | proposed | conflicting
+    supersedes: titles.current@2025-02-01
+to_confirm: ["inferred time zone"]   # inferred items awaiting the operator
+```
+
+Field names follow JSContact (RFC 9553) where one exists (`name.full`, `titles.*`,
+`speakToAs.pronouns`, …), so vCard or schema.org exports are mappings later. `label`
+is one of [`acquaint.trust.LABELS`](_autosummary/acquaint.trust.html.md#acquaint.trust.LABELS). A `source` follows the rules of a preference
+line ([`acquaint.records.source_problem()`](_autosummary/acquaint.records.html.md#acquaint.records.source_problem)): a date alone is not a source.
+
+What reads them: [`facts_problems()`](_autosummary/acquaint.facts.html.md#acquaint.facts.facts_problems) (`lint`), [`brief_lines()`](_autosummary/acquaint.facts.html.md#acquaint.facts.brief_lines) (the brief’s
+“Facts” block: `clear` facts that are current, never `amber` or `red`) and
+[`fact_value()`](_autosummary/acquaint.facts.html.md#acquaint.facts.fact_value) (`who <id> -f name.full`, `clear` only: a fact with a stricter label
+is refused, since `who` knows nothing about its reader). A fact that fails its own lint, is
+duplicated, is not `current` or is outside its `valid_from`/`valid_to` is never shown.
+
+```pycon
+>>> facts_problems("schema: acquaint/facts/v1\nfacts:\n  name.full: {value: Ada, label: clear, source: operator, recorded: 2026-11-09}\n", today="2026-11-10")
+[]
+```
+
+### Module Attributes
+
+| [`OPEN_LABELS`](_autosummary/acquaint.facts.html.md#acquaint.facts.OPEN_LABELS)   | Labels a fact may be read at without knowing who reads it.   |
+|----------------------------------------------------------------|--------------------------------------------------------------|
+
+### Functions
+
+| [`brief_lines`](_autosummary/acquaint.facts.html.md#acquaint.facts.brief_lines)(entity, \*, max_chars[, today])   | `- name: value` for each readable fact, within `max_chars` (the overflow note included); what does not fit is counted, not cut mid-line.                  |
+|------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`fact_value`](_autosummary/acquaint.facts.html.md#acquaint.facts.fact_value)(entity, name, \*[, today])         | `(value, refusal)` of a fact by dotted name (any case): the value when it is readable, else `None` and why not (`None, None` when there is no such fact). |
+| [`facts`](_autosummary/acquaint.facts.html.md#acquaint.facts.facts)(entity)                                 | The entity's facts by name; `{}` when there is no file, it does not parse, or the file as a whole has an error (lint reports that).                       |
+| [`facts_problems`](_autosummary/acquaint.facts.html.md#acquaint.facts.facts_problems)(text, \*, today)               | `(severity, rule, message)` for one `facts.yaml`: shape, label, source, dates, repeated keys, a passed `review_by`.                                       |
+
+### acquaint.facts.OPEN_LABELS *= ('clear',)*
+
+Labels a fact may be read at without knowing who reads it.
+
+### acquaint.facts.brief_lines(entity, , max_chars, today=None)
+
+`- name: value` for each readable fact, within `max_chars` (the overflow note included); what does not fit is counted, not cut mid-line.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### acquaint.facts.fact_value(entity, name, , today=None)
+
+`(value, refusal)` of a fact by dotted name (any case): the value when it is readable, else `None` and why not (`None, None` when there is no such fact).
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Any`](https://docs.python.org/3/library/typing.html#typing.Any), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)]
+
+### acquaint.facts.facts(entity)
+
+The entity’s facts by name; `{}` when there is no file, it does not parse, or the file as a whole has an error (lint reports that).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+### acquaint.facts.facts_problems(text, , today)
+
+`(severity, rule, message)` for one `facts.yaml`: shape, label, source, dates, repeated keys, a passed `review_by`. A message never echoes what was written.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
+
+
 # _autosummary/acquaint.html.md
 
 # acquaint
@@ -901,7 +989,7 @@ Whether the store is synced, to which repository, uncommitted changes, ahead/beh
 Look up one person, project, org or group by exact id, name, alias, handle or email.
 
 Costs scale with what you ask: `field` returns one value (`aka`, `email`,
-`github`, `label`, `tier`, any frontmatter key), `brief` the identity block, and the default the
+`github`, `label`, `tier`, any frontmatter key, or a dotted fact name such as `name.full`: only a current `clear` fact is readable here, a stricter one is refused), `brief` the identity block, and the default the
 whole entry file. It never guesses: no exact match, or several, returns the
 candidates and `ok: false`.
 
@@ -914,6 +1002,7 @@ candidates and `ok: false`.
 |--------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`digests`](_autosummary/acquaint.digests.html.md#module-acquaint.digests)     | Digests: what a conversation with an entity said, written up through a watermark.                                                                                                |
 | [`edit`](_autosummary/acquaint.edit.html.md#module-acquaint.edit)           | Changing the store: create an entity, append an observation, rename with relinking, forget with a tombstone.                                                                     |
+| [`facts`](_autosummary/acquaint.facts.html.md#module-acquaint.facts)         | Facts: the small exact things agents keep asking for, as a typed file on the record they belong to.                                                                              |
 | [`lookup`](_autosummary/acquaint.lookup.html.md#module-acquaint.lookup)       | Finding the right record: exact references, handle resolution, the conflation check, and channel choice.                                                                         |
 | [`mcp`](_autosummary/acquaint.mcp.html.md#module-acquaint.mcp)             | MCP over stdio: the same tools, for Claude Desktop and other local MCP clients.                                                                                                  |
 | [`meta`](_autosummary/acquaint.meta.html.md#module-acquaint.meta)           | Where a project's meeting todos may be filed: its declared private meta repository, and the people who belong to it.                                                             |
@@ -1230,31 +1319,32 @@ True
 
 ### Functions
 
-| [`blank_frontmatter`](_autosummary/acquaint.records.html.md#acquaint.records.blank_frontmatter)(text)                          | The text with its frontmatter lines emptied, so line numbers still match the file.                                                                           |
-|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`disclosed_refs`](_autosummary/acquaint.records.html.md#acquaint.records.disclosed_refs)(value)                            | The record references a log entry's `disclosed:` field lists, lowercased: `project:heron, org:example` or `[project:heron]`.                                 |
-| [`dump_yaml`](_autosummary/acquaint.records.html.md#acquaint.records.dump_yaml)(data)                                  | Write YAML the way a person would: keys in order, short lists inline, unicode kept.                                                                          |
-| [`fact_tags`](_autosummary/acquaint.records.html.md#acquaint.records.fact_tags)(text)                                  | The label and seals one fact carries, and what is wrong with how they are written.                                                                           |
-| [`format_log_entry`](_autosummary/acquaint.records.html.md#acquaint.records.format_log_entry)(entry_id, date, kind, text, \*) | One log entry: a `## id · date · kind` heading, the observation on one line, then `- key: value` fields.                                                     |
-| [`item_blocks`](_autosummary/acquaint.records.html.md#acquaint.records.item_blocks)(text)                                | `(section, first_line, last_line, item)` for every item of a Markdown document.                                                                              |
-| [`headings`](_autosummary/acquaint.records.html.md#acquaint.records.headings)(text)                                   | `(line, level, normalized title)` for every real heading: not in a code fence or an HTML comment.                                                            |
-| [`section_spans`](_autosummary/acquaint.records.html.md#acquaint.records.section_spans)(body)                              | `{title: (heading line, first line after the section)}` for each `##` section, read as [`sections()`](_autosummary/acquaint.records.html.md#acquaint.records.sections) reads it. |
-| [`visible_lines`](_autosummary/acquaint.records.html.md#acquaint.records.visible_lines)(text)                              | `(number, line, in_code)` for every line of `text`, HTML comments blanked and fences marked: the reading every lint rule uses.                               |
-| [`items`](_autosummary/acquaint.records.html.md#acquaint.records.items)(text)                                      | `(line, item)` for every item: each bullet with its wrapped lines, or a paragraph.                                                                           |
-| [`join_frontmatter`](_autosummary/acquaint.records.html.md#acquaint.records.join_frontmatter)(meta, body)                     | The inverse of [`split_frontmatter()`](_autosummary/acquaint.records.html.md#acquaint.records.split_frontmatter).                                                                         |
-| [`load_yaml`](_autosummary/acquaint.records.html.md#acquaint.records.load_yaml)(text)                                  | Parse YAML into JSON-ready data, returning `(data, errors)` instead of raising: these files are hand-edited.                                                 |
-| [`next_log_id`](_autosummary/acquaint.records.html.md#acquaint.records.next_log_id)(text)                                | The next free entry id in a log, counting every `## eNN` heading however it is written.                                                                      |
-| [`normalize_newlines`](_autosummary/acquaint.records.html.md#acquaint.records.normalize_newlines)(text)                         | `\r\n` and lone `\r` as `\n`, without a leading byte-order mark.                                                                                             |
-| [`normalize_title`](_autosummary/acquaint.records.html.md#acquaint.records.normalize_title)(title)                           | A heading as written, minus decoration: closing <br/><br/>```<br/>``<br/>```<br/><br/>#\`\`s, a trailing colon, typographic apostrophes, extra space.        |
-| [`parse_log`](_autosummary/acquaint.records.html.md#acquaint.records.parse_log)(text)                                  | Entries of an append-only `log/YYYY-MM.md` file, oldest first.                                                                                               |
-| [`sectioned_items`](_autosummary/acquaint.records.html.md#acquaint.records.sectioned_items)(text)                            | `(section, line, item)` for every item: see [`item_blocks()`](_autosummary/acquaint.records.html.md#acquaint.records.item_blocks).                                                  |
-| [`sections`](_autosummary/acquaint.records.html.md#acquaint.records.sections)(body)                                   | `## Title` blocks of a Markdown body, in order, as `{normalized title: text}`.                                                                               |
-| [`slugify`](_autosummary/acquaint.records.html.md#acquaint.records.slugify)(name, \*[, qualifier])                   | A readable, ASCII-folded, lowercase id: `given-family`, plus `--qualifier` on a collision.                                                                   |
-| [`source_kind`](_autosummary/acquaint.records.html.md#acquaint.records.source_kind)(ref)                                 | Classify one source reference.                                                                                                                               |
-| [`source_problem`](_autosummary/acquaint.records.html.md#acquaint.records.source_problem)(text)                             | Why a preference-bearing item is not sourced, or `None` when it is.                                                                                          |
-| [`source_refs`](_autosummary/acquaint.records.html.md#acquaint.records.source_refs)(line)                                | Every `[source: …]` reference in a piece of text, stripped.                                                                                                  |
-| [`split_frontmatter`](_autosummary/acquaint.records.html.md#acquaint.records.split_frontmatter)(text)                          | Split `---` YAML frontmatter from a Markdown body: `(meta, body, errors)`.                                                                                   |
-| [`tags`](_autosummary/acquaint.records.html.md#acquaint.records.tags)(text)                                       | Every `[source: …]`, `[label: …]` and `[sealed-from: …]` tag in a piece of text: `(name, value)`, in order.                                                  |
+| [`blank_frontmatter`](_autosummary/acquaint.records.html.md#acquaint.records.blank_frontmatter)(text)                          | The text with its frontmatter lines emptied, so line numbers still match the file.                                                                                       |
+|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`disclosed_refs`](_autosummary/acquaint.records.html.md#acquaint.records.disclosed_refs)(value)                            | The record references a log entry's `disclosed:` field lists, lowercased: `project:heron, org:example` or `[project:heron]`.                                             |
+| [`dump_yaml`](_autosummary/acquaint.records.html.md#acquaint.records.dump_yaml)(data)                                  | Write YAML the way a person would: keys in order, short lists inline, unicode kept.                                                                                      |
+| [`fact_tags`](_autosummary/acquaint.records.html.md#acquaint.records.fact_tags)(text)                                  | The label and seals one fact carries, and what is wrong with how they are written.                                                                                       |
+| [`format_log_entry`](_autosummary/acquaint.records.html.md#acquaint.records.format_log_entry)(entry_id, date, kind, text, \*) | One log entry: a `## id · date · kind` heading, the observation on one line, then `- key: value` fields.                                                                 |
+| [`item_blocks`](_autosummary/acquaint.records.html.md#acquaint.records.item_blocks)(text)                                | `(section, first_line, last_line, item)` for every item of a Markdown document.                                                                                          |
+| [`headings`](_autosummary/acquaint.records.html.md#acquaint.records.headings)(text)                                   | `(line, level, normalized title)` for every real heading: not in a code fence or an HTML comment.                                                                        |
+| [`section_spans`](_autosummary/acquaint.records.html.md#acquaint.records.section_spans)(body)                              | `{title: (heading line, first line after the section)}` for each `##` section, read as [`sections()`](_autosummary/acquaint.records.html.md#acquaint.records.sections) reads it.             |
+| [`visible_lines`](_autosummary/acquaint.records.html.md#acquaint.records.visible_lines)(text)                              | `(number, line, in_code)` for every line of `text`, HTML comments blanked and fences marked: the reading every lint rule uses.                                           |
+| [`items`](_autosummary/acquaint.records.html.md#acquaint.records.items)(text)                                      | `(line, item)` for every item: each bullet with its wrapped lines, or a paragraph.                                                                                       |
+| [`join_frontmatter`](_autosummary/acquaint.records.html.md#acquaint.records.join_frontmatter)(meta, body)                     | The inverse of [`split_frontmatter()`](_autosummary/acquaint.records.html.md#acquaint.records.split_frontmatter).                                                                                     |
+| [`load_yaml`](_autosummary/acquaint.records.html.md#acquaint.records.load_yaml)(text)                                  | Parse YAML into JSON-ready data, returning `(data, errors)` instead of raising: these files are hand-edited.                                                             |
+| [`load_yaml_audited`](_autosummary/acquaint.records.html.md#acquaint.records.load_yaml_audited)(text)                          | [`load_yaml()`](_autosummary/acquaint.records.html.md#acquaint.records.load_yaml), plus `(kind, key)` for each key that is not text (`non-text`) or is repeated in one mapping (`duplicate`). |
+| [`next_log_id`](_autosummary/acquaint.records.html.md#acquaint.records.next_log_id)(text)                                | The next free entry id in a log, counting every `## eNN` heading however it is written.                                                                                  |
+| [`normalize_newlines`](_autosummary/acquaint.records.html.md#acquaint.records.normalize_newlines)(text)                         | `\r\n` and lone `\r` as `\n`, without a leading byte-order mark.                                                                                                         |
+| [`normalize_title`](_autosummary/acquaint.records.html.md#acquaint.records.normalize_title)(title)                           | A heading as written, minus decoration: closing <br/><br/>```<br/>``<br/>```<br/><br/>#\`\`s, a trailing colon, typographic apostrophes, extra space.                    |
+| [`parse_log`](_autosummary/acquaint.records.html.md#acquaint.records.parse_log)(text)                                  | Entries of an append-only `log/YYYY-MM.md` file, oldest first.                                                                                                           |
+| [`sectioned_items`](_autosummary/acquaint.records.html.md#acquaint.records.sectioned_items)(text)                            | `(section, line, item)` for every item: see [`item_blocks()`](_autosummary/acquaint.records.html.md#acquaint.records.item_blocks).                                                              |
+| [`sections`](_autosummary/acquaint.records.html.md#acquaint.records.sections)(body)                                   | `## Title` blocks of a Markdown body, in order, as `{normalized title: text}`.                                                                                           |
+| [`slugify`](_autosummary/acquaint.records.html.md#acquaint.records.slugify)(name, \*[, qualifier])                   | A readable, ASCII-folded, lowercase id: `given-family`, plus `--qualifier` on a collision.                                                                               |
+| [`source_kind`](_autosummary/acquaint.records.html.md#acquaint.records.source_kind)(ref)                                 | Classify one source reference.                                                                                                                                           |
+| [`source_problem`](_autosummary/acquaint.records.html.md#acquaint.records.source_problem)(text)                             | Why a preference-bearing item is not sourced, or `None` when it is.                                                                                                      |
+| [`source_refs`](_autosummary/acquaint.records.html.md#acquaint.records.source_refs)(line)                                | Every `[source: …]` reference in a piece of text, stripped.                                                                                                              |
+| [`split_frontmatter`](_autosummary/acquaint.records.html.md#acquaint.records.split_frontmatter)(text)                          | Split `---` YAML frontmatter from a Markdown body: `(meta, body, errors)`.                                                                                               |
+| [`tags`](_autosummary/acquaint.records.html.md#acquaint.records.tags)(text)                                       | Every `[source: …]`, `[label: …]` and `[sealed-from: …]` tag in a piece of text: `(name, value)`, in order.                                                              |
 
 ### acquaint.records.NONE_LOCATED *= ('none located', 'no primary source located', 'no source located')*
 
@@ -1395,6 +1485,19 @@ Parse YAML into JSON-ready data, returning `(data, errors)` instead of raising: 
 
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Any`](https://docs.python.org/3/library/typing.html#typing.Any), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
+
+### acquaint.records.load_yaml_audited(text)
+
+[`load_yaml()`](_autosummary/acquaint.records.html.md#acquaint.records.load_yaml), plus `(kind, key)` for each key that is not text (`non-text`) or is repeated in one mapping (`duplicate`).
+
+```pycon
+>>> data, errors, odd = load_yaml_audited("a: 1\na: 2\n1: x\n")
+>>> odd
+[('duplicate', 'a'), ('non-text', '1')]
+```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Any`](https://docs.python.org/3/library/typing.html#typing.Any), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]]
 
 ### acquaint.records.next_log_id(text)
 
@@ -2403,7 +2506,7 @@ Before filing a meeting’s todos as GitHub issues: is the project unambiguous, 
 Look up one person, project, org or group by exact id, name, alias, handle or email.
 
 Costs scale with what you ask: `field` returns one value (`aka`, `email`,
-`github`, `label`, `tier`, any frontmatter key), `brief` the identity block, and the default the
+`github`, `label`, `tier`, any frontmatter key, or a dotted fact name such as `name.full`: only a current `clear` fact is readable here, a stricter one is refused), `brief` the identity block, and the default the
 whole entry file. It never guesses: no exact match, or several, returns the
 candidates and `ok: false`.
 
@@ -2607,7 +2710,7 @@ True
 
 # About this build
 
-This documentation was built on **2026-11-16 06:08 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/c8c49dabcad4e91a8cca1845ed45b88a520595ff"><code>c8c49da</code></a> on branch <code>main</code>, for **acquaint 0.0.26** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 06:26 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/8d974412ddbc9274d8d09258ff3d83e35436fd22"><code>8d97441</code></a> on branch <code>main</code>, for **acquaint 0.0.27** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -2616,7 +2719,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                            |
 |---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/c8c49dabcad4e91a8cca1845ed45b88a520595ff"><code>c8c49dabcad4e91a8cca1845ed45b88a520595ff</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/8d974412ddbc9274d8d09258ff3d83e35436fd22"><code>8d974412ddbc9274d8d09258ff3d83e35436fd22</code></a> |
 | Branch              | <code>main</code>                                                                                                                                          |
 | Tags at this commit | none                                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                      |
@@ -2627,9 +2730,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/acquaint</code>                                                           |
-| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43814570992">43814570992</a>  |
+| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43816525193">43816525193</a>  |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>c8c49dabcad4e91a8cca1845ed45b88a520595ff</code> (in the history of the built commit) |
+| Event commit | <code>8d974412ddbc9274d8d09258ff3d83e35436fd22</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2654,13 +2757,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/acquaint/0.0.26/">0.0.26</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/acquaint/0.0.27/">0.0.27</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/acquaint && cd acquaint
-git checkout c8c49dabcad4e91a8cca1845ed45b88a520595ff
+git checkout 8d974412ddbc9274d8d09258ff3d83e35436fd22
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

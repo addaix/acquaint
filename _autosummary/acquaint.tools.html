@@ -69,6 +69,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="acquaint.deslop.html">acquaint.deslop</a></li>
 <li class="toctree-l3"><a class="reference internal" href="acquaint.digests.html">acquaint.digests</a></li>
 <li class="toctree-l3"><a class="reference internal" href="acquaint.edit.html">acquaint.edit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="acquaint.facts.html">acquaint.facts</a></li>
 <li class="toctree-l3"><a class="reference internal" href="acquaint.lookup.html">acquaint.lookup</a></li>
 <li class="toctree-l3"><a class="reference internal" href="acquaint.mcp.html">acquaint.mcp</a></li>
 <li class="toctree-l3"><a class="reference internal" href="acquaint.meta.html">acquaint.meta</a></li>
@@ -545,7 +546,7 @@ inactive identity, or several owners all return <code class="docutils literal no
 <span class="sig-prename descclassname"><span class="pre">acquaint.tools.</span></span><span class="sig-name descname"><span class="pre">who</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brief</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/tools.html#who"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.tools.who" title="Link to this definition">#</a></dt>
 <dd><p>Look up one person, project, org or group by exact id, name, alias, handle or email.</p>
 <p>Costs scale with what you ask: <code class="docutils literal notranslate"><span class="pre">field</span></code> returns one value (<code class="docutils literal notranslate"><span class="pre">aka</span></code>, <code class="docutils literal notranslate"><span class="pre">email</span></code>,
-<code class="docutils literal notranslate"><span class="pre">github</span></code>, <code class="docutils literal notranslate"><span class="pre">label</span></code>, <code class="docutils literal notranslate"><span class="pre">tier</span></code>, any frontmatter key), <code class="docutils literal notranslate"><span class="pre">brief</span></code> the identity block, and the default the
+<code class="docutils literal notranslate"><span class="pre">github</span></code>, <code class="docutils literal notranslate"><span class="pre">label</span></code>, <code class="docutils literal notranslate"><span class="pre">tier</span></code>, any frontmatter key, or a dotted fact name such as <code class="docutils literal notranslate"><span class="pre">name.full</span></code>: only a current <code class="docutils literal notranslate"><span class="pre">clear</span></code> fact is readable here, a stricter one is refused), <code class="docutils literal notranslate"><span class="pre">brief</span></code> the identity block, and the default the
 whole entry file. It never guesses: no exact match, or several, returns the
 candidates and <code class="docutils literal notranslate"><span class="pre">ok:</span> <span class="pre">false</span></code>.</p>
 <dl class="field-list simple">
@@ -597,7 +598,7 @@ candidates and <code class="docutils literal notranslate"><span class="pre">ok:<
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=6a9d8632"></script>
+      <script src="../_static/documentation_options.js?v=cee5022b"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

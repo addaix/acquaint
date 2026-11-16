@@ -370,7 +370,7 @@ Whether the store is synced, to which repository, uncommitted changes, ahead/beh
 Look up one person, project, org or group by exact id, name, alias, handle or email.
 
 Costs scale with what you ask: `field` returns one value (`aka`, `email`,
-`github`, `label`, `tier`, any frontmatter key), `brief` the identity block, and the default the
+`github`, `label`, `tier`, any frontmatter key, or a dotted fact name such as `name.full`: only a current `clear` fact is readable here, a stricter one is refused), `brief` the identity block, and the default the
 whole entry file. It never guesses: no exact match, or several, returns the
 candidates and `ok: false`.
 
@@ -383,6 +383,7 @@ candidates and `ok: false`.
 |--------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`digests`](acquaint.digests.html.md#module-acquaint.digests)     | Digests: what a conversation with an entity said, written up through a watermark.                                                                                                |
 | [`edit`](acquaint.edit.html.md#module-acquaint.edit)           | Changing the store: create an entity, append an observation, rename with relinking, forget with a tombstone.                                                                     |
+| [`facts`](acquaint.facts.html.md#module-acquaint.facts)         | Facts: the small exact things agents keep asking for, as a typed file on the record they belong to.                                                                              |
 | [`lookup`](acquaint.lookup.html.md#module-acquaint.lookup)       | Finding the right record: exact references, handle resolution, the conflation check, and channel choice.                                                                         |
 | [`mcp`](acquaint.mcp.html.md#module-acquaint.mcp)             | MCP over stdio: the same tools, for Claude Desktop and other local MCP clients.                                                                                                  |
 | [`meta`](acquaint.meta.html.md#module-acquaint.meta)           | Where a project's meeting todos may be filed: its declared private meta repository, and the people who belong to it.                                                             |

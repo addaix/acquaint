@@ -69,6 +69,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/acquaint.deslop.html">acquaint.deslop</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/acquaint.digests.html">acquaint.digests</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/acquaint.edit.html">acquaint.edit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/acquaint.facts.html">acquaint.facts</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/acquaint.lookup.html">acquaint.lookup</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/acquaint.mcp.html">acquaint.mcp</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/acquaint.meta.html">acquaint.meta</a></li>
@@ -160,12 +161,13 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="5">  rules.yaml                    channel rules: when → do (channel, and the address
 </span><span data-line="6">                                when the channel is addressed by conversation), who set it, source
 </span><span data-line="7">  links.yaml                    affiliations: project, org, group; role; period
-</span><span data-line="8">  style.md                      the writing card: AI tolerance, register, do, don't, blocklist, exemplars
-</span><span data-line="9">  views.md                      positions and standing objections, sourced
-</span><span data-line="10">  sources.md                    where their writing lives, how authorship was verified
-</span><span data-line="11">  log/2026-09.md                append-only observations
-</span><span data-line="12">projects/&lt;id&gt;/PROFILE.md        What &amp; status · Where things live · Who · Agents &amp; skills · Norms · Now
-</span><span data-line="13">orgs/&lt;id&gt;/  groups/&lt;id&gt;/  …     any other kind
+</span><span data-line="8">  facts.yaml                    typed facts (name.full, titles.current, ...), each with a label, source and date; `clear` ones appear in the brief, `who -f name.full` reads one
+</span><span data-line="9">  style.md                      the writing card: AI tolerance, register, do, don't, blocklist, exemplars
+</span><span data-line="10">  views.md                      positions and standing objections, sourced
+</span><span data-line="11">  sources.md                    where their writing lives, how authorship was verified
+</span><span data-line="12">  log/2026-09.md                append-only observations
+</span><span data-line="13">projects/&lt;id&gt;/PROFILE.md        What &amp; status · Where things live · Who · Agents &amp; skills · Norms · Now
+</span><span data-line="14">orgs/&lt;id&gt;/  groups/&lt;id&gt;/  …     any other kind
 </span></pre></div>
 </div>
 <p>Only <code class="docutils literal notranslate"><span class="pre">PROFILE.md</span></code> is required. A malformed file is reported and skipped; it never breaks lookups of anyone else.</p>
@@ -182,7 +184,7 @@ data-aria-dark="Switch to auto color mode">
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">who</span> <span class="pre">NAME</span> <span class="pre">[-f</span> <span class="pre">FIELD]</span> <span class="pre">[-b]</span></code></p></td>
-<td><p>one field (<code class="docutils literal notranslate"><span class="pre">email</span></code>, <code class="docutils literal notranslate"><span class="pre">aka</span></code>, <code class="docutils literal notranslate"><span class="pre">label</span></code>, <code class="docutils literal notranslate"><span class="pre">tier</span></code>, any frontmatter key), the identity block, or the whole entry file; lists candidates instead of guessing</p></td>
+<td><p>one field (<code class="docutils literal notranslate"><span class="pre">email</span></code>, <code class="docutils literal notranslate"><span class="pre">aka</span></code>, <code class="docutils literal notranslate"><span class="pre">label</span></code>, <code class="docutils literal notranslate"><span class="pre">tier</span></code>, any frontmatter key, a dotted <code class="docutils literal notranslate"><span class="pre">clear</span></code> fact such as <code class="docutils literal notranslate"><span class="pre">name.full</span></code>), the identity block, or the whole entry file; lists candidates instead of guessing</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">resolve</span> <span class="pre">HANDLE</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">github:octocat</span></code>, <code class="docutils literal notranslate"><span class="pre">email:…</span></code> → the person, with the evidence; a handle without its platform, a match by name only, or an inactive identity is reported, never acted on</p></td>
@@ -335,7 +337,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-16 06:08 UTC from <a href="https://github.com/thorwhalen/acquaint/commit/c8c49dabcad4e91a8cca1845ed45b88a520595ff">c8c49da</a> (main) · acquaint 0.0.26 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-16 06:26 UTC from <a href="https://github.com/thorwhalen/acquaint/commit/8d974412ddbc9274d8d09258ff3d83e35436fd22">8d97441</a> (main) · acquaint 0.0.27 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -370,7 +372,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=6a9d8632"></script>
+      <script src="_static/documentation_options.js?v=cee5022b"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

@@ -26,6 +26,7 @@ acquaint.records
       items
       join_frontmatter
       load_yaml
+      load_yaml_audited
       next_log_id
       normalize_newlines
       normalize_title

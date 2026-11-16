@@ -1,0 +1,21 @@
+acquaint.facts
+==============
+
+.. automodule:: acquaint.facts
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      OPEN_LABELS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      brief_lines
+      fact_value
+      facts
+      facts_problems
+   

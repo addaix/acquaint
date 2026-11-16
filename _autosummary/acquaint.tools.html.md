@@ -234,7 +234,7 @@ Before filing a meeting’s todos as GitHub issues: is the project unambiguous, 
 Look up one person, project, org or group by exact id, name, alias, handle or email.
 
 Costs scale with what you ask: `field` returns one value (`aka`, `email`,
-`github`, `label`, `tier`, any frontmatter key), `brief` the identity block, and the default the
+`github`, `label`, `tier`, any frontmatter key, or a dotted fact name such as `name.full`: only a current `clear` fact is readable here, a stricter one is refused), `brief` the identity block, and the default the
 whole entry file. It never guesses: no exact match, or several, returns the
 candidates and `ok: false`.
 

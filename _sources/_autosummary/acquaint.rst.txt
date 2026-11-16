@@ -49,6 +49,7 @@
    deslop
    digests
    edit
+   facts
    lookup
    mcp
    meta
