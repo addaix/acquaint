@@ -114,13 +114,12 @@ Re-check the remote and its visibility, then rebase local work onto it (uncommit
 Commit, rebase onto the remote, and push, after re-checking the remote, the guard and the visibility.
 
 `entities` are record folders (`people/ada-lovelace`): only those, plus
-`STORE_FILES` when they changed, are committed; everything else stays
+`STORE_FILES` when one of them is a deleted record, are committed; everything else stays
 uncommitted, so one session does not sweep up another’s unfinished records. Without
 `entities` every change is committed, but when a `message` is given it must name
 each record being committed (its id appears in the text as a word) unless
 `everything` is set; a message naming only some of them is refused, listing the
-rest. With no `message` the default one lists the records. Other sessions’ tombstones
-travel with a scoped push, and a renamed record needs both its old and new folder named.
+rest. With no `message` the default one lists the records. A renamed record needs both its old and new folder named.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
