@@ -164,7 +164,9 @@ def _load(entity: Entity, ref: str) -> tuple[dict, dict, str]:
     return found, meta, body
 
 
-def _moved_watermark(meta: dict, through: str, scope: str, force: bool) -> tuple[dict, Any]:
+def _moved_watermark(
+    meta: dict, through: str, scope: str, force: bool
+) -> tuple[dict, Any]:
     """``(marks, previous)``: the ``through`` mapping with ``scope`` moved to ``through``. Validates only; writes nothing."""
     if scope not in SCOPES:
         raise AcquaintError(f"scope is one of {', '.join(SCOPES)}, not {scope!r}")
@@ -247,16 +249,22 @@ def parse_rows(rows: str | Mapping[str, Sequence[str]]) -> dict[str, list[str]]:
             merged.setdefault(_section(key), []).extend(_lines_of(key, value))
         return merged
     if not isinstance(rows, str):
-        raise AcquaintError("rows must be a mapping {section: [line, ...]}, JSON text, or `section | line | anchor` rows")
+        raise AcquaintError(
+            "rows must be a mapping {section: [line, ...]}, JSON text, or `section | line | anchor` rows"
+        )
     found: dict[str, list[str]] = {}
     for number, row in enumerate(rows.splitlines(), 1):
         if not row.strip():
             continue
         cells = [cell.strip() for cell in row.split("|")]
         if len(cells) < 2 or not (cells[0] and cells[1]):
-            raise AcquaintError(f"rows line {number}: expected `section | line | anchor`, got {row!r}")
+            raise AcquaintError(
+                f"rows line {number}: expected `section | line | anchor`, got {row!r}"
+            )
         # first cell the section, last the anchor, whatever is between is the line (it may hold a "|")
-        line, anchor = ("|".join(cells[1:-1]), cells[-1]) if len(cells) > 2 else (cells[1], "")
+        line, anchor = (
+            ("|".join(cells[1:-1]), cells[-1]) if len(cells) > 2 else (cells[1], "")
+        )
         if anchor and not _ANCHOR_RE.search(line):
             line = f"{line} {_row_anchor(anchor)}"
         elif anchor:
@@ -280,7 +288,10 @@ def _append_under(body: str, section: str, heading: str, lines: Sequence[str]) -
 
 
 def _unanchored(body: str) -> int:
-    return sum(rule == "unanchored" for _, _, rule, _ in digest_problems(join_frontmatter({"ref": "x:y"}, body)))
+    return sum(
+        rule == "unanchored"
+        for _, _, rule, _ in digest_problems(join_frontmatter({"ref": "x:y"}, body))
+    )
 
 
 def append_batch(
@@ -304,19 +315,27 @@ def append_batch(
     """
     heading = heading.strip().lstrip("#").strip()
     if not heading or len(heading.splitlines()) != 1 or _HIDING_RE.search(heading):
-        raise AcquaintError("a batch needs a one-line heading, e.g. the date range it covers")
+        raise AcquaintError(
+            "a batch needs a one-line heading, e.g. the date range it covers"
+        )
     batch = {k: v for k, v in parse_rows(rows).items() if v}
     if not batch:
         raise AcquaintError("rows has no lines to add")
     for section, lines in batch.items():
         for line in lines:
             if len(line.splitlines()) != 1 or _HIDING_RE.search(line):
-                raise AcquaintError(f"each line is one bullet, with no line break, comment or code fence in it: {line!r}")
+                raise AcquaintError(
+                    f"each line is one bullet, with no line break, comment or code fence in it: {line!r}"
+                )
             if section in ANCHORED_SECTIONS and not _ANCHOR_RE.search(line):
-                raise AcquaintError(f"an item under {section} needs [at: <ISO time>] or [source: …]: {line!r}")
+                raise AcquaintError(
+                    f"an item under {section} needs [at: <ISO time>] or [source: …]: {line!r}"
+                )
     found, meta, body = _load(entity, ref)
     before = _unanchored(body)
-    for section in BATCH_SECTIONS:  # template order, so the result does not depend on row order
+    for (
+        section
+    ) in BATCH_SECTIONS:  # template order, so the result does not depend on row order
         if section in batch:
             body = _append_under(body, section, heading, batch[section])
     if _unanchored(body) > before:
