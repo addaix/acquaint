@@ -1,4 +1,4 @@
-> built 2026-11-16 06:36 UTC from 0c3694c (main) · acquaint 0.0.28. Details: build_info.json
+> built 2026-11-16 13:17 UTC from b79df89 (main) · acquaint 0.0.29. Details: build_info.json
 
 # index.html.md
 
@@ -2710,18 +2710,18 @@ True
 
 # About this build
 
-This documentation was built on **2026-11-16 06:36 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/0c3694c7603db9214eb3cde6d69d077134f762e5"><code>0c3694c</code></a> on branch <code>main</code>, for **acquaint 0.0.28** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 13:17 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/b79df894f12780b798946e632d37338072693cc8"><code>b79df89</code></a> on branch <code>main</code>, for **acquaint 0.0.29** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.28) is behind the latest release on PyPI (0.0.29): `pip install acquaint` gives newer code than these docs describe.
+- The documented version (0.0.29) is behind the latest release on PyPI (0.0.30): `pip install acquaint` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                            |
 |---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/0c3694c7603db9214eb3cde6d69d077134f762e5"><code>0c3694c7603db9214eb3cde6d69d077134f762e5</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/b79df894f12780b798946e632d37338072693cc8"><code>b79df894f12780b798946e632d37338072693cc8</code></a> |
 | Branch              | <code>main</code>                                                                                                                                          |
 | Tags at this commit | none                                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                      |
@@ -2732,9 +2732,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/acquaint</code>                                                           |
-| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43817671819">43817671819</a>  |
+| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43874021042">43874021042</a>  |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>0c3694c7603db9214eb3cde6d69d077134f762e5</code> (in the history of the built commit) |
+| Event commit | <code>b79df894f12780b798946e632d37338072693cc8</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2759,13 +2759,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/acquaint/0.0.29/">0.0.29</a>, newer than the documented version (0.0.28).
+Latest release: <a href="https://pypi.org/project/acquaint/0.0.30/">0.0.30</a>, newer than the documented version (0.0.29).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/acquaint && cd acquaint
-git checkout 0c3694c7603db9214eb3cde6d69d077134f762e5
+git checkout b79df894f12780b798946e632d37338072693cc8
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

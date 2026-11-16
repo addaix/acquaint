@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
-  "built_at": "2026-11-16T06:36:16Z",
+  "built_at": "2026-11-16T13:17:15Z",
   "package": {
     "name": "acquaint",
-    "version": "0.0.28",
+    "version": "0.0.29",
     "display_name": "acquaint",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "0c3694c7603db9214eb3cde6d69d077134f762e5",
-    "short_commit": "0c3694c",
+    "commit": "b79df894f12780b798946e632d37338072693cc8",
+    "short_commit": "b79df89",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/acquaint",
-    "commit_url": "https://github.com/thorwhalen/acquaint/commit/0c3694c7603db9214eb3cde6d69d077134f762e5",
+    "commit_url": "https://github.com/thorwhalen/acquaint/commit/b79df894f12780b798946e632d37338072693cc8",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/acquaint",
-    "sha": "0c3694c7603db9214eb3cde6d69d077134f762e5",
+    "sha": "b79df894f12780b798946e632d37338072693cc8",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "43817671819",
-    "run_url": "https://github.com/thorwhalen/acquaint/actions/runs/43817671819",
+    "run_id": "43874021042",
+    "run_url": "https://github.com/thorwhalen/acquaint/actions/runs/43874021042",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -60,16 +60,16 @@
   },
   "pypi": {
     "checked": true,
-    "latest": "0.0.29",
+    "latest": "0.0.30",
     "relation": "behind",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/acquaint && cd acquaint\ngit checkout 0c3694c7603db9214eb3cde6d69d077134f762e5\npip install \"epythet==0.2.22\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/acquaint && cd acquaint\ngit checkout b79df894f12780b798946e632d37338072693cc8\npip install \"epythet==0.2.22\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": false,
     "notes": [
-      "The documented version (0.0.28) is behind the latest release on PyPI (0.0.29): `pip install acquaint` gives newer code than these docs describe."
+      "The documented version (0.0.29) is behind the latest release on PyPI (0.0.30): `pip install acquaint` gives newer code than these docs describe."
     ]
   }
 }
