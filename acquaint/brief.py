@@ -33,15 +33,15 @@ from collections.abc import Callable, Mapping
 from datetime import date
 from typing import Any
 
-from acquaint.digests import digests
 from acquaint.deslop import recipient_card
+from acquaint.digests import digests
 from acquaint.disclosure import disclose, may_see, parse_audience, person_key
+from acquaint.facts import brief_lines as _fact_lines
 from acquaint.lint import lint_store
 from acquaint.lookup import NO_CHANNEL_NAMED, reach_channels
 from acquaint.records import fact_tags, item_blocks, parse_log, split_frontmatter
 from acquaint.resources import data_yaml
 from acquaint.store import AcquaintError, Store
-from acquaint.facts import brief_lines as _fact_lines
 from acquaint.trust import LABELS
 
 __all__ = ["BRIEF_SECTIONS", "CARD_SECTIONS", "compose_brief"]
