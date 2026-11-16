@@ -40,6 +40,7 @@ True
 | [`fact_tags`](#acquaint.records.fact_tags)(text)                                  | The label and seals one fact carries, and what is wrong with how they are written.                                                                    |
 | [`format_log_entry`](#acquaint.records.format_log_entry)(entry_id, date, kind, text, \*) | One log entry: a `## id · date · kind` heading, the observation on one line, then `- key: value` fields.                                              |
 | [`item_blocks`](#acquaint.records.item_blocks)(text)                                | `(section, first_line, last_line, item)` for every item of a Markdown document.                                                                       |
+| [`visible_lines`](#acquaint.records.visible_lines)(text)                              | `(number, line, in_code)` for every line of `text`, HTML comments blanked and fences marked: the reading every lint rule uses.                        |
 | [`items`](#acquaint.records.items)(text)                                      | `(line, item)` for every item: each bullet with its wrapped lines, or a paragraph.                                                                    |
 | [`join_frontmatter`](#acquaint.records.join_frontmatter)(meta, body)                     | The inverse of [`split_frontmatter()`](#acquaint.records.split_frontmatter).                                                                  |
 | [`load_yaml`](#acquaint.records.load_yaml)(text)                                  | Parse YAML into JSON-ready data, returning `(data, errors)` instead of raising: these files are hand-edited.                                          |
@@ -364,3 +365,10 @@ Every `[source: …]`, `[label: …]` and `[sealed-from: …]` tag in a piece of
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
+
+### acquaint.records.visible_lines(text)
+
+`(number, line, in_code)` for every line of `text`, HTML comments blanked and fences marked: the reading every lint rule uses.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`bool`](https://docs.python.org/3/builtins/functions.html#bool)]]

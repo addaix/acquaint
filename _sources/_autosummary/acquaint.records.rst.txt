@@ -20,6 +20,7 @@ acquaint.records
       fact_tags
       format_log_entry
       item_blocks
+      visible_lines
       items
       join_frontmatter
       load_yaml
