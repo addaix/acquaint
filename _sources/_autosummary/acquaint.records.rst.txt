@@ -20,6 +20,8 @@ acquaint.records
       fact_tags
       format_log_entry
       item_blocks
+      headings
+      section_spans
       visible_lines
       items
       join_frontmatter

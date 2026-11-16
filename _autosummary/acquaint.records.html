@@ -102,6 +102,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#acquaint.records.dump_yaml"><code class="docutils literal notranslate"><span class="pre">dump_yaml()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.records.fact_tags"><code class="docutils literal notranslate"><span class="pre">fact_tags()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.records.format_log_entry"><code class="docutils literal notranslate"><span class="pre">format_log_entry()</span></code></a></li>
+<li><a class="reference internal" href="#acquaint.records.headings"><code class="docutils literal notranslate"><span class="pre">headings()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.records.item_blocks"><code class="docutils literal notranslate"><span class="pre">item_blocks()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.records.items"><code class="docutils literal notranslate"><span class="pre">items()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.records.join_frontmatter"><code class="docutils literal notranslate"><span class="pre">join_frontmatter()</span></code></a></li>
@@ -110,6 +111,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#acquaint.records.normalize_newlines"><code class="docutils literal notranslate"><span class="pre">normalize_newlines()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.records.normalize_title"><code class="docutils literal notranslate"><span class="pre">normalize_title()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.records.parse_log"><code class="docutils literal notranslate"><span class="pre">parse_log()</span></code></a></li>
+<li><a class="reference internal" href="#acquaint.records.section_spans"><code class="docutils literal notranslate"><span class="pre">section_spans()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.records.sectioned_items"><code class="docutils literal notranslate"><span class="pre">sectioned_items()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.records.sections"><code class="docutils literal notranslate"><span class="pre">sections()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.records.slugify"><code class="docutils literal notranslate"><span class="pre">slugify()</span></code></a></li>
@@ -212,6 +214,12 @@ as one line under a heading is what the lint checks.</p>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#acquaint.records.item_blocks" title="acquaint.records.item_blocks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">item_blocks</span></code></a>(text)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">(section,</span> <span class="pre">first_line,</span> <span class="pre">last_line,</span> <span class="pre">item)</span></code> for every item of a Markdown document.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.records.headings" title="acquaint.records.headings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">headings</span></code></a>(text)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(line,</span> <span class="pre">level,</span> <span class="pre">normalized</span> <span class="pre">title)</span></code> for every real heading: not in a code fence or an HTML comment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#acquaint.records.section_spans" title="acquaint.records.section_spans"><code class="xref py py-obj docutils literal notranslate"><span class="pre">section_spans</span></code></a>(body)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{title:</span> <span class="pre">(heading</span> <span class="pre">line,</span> <span class="pre">first</span> <span class="pre">line</span> <span class="pre">after</span> <span class="pre">the</span> <span class="pre">section)}</span></code> for each <code class="docutils literal notranslate"><span class="pre">##</span></code> section, read as <a class="reference internal" href="#acquaint.records.sections" title="acquaint.records.sections"><code class="xref py py-func docutils literal notranslate"><span class="pre">sections()</span></code></a> reads it.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.records.visible_lines" title="acquaint.records.visible_lines"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visible_lines</span></code></a>(text)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">(number,</span> <span class="pre">line,</span> <span class="pre">in_code)</span></code> for every line of <code class="docutils literal notranslate"><span class="pre">text</span></code>, HTML comments blanked and fences marked: the reading every lint rule uses.</p></td>
@@ -355,6 +363,21 @@ leading backslash, so captured text can never forge an entry or change its kind.
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="acquaint.records.headings">
+<span class="sig-prename descclassname"><span class="pre">acquaint.records.</span></span><span class="sig-name descname"><span class="pre">headings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/records.html#headings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.records.headings" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(line,</span> <span class="pre">level,</span> <span class="pre">normalized</span> <span class="pre">title)</span></code> for every real heading: not in a code fence or an HTML comment.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">headings</span><span class="p">(</span><span class="s2">"## Who:</span><span class="se">\n</span><span class="s2">```</span><span class="se">\n</span><span class="s2">## Not</span><span class="se">\n</span><span class="s2">```</span><span class="se">\n</span><span class="s2">  ### Detail ###</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">[(1, 2, 'Who'), (5, 3, 'Detail')]</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="acquaint.records.item_blocks">
 <span class="sig-prename descclassname"><span class="pre">acquaint.records.</span></span><span class="sig-name descname"><span class="pre">item_blocks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/records.html#item_blocks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.records.item_blocks" title="Link to this definition">#</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">(section,</span> <span class="pre">first_line,</span> <span class="pre">last_line,</span> <span class="pre">item)</span></code> for every item of a Markdown document.</p>
@@ -482,6 +505,22 @@ before the first one or after a <code class="docutils literal notranslate"><span
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="acquaint.records.section_spans">
+<span class="sig-prename descclassname"><span class="pre">acquaint.records.</span></span><span class="sig-name descname"><span class="pre">section_spans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">body</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/records.html#section_spans"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.records.section_spans" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">{title:</span> <span class="pre">(heading</span> <span class="pre">line,</span> <span class="pre">first</span> <span class="pre">line</span> <span class="pre">after</span> <span class="pre">the</span> <span class="pre">section)}</span></code> for each <code class="docutils literal notranslate"><span class="pre">##</span></code> section, read as <a class="reference internal" href="#acquaint.records.sections" title="acquaint.records.sections"><code class="xref py py-func docutils literal notranslate"><span class="pre">sections()</span></code></a> reads it.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">#</span></code> or <code class="docutils literal notranslate"><span class="pre">##</span></code> heading ends a section; deeper ones stay inside it. The first of a repeated title wins.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">section_spans</span><span class="p">(</span><span class="s2">"intro</span><span class="se">\n</span><span class="s2">## Who</span><span class="se">\n</span><span class="s2">Ada</span><span class="se">\n</span><span class="s2">### Detail</span><span class="se">\n</span><span class="s2"># Aside</span><span class="se">\n</span><span class="s2">## Now:</span><span class="se">\n</span><span class="s2">- busy</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">{'Who': (2, 5), 'Now': (6, 9)}</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -679,7 +718,7 @@ so one bad hand edit cannot take down lookups of every other record.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=96ec9c95"></script>
+      <script src="../_static/documentation_options.js?v=3294188c"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

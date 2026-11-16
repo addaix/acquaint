@@ -33,29 +33,31 @@ True
 
 ### Functions
 
-| [`blank_frontmatter`](#acquaint.records.blank_frontmatter)(text)                          | The text with its frontmatter lines emptied, so line numbers still match the file.                                                                    |
-|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`disclosed_refs`](#acquaint.records.disclosed_refs)(value)                            | The record references a log entry's `disclosed:` field lists, lowercased: `project:heron, org:example` or `[project:heron]`.                          |
-| [`dump_yaml`](#acquaint.records.dump_yaml)(data)                                  | Write YAML the way a person would: keys in order, short lists inline, unicode kept.                                                                   |
-| [`fact_tags`](#acquaint.records.fact_tags)(text)                                  | The label and seals one fact carries, and what is wrong with how they are written.                                                                    |
-| [`format_log_entry`](#acquaint.records.format_log_entry)(entry_id, date, kind, text, \*) | One log entry: a `## id · date · kind` heading, the observation on one line, then `- key: value` fields.                                              |
-| [`item_blocks`](#acquaint.records.item_blocks)(text)                                | `(section, first_line, last_line, item)` for every item of a Markdown document.                                                                       |
-| [`visible_lines`](#acquaint.records.visible_lines)(text)                              | `(number, line, in_code)` for every line of `text`, HTML comments blanked and fences marked: the reading every lint rule uses.                        |
-| [`items`](#acquaint.records.items)(text)                                      | `(line, item)` for every item: each bullet with its wrapped lines, or a paragraph.                                                                    |
-| [`join_frontmatter`](#acquaint.records.join_frontmatter)(meta, body)                     | The inverse of [`split_frontmatter()`](#acquaint.records.split_frontmatter).                                                                  |
-| [`load_yaml`](#acquaint.records.load_yaml)(text)                                  | Parse YAML into JSON-ready data, returning `(data, errors)` instead of raising: these files are hand-edited.                                          |
-| [`next_log_id`](#acquaint.records.next_log_id)(text)                                | The next free entry id in a log, counting every `## eNN` heading however it is written.                                                               |
-| [`normalize_newlines`](#acquaint.records.normalize_newlines)(text)                         | `\r\n` and lone `\r` as `\n`, without a leading byte-order mark.                                                                                      |
-| [`normalize_title`](#acquaint.records.normalize_title)(title)                           | A heading as written, minus decoration: closing <br/><br/>```<br/>``<br/>```<br/><br/>#\`\`s, a trailing colon, typographic apostrophes, extra space. |
-| [`parse_log`](#acquaint.records.parse_log)(text)                                  | Entries of an append-only `log/YYYY-MM.md` file, oldest first.                                                                                        |
-| [`sectioned_items`](#acquaint.records.sectioned_items)(text)                            | `(section, line, item)` for every item: see [`item_blocks()`](#acquaint.records.item_blocks).                                           |
-| [`sections`](#acquaint.records.sections)(body)                                   | `## Title` blocks of a Markdown body, in order, as `{normalized title: text}`.                                                                        |
-| [`slugify`](#acquaint.records.slugify)(name, \*[, qualifier])                   | A readable, ASCII-folded, lowercase id: `given-family`, plus `--qualifier` on a collision.                                                            |
-| [`source_kind`](#acquaint.records.source_kind)(ref)                                 | Classify one source reference.                                                                                                                        |
-| [`source_problem`](#acquaint.records.source_problem)(text)                             | Why a preference-bearing item is not sourced, or `None` when it is.                                                                                   |
-| [`source_refs`](#acquaint.records.source_refs)(line)                                | Every `[source: …]` reference in a piece of text, stripped.                                                                                           |
-| [`split_frontmatter`](#acquaint.records.split_frontmatter)(text)                          | Split `---` YAML frontmatter from a Markdown body: `(meta, body, errors)`.                                                                            |
-| [`tags`](#acquaint.records.tags)(text)                                       | Every `[source: …]`, `[label: …]` and `[sealed-from: …]` tag in a piece of text: `(name, value)`, in order.                                           |
+| [`blank_frontmatter`](#acquaint.records.blank_frontmatter)(text)                          | The text with its frontmatter lines emptied, so line numbers still match the file.                                                                           |
+|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`disclosed_refs`](#acquaint.records.disclosed_refs)(value)                            | The record references a log entry's `disclosed:` field lists, lowercased: `project:heron, org:example` or `[project:heron]`.                                 |
+| [`dump_yaml`](#acquaint.records.dump_yaml)(data)                                  | Write YAML the way a person would: keys in order, short lists inline, unicode kept.                                                                          |
+| [`fact_tags`](#acquaint.records.fact_tags)(text)                                  | The label and seals one fact carries, and what is wrong with how they are written.                                                                           |
+| [`format_log_entry`](#acquaint.records.format_log_entry)(entry_id, date, kind, text, \*) | One log entry: a `## id · date · kind` heading, the observation on one line, then `- key: value` fields.                                                     |
+| [`item_blocks`](#acquaint.records.item_blocks)(text)                                | `(section, first_line, last_line, item)` for every item of a Markdown document.                                                                              |
+| [`headings`](#acquaint.records.headings)(text)                                   | `(line, level, normalized title)` for every real heading: not in a code fence or an HTML comment.                                                            |
+| [`section_spans`](#acquaint.records.section_spans)(body)                              | `{title: (heading line, first line after the section)}` for each `##` section, read as [`sections()`](#acquaint.records.sections) reads it. |
+| [`visible_lines`](#acquaint.records.visible_lines)(text)                              | `(number, line, in_code)` for every line of `text`, HTML comments blanked and fences marked: the reading every lint rule uses.                               |
+| [`items`](#acquaint.records.items)(text)                                      | `(line, item)` for every item: each bullet with its wrapped lines, or a paragraph.                                                                           |
+| [`join_frontmatter`](#acquaint.records.join_frontmatter)(meta, body)                     | The inverse of [`split_frontmatter()`](#acquaint.records.split_frontmatter).                                                                         |
+| [`load_yaml`](#acquaint.records.load_yaml)(text)                                  | Parse YAML into JSON-ready data, returning `(data, errors)` instead of raising: these files are hand-edited.                                                 |
+| [`next_log_id`](#acquaint.records.next_log_id)(text)                                | The next free entry id in a log, counting every `## eNN` heading however it is written.                                                                      |
+| [`normalize_newlines`](#acquaint.records.normalize_newlines)(text)                         | `\r\n` and lone `\r` as `\n`, without a leading byte-order mark.                                                                                             |
+| [`normalize_title`](#acquaint.records.normalize_title)(title)                           | A heading as written, minus decoration: closing <br/><br/>```<br/>``<br/>```<br/><br/>#\`\`s, a trailing colon, typographic apostrophes, extra space.        |
+| [`parse_log`](#acquaint.records.parse_log)(text)                                  | Entries of an append-only `log/YYYY-MM.md` file, oldest first.                                                                                               |
+| [`sectioned_items`](#acquaint.records.sectioned_items)(text)                            | `(section, line, item)` for every item: see [`item_blocks()`](#acquaint.records.item_blocks).                                                  |
+| [`sections`](#acquaint.records.sections)(body)                                   | `## Title` blocks of a Markdown body, in order, as `{normalized title: text}`.                                                                               |
+| [`slugify`](#acquaint.records.slugify)(name, \*[, qualifier])                   | A readable, ASCII-folded, lowercase id: `given-family`, plus `--qualifier` on a collision.                                                                   |
+| [`source_kind`](#acquaint.records.source_kind)(ref)                                 | Classify one source reference.                                                                                                                               |
+| [`source_problem`](#acquaint.records.source_problem)(text)                             | Why a preference-bearing item is not sourced, or `None` when it is.                                                                                          |
+| [`source_refs`](#acquaint.records.source_refs)(line)                                | Every `[source: …]` reference in a piece of text, stripped.                                                                                                  |
+| [`split_frontmatter`](#acquaint.records.split_frontmatter)(text)                          | Split `---` YAML frontmatter from a Markdown body: `(meta, body, errors)`.                                                                                   |
+| [`tags`](#acquaint.records.tags)(text)                                       | Every `[source: …]`, `[label: …]` and `[sealed-from: …]` tag in a piece of text: `(name, value)`, in order.                                                  |
 
 ### acquaint.records.NONE_LOCATED *= ('none located', 'no primary source located', 'no source located')*
 
@@ -130,6 +132,18 @@ leading backslash, so captured text can never forge an entry or change its kind.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### acquaint.records.headings(text)
+
+`(line, level, normalized title)` for every real heading: not in a code fence or an HTML comment.
+
+```pycon
+>>> headings("## Who:\n```\n## Not\n```\n  ### Detail ###\n")
+[(1, 2, 'Who'), (5, 3, 'Detail')]
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
 ### acquaint.records.item_blocks(text)
 
@@ -245,6 +259,20 @@ Headings may use `·`, `-` or `|` between their parts; an escaped prose line
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+### acquaint.records.section_spans(body)
+
+`{title: (heading line, first line after the section)}` for each `##` section, read as [`sections()`](#acquaint.records.sections) reads it.
+
+A `#` or `##` heading ends a section; deeper ones stay inside it. The first of a repeated title wins.
+
+```pycon
+>>> section_spans("intro\n## Who\nAda\n### Detail\n# Aside\n## Now:\n- busy\n")
+{'Who': (2, 5), 'Now': (6, 9)}
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]]
 
 ### acquaint.records.sectioned_items(text)
 
