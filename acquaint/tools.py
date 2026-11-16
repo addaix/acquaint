@@ -947,15 +947,16 @@ def digest_sweep(
     force: bool = False,
     data_dir: str | None = None,
 ) -> dict:
-    """Record a sweep of a channel (``slack``, ``whatsapp``, ...): stamp ``checked`` (ISO time the sweep read them) on every digest of that channel, quiet ones included, after creating a digest for each of ``refs`` (conversation references ``<channel>:...``) that has none. ``digest`` then reports ``swept``: the oldest ``checked`` per channel."""
+    """Record a sweep of a channel (``slack``, ``whatsapp``, ...): stamp ``checked`` (ISO time with an offset, when the sweep read them) on the digests it read, quiet ones included. With ``refs`` (conversation references ``<channel>:...``, one per item or comma-separated) exactly those are stamped, each created first if it has none; without, every digest of the channel is. A digest checked later keeps that later time (see ``kept_later``). ``digest`` then reports ``swept``: the oldest ``checked`` per channel."""
     store = _store(data_dir)
+    wanted = [part for ref in refs or [] for part in ref.split(",")]  # a comma-separated list is a likely slip
     found = sweep_digests(
-        Entity(store, find_entity(store, entity)), channel, checked, refs=refs or (), archive=archive, force=force
+        Entity(store, find_entity(store, entity)), channel, checked, refs=wanted, archive=archive, force=force
     )
     return {
         "ok": True,
         **found,
-        "summary": f"{channel} checked {checked}: {len(found['stamped'])} digest(s) stamped, {len(found['created'])} created",
+        "summary": f"{channel} checked {checked}: {len(found['stamped'])} digest(s) stamped, {len(found['created'])} created, {len(found['kept_later'])} already checked later",
     }
 
 

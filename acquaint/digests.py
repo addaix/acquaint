@@ -222,12 +222,31 @@ def mark_digest(
     return {**_summary(entity, found["file"]), "previous": previous}
 
 
+def _checked_time(value: Any, what: str = "checked") -> str:
+    """An ISO 8601 time with an offset (``checked`` orders digests across machines, so a naive time would be read in each machine's own zone)."""
+    text = _time(value, what)
+    if datetime.fromisoformat(text.replace("Z", "+00:00")).tzinfo is None:
+        raise AcquaintError(f"{what} needs a UTC offset, e.g. 2026-11-09T08:00:00+01:00 or ...Z, not {text!r}")
+    return text
+
+
+def _later_than(candidate: str, before: Any) -> bool:
+    """Whether ``candidate`` is later than ``before``; an unreadable ``before`` counts as earlier, so a hand-edited value can be repaired."""
+    try:
+        return _when(candidate) >= _when(before)
+    except (ValueError, TypeError):
+        return True
+
+
 def _moved_checked(meta: dict, checked: str, force: bool) -> str:
-    checked = _time(checked, "checked")
+    checked = _checked_time(checked)
     before = meta.get("checked")
-    if before and _when(checked) < _when(before) and not force:
+    if before and not force and not _later_than(checked, before):
         raise AcquaintError(f"the conversation was already checked at {before}; moving it back to {checked} needs force")
     return checked
+
+
+_CHANNEL_RE = re.compile(r"[A-Za-z0-9_-]+")
 
 
 def sweep_digests(
@@ -240,34 +259,61 @@ def sweep_digests(
     force: bool = False,
     today: str | None = None,
 ) -> dict:
-    """Stamp ``checked`` on every digest of ``channel`` (refs ``<channel>:…``), after creating a digest for each of ``refs`` that has none: a sweep read all of them, quiet ones included."""
-    checked = _time(checked, "checked")
-    wrong = [r for r in refs if not r.startswith(f"{channel}:")]
+    """Stamp ``checked`` on the digests of ``channel`` that a sweep read, creating those that do not exist yet.
+
+    With ``refs`` (conversation references ``<channel>:…``) exactly those are stamped, each
+    created first when missing; without, every digest of the channel is (the sweep read the
+    whole channel kind). A digest already checked later keeps that later time (unless
+    ``force``), so a sweep never fails halfway: every check is made before anything is written.
+    """
+    if not _CHANNEL_RE.fullmatch(channel):
+        raise AcquaintError(f"channel is a name like slack or whatsapp, not {channel!r}")
+    checked = _checked_time(checked)
+    refs = list(dict.fromkeys(r.strip() for r in refs if r.strip()))
+    wrong = [r for r in refs if not r.startswith(f"{channel}:") or len(r) == len(channel) + 1]
     if wrong:
-        raise AcquaintError(f"refs {', '.join(wrong)} are not of the channel {channel!r} (they start with {channel}:)")
-    created = [r for r in refs if find_digest(entity, r) is None]
+        raise AcquaintError(f"refs {', '.join(wrong)} are not conversations of the channel {channel!r} (<{channel}>:<id>)")
+    existing = {str(d["ref"]): d for d in digests(entity) if str(d["ref"]).startswith(f"{channel}:")}
+    targets = refs or sorted(existing)
+    if not targets:
+        raise AcquaintError(f"{entity.key} has no digest of the channel {channel!r}; name its conversations with refs to create them")
+    created = [r for r in targets if r not in existing and find_digest(entity, r) is None]
     for ref in created:
         new_digest(entity, ref, archive=archive, today=today)
-    stamped = [d["ref"] for d in digests(entity) if str(d["ref"]).startswith(f"{channel}:")]
-    if not stamped:
-        raise AcquaintError(f"{entity.key} has no digest of the channel {channel!r}; name its conversations with refs to create them")
-    for ref in stamped:
-        mark_digest(entity, ref, checked=checked, force=force, today=today)
-    return {"channel": channel, "checked": checked, "stamped": stamped, "created": created}
+    stamped, kept = [], []
+    for ref in targets:
+        before = (find_digest(entity, ref) or {}).get("checked")
+        if before and not force and not _later_than(checked, before):
+            kept.append(ref)  # read more recently by another sweep or by hand
+            continue
+        mark_digest(entity, ref, checked=checked, force=True, today=today)
+        stamped.append(ref)
+    return {"channel": channel, "checked": checked, "stamped": stamped, "created": created, "kept_later": kept}
 
 
 def swept(entity: Entity) -> dict[str, str | None]:
-    """``{channel: oldest checked time}`` over the entity's digests; ``None`` when one of the channel's digests was never checked.
+    """``{channel: oldest checked time}`` over the entity's digests; ``None`` when one of the channel's digests was never (validly) checked.
 
     The oldest, because a sweep is only as complete as its least-recently-read conversation.
+    Digests without a ``<channel>:<id>`` reference are not counted.
     """
-    by_channel: dict[str, list[str | None]] = {}
+    by_channel: dict[str, list[datetime | None]] = {}
+    texts: dict[tuple[str, datetime], str] = {}
     for d in digests(entity):
-        channel = str(d["ref"]).split(":", 1)[0]
-        by_channel.setdefault(channel, []).append(d["checked"])
+        ref = str(d["ref"] or "")
+        if ":" not in ref:
+            continue
+        channel = ref.split(":", 1)[0]
+        try:
+            moment = _when(d["checked"]) if d["checked"] else None
+        except (ValueError, TypeError):
+            moment = None
+        if moment is not None:
+            texts[(channel, moment)] = d["checked"]
+        by_channel.setdefault(channel, []).append(moment)
     return {
-        channel: None if None in times else min(times, key=_when)  # type: ignore[arg-type]
-        for channel, times in by_channel.items()
+        channel: None if None in moments else texts[(channel, min(moments))]  # type: ignore[type-var]
+        for channel, moments in by_channel.items()
     }
 
 
@@ -472,6 +518,11 @@ def digest_problems(text: str) -> list[tuple[str, int | None, str, str]]:
             ("error", None, "digest-through", "through must map scopes to times")
         )
         through = {}
+    if meta.get("checked"):
+        try:
+            _checked_time(meta["checked"], "checked")
+        except AcquaintError as error:
+            found.append(("error", None, "digest-checked", str(error)))
     for scope, value in through.items():
         if scope not in SCOPES:
             found.append(
