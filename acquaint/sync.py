@@ -42,6 +42,7 @@ import re
 import subprocess
 import sys
 from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -51,7 +52,9 @@ from acquaint.resources import data_text
 from acquaint.store import AcquaintError
 
 __all__ = [
+    "ACQUAINT",
     "BRANCH",
+    "SyncNamespace",
     "GITHUB_HOST",
     "github_urls",
     "init",
@@ -70,6 +73,49 @@ _GITIGNORE = "# generated, never synced\n_index/\n.DS_Store\n"
 _GITATTRIBUTES = "# one line-ending convention on every machine, so records parse the same everywhere\n* text=auto eol=lf\n"
 
 Runner = Callable[..., Any]
+
+
+@dataclass(frozen=True)
+class SyncNamespace:
+    """Everything that names the application using this mechanism: one value, so another app can reuse it unchanged.
+
+    ``name`` prefixes the git config keys (``<name>.repo``, ``<name>.remote``) and the
+    default commit messages; ``command`` is what error messages tell the user to run
+    (``<command> init``, ``<command> push``); ``subject`` is what the guard refuses to push
+    to a non-private repository ("profile data").
+    """
+
+    name: str = "acquaint"
+    command: str = "acquaint sync"
+    subject: str = "profile data"
+    description: str = "acquaint profile store (private)"
+    gitignore: str = _GITIGNORE
+
+    @property
+    def repo_key(self) -> str:
+        return f"{self.name}.repo"
+
+    @property
+    def remote_key(self) -> str:
+        return f"{self.name}.remote"
+
+    @property
+    def init_message(self) -> str:
+        return f"{self.name}: initialise store"
+
+    def sync_message(self, stamp: str, what: str) -> str:
+        return f"{self.name}: sync {stamp} ({what})"
+
+    def hook_text(self) -> str:
+        """The shipped pre-push guard with this namespace filled in."""
+        text = data_text("hooks/pre-push")
+        for token, value in (("__NAME__", self.name), ("__COMMAND__", self.command), ("__SUBJECT__", self.subject)):
+            text = text.replace(token, value)
+        return text
+
+
+#: The default: acquaint's own store.
+ACQUAINT = SyncNamespace()
 
 
 def github_urls(repo: str) -> list[str]:
@@ -188,16 +234,16 @@ def _require_private(repo: str, run: Runner) -> str:
     return seen
 
 
-def _configured(root: Path, run: Runner) -> tuple[str, str]:
+def _configured(root: Path, run: Runner, ns: SyncNamespace) -> tuple[str, str]:
     if not (root / ".git").exists():
         raise AcquaintError(
-            f"{root} is not a synced store yet: run `acquaint sync init --repo <owner>/<name>` first"
+            f"{root} is not a synced store yet: run `{ns.command} init --repo <owner>/<name>` first"
         )
-    repo = next(iter(_lines(root, run, "config", "--get", "acquaint.repo")), "")
-    remote = next(iter(_lines(root, run, "config", "--get", "acquaint.remote")), "")
+    repo = next(iter(_lines(root, run, "config", "--get", ns.repo_key)), "")
+    remote = next(iter(_lines(root, run, "config", "--get", ns.remote_key)), "")
     if not repo or not remote:
         raise AcquaintError(
-            f"{root} is a git repository but was not set up by `acquaint sync init`"
+            f"{root} is a git repository but was not set up by `{ns.command} init`"
         )
     if not _same_repo(remote, repo):
         raise AcquaintError(
@@ -280,17 +326,15 @@ def _hook_path(root: Path, run: Runner) -> Path:
     return effective if effective.is_absolute() else root / effective
 
 
-def _hook_active(root: Path, run: Runner) -> bool:
+def _hook_active(root: Path, run: Runner, ns: SyncNamespace) -> bool:
     """Whether git will run the shipped guard here: the effective hook path holds it, unchanged and executable."""
     hook = _hook_path(root, run)
-    if not hook.is_file() or hook.read_text(encoding="utf-8") != data_text(
-        "hooks/pre-push"
-    ):
+    if not hook.is_file() or hook.read_text(encoding="utf-8") != ns.hook_text():
         return False
     return sys.platform == "win32" or os.access(hook, os.X_OK)
 
 
-def _install_hook(root: Path, run: Runner) -> Path:
+def _install_hook(root: Path, run: Runner, ns: SyncNamespace) -> Path:
     common = Path(
         _ok(
             run,
@@ -302,7 +346,7 @@ def _install_hook(root: Path, run: Runner) -> Path:
     hooks = (common if common.is_absolute() else root / common).resolve() / "hooks"
     hooks.mkdir(parents=True, exist_ok=True)
     hook = hooks / "pre-push"
-    hook.write_text(data_text("hooks/pre-push"), encoding="utf-8", newline="\n")
+    hook.write_text(ns.hook_text(), encoding="utf-8", newline="\n")
     hook.chmod(0o755)
     # Absolute on purpose: a relative core.hooksPath is not found from a linked worktree.
     _ok(
@@ -314,11 +358,11 @@ def _install_hook(root: Path, run: Runner) -> Path:
     return hook
 
 
-def _check_existing_checkout(root: Path, repo: str, run: Runner) -> None:
+def _check_existing_checkout(root: Path, repo: str, run: Runner, ns: SyncNamespace) -> None:
     """Refuse to take over a repository that is neither this store nor a clone of ``repo``."""
     if not (root / ".git").exists():
         return
-    recorded = next(iter(_lines(root, run, "config", "--get", "acquaint.repo")), "")
+    recorded = next(iter(_lines(root, run, "config", "--get", ns.repo_key)), "")
     if recorded:
         if recorded.lower() != repo.lower():
             raise AcquaintError(
@@ -329,7 +373,7 @@ def _check_existing_checkout(root: Path, repo: str, run: Runner) -> None:
     if not (len(origins) == 1 and _same_repo(origins[0], repo)):
         found = f"origin {', '.join(origins)}" if origins else "no origin"
         raise AcquaintError(
-            f"{root} is already a git repository ({found}); acquaint takes over only an empty folder or a clone of {repo}"
+            f"{root} is already a git repository ({found}); {ns.name} takes over only an empty folder or a clone of {repo}"
         )
 
 
@@ -340,6 +384,7 @@ def init(
     remote_url: str | None = None,
     create: bool = True,
     dry_run: bool = False,
+    namespace: SyncNamespace = ACQUAINT,
     run: Runner = run_command,
 ) -> dict[str, Any]:
     """Make ``root`` a checkout of the private GitHub repository ``repo``, creating it (private) if needed."""
@@ -356,14 +401,14 @@ def init(
                 "the visibility check must cover the repository that receives the data"
             )
     root = Path(root)
-    _check_existing_checkout(root, repo, run)
+    _check_existing_checkout(root, repo, run, namespace)
     plan = [
         f"gh repo view {repo} (create it with `gh repo create {repo} --private` if missing)"
         if create
         else f"gh repo view {repo}",
         f"refuse unless gh reports {repo} on github.com as PRIVATE",
         f"git init {root} (branch {BRANCH}), or adopt an existing clone of {repo}; origin = {remote_url or 'the repository SSH URL from gh'}",
-        "record acquaint.repo and acquaint.remote in the repository's git config",
+        f"record {namespace.repo_key} and {namespace.remote_key} in the repository's git config",
         "install the pre-push guard (absolute core.hooksPath); commit and push the current store",
     ]
     if dry_run:
@@ -384,7 +429,7 @@ def init(
                 repo,
                 "--private",
                 "--description",
-                "acquaint profile store (private)",
+                namespace.description,
             ],
             what="creating the repository",
         )
@@ -419,25 +464,25 @@ def init(
     run(["git", "config", "--unset-all", "remote.origin.pushurl"], cwd=root)
     _ok(
         run,
-        ["git", "config", "acquaint.repo", repo],
+        ["git", "config", namespace.repo_key, repo],
         cwd=root,
         what="recording the repository",
     )
     _ok(
         run,
-        ["git", "config", "acquaint.remote", url],
+        ["git", "config", namespace.remote_key, url],
         cwd=root,
         what="recording the remote",
     )
-    for name, text in ((".gitignore", _GITIGNORE), (".gitattributes", _GITATTRIBUTES)):
+    for name, text in ((".gitignore", namespace.gitignore), (".gitattributes", _GITATTRIBUTES)):
         if not (root / name).exists():
             (root / name).write_text(text, encoding="utf-8", newline="\n")
-    hook = _install_hook(root, run)
+    hook = _install_hook(root, run, namespace)
     try:
-        pushed = push(root, message="acquaint: initialise store", everything=True, run=run)
+        pushed = push(root, message=namespace.init_message, everything=True, namespace=namespace, run=run)
     except AcquaintError as error:
         raise AcquaintError(
-            f"the store is set up for {repo}, but the first push failed: {error}. Fix that, then run `acquaint sync push`"
+            f"the store is set up for {repo}, but the first push failed: {error}. Fix that, then run `{namespace.command} push`"
         ) from error
     return {
         "repo": repo,
@@ -507,7 +552,7 @@ def _plan(root: Path, run: Runner, entities: Sequence[str], message: str | None)
     return {"changed": changed, "entities": touched, "unnamed": [] if entities else unnamed}
 
 
-def _commit(root: Path, run: Runner, plan: dict[str, Any], *, message: str | None, scoped: bool) -> None:
+def _commit(root: Path, run: Runner, plan: dict[str, Any], *, message: str | None, scoped: bool, ns: SyncNamespace) -> None:
     """Commit the planned paths (only those when ``scoped``; literal pathspecs, so no glob in a file name matches more)."""
     changed, touched = plan["changed"], plan["entities"]
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
@@ -522,7 +567,7 @@ def _commit(root: Path, run: Runner, plan: dict[str, Any], *, message: str | Non
             "commit",
             "-q",
             "-m",
-            message or f"acquaint: sync {stamp} ({listed})",
+            message or ns.sync_message(stamp, listed),
             *(["--only", *only] if scoped else []),
         ],
         cwd=root,
@@ -537,6 +582,7 @@ def push(
     entities: Sequence[str] = (),
     everything: bool = False,
     dry_run: bool = False,
+    namespace: SyncNamespace = ACQUAINT,
     run: Runner = run_command,
 ) -> dict[str, Any]:
     """Commit, rebase onto the remote, and push, after re-checking the remote, the guard and the visibility.
@@ -551,7 +597,7 @@ def push(
     travel with a scoped push, and a renamed record needs both its old and new folder named.
     """
     root = Path(root)
-    repo, remote = _configured(root, run)
+    repo, remote = _configured(root, run, namespace)
     scoped = bool(entities)
     plan = _plan(root, run, _record_folders(root, run, entities), message)
     unnamed = [] if everything else plan["unnamed"]
@@ -569,15 +615,15 @@ def push(
             f"the message does not name {', '.join(unnamed)}, which would be committed with it. "
             "Name them, push only your own records (`sync push <id> ...`), or pass --all to commit everything"
         )
-    if not _hook_active(root, run):
+    if not _hook_active(root, run, namespace):
         raise AcquaintError(
             f"the pre-push guard is not active in {root} (moved data root, a changed core.hooksPath, or a hook that is not executable); "
-            f"run `acquaint sync init --repo {repo} --existing-only` first"
+            f"run `{namespace.command} init --repo {repo} --existing-only` first"
         )
     _require_private(repo, run)
     _refuse_conflicts(root, run, doing="commit and push")  # nothing is unresolved from here on, so anything after is new
     if plan["changed"]:
-        _commit(root, run, plan, message=message, scoped=scoped)
+        _commit(root, run, plan, message=message, scoped=scoped, ns=namespace)
     if run(["git", "rev-parse", "--verify", "HEAD"], cwd=root).returncode != 0:
         return {"repo": repo, "committed": False, "pushed": False, "note": "nothing to push yet"}
     if run(["git", "fetch", "-q", "origin", BRANCH], cwd=root).returncode == 0:
@@ -601,11 +647,15 @@ def push(
 
 
 def pull(
-    root: str | os.PathLike, *, dry_run: bool = False, run: Runner = run_command
+    root: str | os.PathLike,
+    *,
+    dry_run: bool = False,
+    namespace: SyncNamespace = ACQUAINT,
+    run: Runner = run_command,
 ) -> dict[str, Any]:
     """Re-check the remote and its visibility, then rebase local work onto it (uncommitted edits are stashed and restored)."""
     root = Path(root)
-    repo, remote = _configured(root, run)
+    repo, remote = _configured(root, run, namespace)
     if dry_run:
         return {
             "repo": repo,
@@ -629,7 +679,11 @@ def pull(
 
 
 def status(
-    root: str | os.PathLike, *, check_visibility: bool = True, run: Runner = run_command
+    root: str | os.PathLike,
+    *,
+    check_visibility: bool = True,
+    namespace: SyncNamespace = ACQUAINT,
+    run: Runner = run_command,
 ) -> dict[str, Any]:
     """Whether the store is synced, where to, uncommitted changes, ahead/behind, the guard, and live visibility.
 
@@ -642,9 +696,9 @@ def status(
         return {
             "synced": False,
             "root": str(root),
-            "note": "not set up: acquaint sync init --repo <owner>/<name>",
+            "note": f"not set up: {namespace.command} init --repo <owner>/<name>",
         }
-    repo, remote = _configured(root, run)
+    repo, remote = _configured(root, run, namespace)
     dirty = [
         line
         for line in _ok(
@@ -658,7 +712,7 @@ def status(
         "repo": repo,
         "remote": remote,
         "uncommitted": len(dirty),
-        "hook_installed": _hook_active(root, run),
+        "hook_installed": _hook_active(root, run, namespace),
     }
     if check_visibility:
         result["visibility"] = visibility(repo, run=run)
