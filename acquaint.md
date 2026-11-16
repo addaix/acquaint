@@ -1,4 +1,4 @@
-> built 2026-11-10 07:38 UTC from d2a3b9e (main) · acquaint 0.0.17. Details: build_info.json
+> built 2026-11-16 04:11 UTC from bba1cc3 (main) · acquaint 0.0.18. Details: build_info.json
 
 # index.html.md
 
@@ -2450,16 +2450,18 @@ True
 
 # About this build
 
-This documentation was built on **2026-11-10 07:38 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/d2a3b9e23fb989ab3cf42fec705a054bccf0aebf"><code>d2a3b9e</code></a> on branch <code>main</code>, for **acquaint 0.0.17** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 04:11 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/bba1cc39cd936f4a254fe5e1f69197a823004a78"><code>bba1cc3</code></a> on branch <code>main</code>, for **acquaint 0.0.18** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.18) is behind the latest release on PyPI (0.0.19): `pip install acquaint` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                            |
 |---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/d2a3b9e23fb989ab3cf42fec705a054bccf0aebf"><code>d2a3b9e23fb989ab3cf42fec705a054bccf0aebf</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/bba1cc39cd936f4a254fe5e1f69197a823004a78"><code>bba1cc39cd936f4a254fe5e1f69197a823004a78</code></a> |
 | Branch              | <code>main</code>                                                                                                                                          |
 | Tags at this commit | none                                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                      |
@@ -2470,9 +2472,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/acquaint</code>                                                           |
-| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/42776563290">42776563290</a>  |
+| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43802442321">43802442321</a>  |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>d2a3b9e23fb989ab3cf42fec705a054bccf0aebf</code> (in the history of the built commit) |
+| Event commit | <code>bba1cc39cd936f4a254fe5e1f69197a823004a78</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2497,13 +2499,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/acquaint/0.0.17/">0.0.17</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/acquaint/0.0.19/">0.0.19</a>, newer than the documented version (0.0.18).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/acquaint && cd acquaint
-git checkout d2a3b9e23fb989ab3cf42fec705a054bccf0aebf
+git checkout bba1cc39cd936f4a254fe5e1f69197a823004a78
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
