@@ -54,3 +54,23 @@ def test_who_and_brief_accept_self(tmp_path, monkeypatch):
     assert tools.who("self")["id"] == "ada-lovelace"
     assert tools.who("self", field="operator")["value"] is True
     assert tools.brief("self")["id"] == "ada-lovelace"
+
+
+def test_self_is_for_reading_only(store, put):
+    put(store, "people/ada-lovelace", meta={"name": "Ada Lovelace", "operator": True})
+    with pytest.raises(AcquaintError, match="exact id"):
+        find_entity(store, "self", names=False)
+
+
+def test_a_person_named_self_keeps_the_name_and_a_broken_record_blocks_the_alias(store, put):
+    put(store, "people/ada-lovelace", meta={"name": "Ada Lovelace", "operator": True})
+    put(store, "people/nick-example", meta={"name": "Nick Example", "aka": ["Self"]})
+    assert find_entity(store, "self") == "people/nick-example"
+
+
+def test_an_unreadable_person_blocks_self(store, put):
+    put(store, "people/ada-lovelace", meta={"name": "Ada Lovelace"})
+    put(store, "people/grace-example", meta={"name": "Grace", "operator": True})
+    store["people/ada-lovelace"] = {"PROFILE.md": "---\nname: [unclosed\n---\n"}
+    with pytest.raises(AcquaintError, match="cannot be read"):
+        find_entity(store, "self")

@@ -136,15 +136,24 @@ SELF = "self"
 
 def operator_keys(store: Store) -> list[str]:
     """Store keys of the records marked ``operator: true`` (only a person counts); a record that cannot be read is skipped here, ``lint`` reports it."""
-    found = []
+    return _operator_scan(store)[0]
+
+
+def _operator_scan(store: Store) -> tuple[list[str], list[str]]:
+    """``(marked, unreadable)`` person keys: a person whose frontmatter does not parse might be the marked one."""
+    marked, unreadable = [], []
     for key in store:
-        try:
-            marked = key.startswith("people/") and store[key].meta.get("operator") is True
-        except Exception:  # noqa: BLE001 - one unreadable record must not stop a lookup
+        if not key.startswith("people/"):
             continue
-        if marked:
-            found.append(key)
-    return found
+        try:
+            entity = store[key]
+            if entity.meta.get("operator") is True:
+                marked.append(key)
+            elif entity.errors:
+                unreadable.append(key)
+        except Exception:  # noqa: BLE001 - one unreadable record must not stop a lookup
+            unreadable.append(key)
+    return marked, unreadable
 
 
 def find_entity(store: Store, ref: str, *, names: bool = True) -> str:
@@ -157,8 +166,13 @@ def find_entity(store: Store, ref: str, *, names: bool = True) -> str:
     Operations that rewrite or remove records pass ``names=False`` and need the id.
     """
     text = ref.strip()
-    if text.lower() == SELF and not store.find_id(text):  # a record literally named self wins
-        operators = operator_keys(store)
+    if text.lower() == SELF and not store.find_id(text) and not match(store, text)["exact"]:
+        # a record named self (by id, name, alias or handle) wins over the alias
+        if not names:
+            raise AcquaintError("`self` is an alias for reading; this needs the operator's exact id (e.g. person:ada-lovelace)")
+        operators, unreadable = _operator_scan(store)
+        if unreadable:
+            raise AcquaintError(f"`self` is not resolved while {', '.join(unreadable)} cannot be read (it may be the marked one); fix it first")
         if len(operators) == 1:
             return operators[0]
         raise AcquaintError(
