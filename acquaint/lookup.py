@@ -166,13 +166,21 @@ def find_entity(store: Store, ref: str, *, names: bool = True) -> str:
     Operations that rewrite or remove records pass ``names=False`` and need the id.
     """
     text = ref.strip()
-    if text.lower() == SELF and not store.find_id(text) and not match(store, text)["exact"]:
+    if (
+        text.lower() == SELF
+        and not store.find_id(text)
+        and not match(store, text)["exact"]
+    ):
         # a record named self (by id, name, alias or handle) wins over the alias
         if not names:
-            raise AcquaintError("`self` is an alias for reading; this needs the operator's exact id (e.g. person:ada-lovelace)")
+            raise AcquaintError(
+                "`self` is an alias for reading; this needs the operator's exact id (e.g. person:ada-lovelace)"
+            )
         operators, unreadable = _operator_scan(store)
         if unreadable:
-            raise AcquaintError(f"`self` is not resolved while {', '.join(unreadable)} cannot be read (it may be the marked one); fix it first")
+            raise AcquaintError(
+                f"`self` is not resolved while {', '.join(unreadable)} cannot be read (it may be the marked one); fix it first"
+            )
         if len(operators) == 1:
             return operators[0]
         raise AcquaintError(
