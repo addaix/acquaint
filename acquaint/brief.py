@@ -444,7 +444,7 @@ def compose_brief(
         "style": style_text,
         "views": views_text,
         "project_norms": norms,
-        "facts": _fact_lines(entity, max_chars=budgets["brief_facts_chars"]),
+        "facts": _fact_lines(entity, max_chars=budgets["brief_facts_chars"], today=today),
         "affiliations": affiliations,
         "observations": observations,
         "reminders": reminders,

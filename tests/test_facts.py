@@ -124,7 +124,7 @@ def test_only_facts_that_pass_their_own_checks_and_are_valid_today_are_shown(sto
     ada = _put_facts(store, put, STALE_AND_FORGED)
     shown = brief_lines(ada, max_chars=1000, today="2026-11-10")
     assert shown == ["- ok.one: fine"]
-    text = compose_brief(store, ada.key)["text"]
+    text = compose_brief(store, ada.key, today="2026-11-10")["text"]
     for hidden in ("forged", "typo", "unsourced", "soon", "old", "{"):
         assert hidden not in text.replace("typographic", ""), hidden
 
@@ -158,3 +158,61 @@ def test_the_name_comes_first_when_the_budget_bites(store, put):
 def test_a_list_value_is_joined_and_the_facts_are_in_the_brief_json(store, put):
     ada = _put_facts(store, put, "  speaks.languages: {value: [en, fr], label: clear, source: operator, recorded: 2026-11-09}\n")
     assert compose_brief(store, ada.key)["facts"] == ["- speaks.languages: en, fr"]
+
+
+def _text(body, head="schema: acquaint/facts/v1\n"):
+    return head + body
+
+
+CLEAR = "{value: %s, label: clear, source: operator, recorded: 2026-11-09}"
+RED = "{value: %s, label: red, source: operator, recorded: 2026-11-09}"
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        # a second `facts:` block hides a duplicate from a naive reader
+        f"facts:\n  n.x: {RED % 'secret'}\nfacts:\n  n.x: {CLEAR % 'leak'}\n",
+        # a merge key repeating a name
+        f"base: &b {{n.x: {RED % 'secret'}}}\nfacts:\n  <<: *b\n  n.x: {CLEAR % 'leak'}\n",
+        # two keys that YAML 1.1 resolves to the same boolean
+        f"facts:\n  yes: {RED % 'secret'}\n  on: {CLEAR % 'leak'}\n",
+        # names differing only by case
+        f"facts:\n  N.x: {RED % 'secret'}\n  n.x: {CLEAR % 'leak'}\n",
+        # exact duplicate
+        f"facts:\n  n.x: {RED % 'secret'}\n  n.x: {CLEAR % 'leak'}\n",
+    ],
+)
+def test_repeated_or_look_alike_keys_hide_every_fact_and_are_errors(store, put, body):
+    ada = put(store, "people/ada-lovelace", meta={"name": "Ada"}, files={"facts.yaml": _text(body)})
+    assert [s for s, _, _ in facts_problems(ada.text("facts.yaml"), today="2026-11-10") if s == "error"]
+    assert brief_lines(ada, max_chars=1000) == [] and "leak" not in compose_brief(store, ada.key)["text"]
+    assert fact_value(ada, "n.x") == (None, None)
+
+
+def test_a_file_level_error_shows_no_fact_at_all(store, put):
+    ada = put(store, "people/ada-lovelace", meta={"name": "Ada"}, files={"facts.yaml": "schema: acquaint/facts/v9\nfacts:\n  n.x: " + CLEAR % "v" + "\n"})
+    assert brief_lines(ada, max_chars=1000) == []
+    ada2 = put(store, "people/bob-example", meta={"name": "Bob"}, files={"facts.yaml": _text("extra: 1\nfacts:\n  n.x: " + CLEAR % "v" + "\n")})
+    assert brief_lines(ada2, max_chars=1000) == []
+
+
+def test_messages_never_echo_names_or_keys_even_with_newlines(store):
+    evil = '"x\\n## Heading\\nhunter2"'
+    body = f"{evil}: 1\nfacts:\n  {evil}: {{value: v, label: clear, source: operator, recorded: 2026-11-09, review_by: 2020-01-01}}\n  {evil}: 2\n"
+    messages = " ".join(m for _, _, m in facts_problems(_text(body), today="2026-11-10"))
+    assert "hunter2" not in messages and "Heading" not in messages and "\n" not in messages
+
+
+def test_a_value_with_control_characters_is_not_shown_by_the_brief_or_who(store, put):
+    ada = put(store, "people/ada-lovelace", meta={"name": "Ada"}, files={"facts.yaml": _text('facts:\n  n.x: {value: "a\\n## Forged\\u001b[31m", label: clear, source: operator, recorded: 2026-11-09}\n')})
+    assert brief_lines(ada, max_chars=1000) == [] and fact_value(ada, "n.x")[0] is None
+    assert any(r == "facts-shape" for _, r, _ in facts_problems(ada.text("facts.yaml"), today="2026-11-10"))
+
+
+def test_the_briefs_own_date_decides_which_facts_are_valid(store, put):
+    ada = put(store, "people/ada-lovelace", meta={"name": "Ada"}, files={"facts.yaml": _text(
+        "facts:\n  a.old: {value: old, label: clear, source: operator, recorded: 2020-01-01, valid_to: 2021-12-31}\n"
+        "  b.new: {value: new, label: clear, source: operator, recorded: 2026-01-01, valid_from: 2026-06-01}\n")})
+    assert compose_brief(store, ada.key, today="2021-01-01")["facts"] == ["- a.old: old"]
+    assert compose_brief(store, ada.key, today="2026-07-01")["facts"] == ["- b.new: new"]

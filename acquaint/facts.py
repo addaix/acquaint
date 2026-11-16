@@ -41,9 +41,7 @@ from collections.abc import Mapping
 from datetime import date
 from typing import Any
 
-import yaml
-
-from acquaint.records import load_yaml, source_problem
+from acquaint.records import load_yaml_audited, source_problem
 from acquaint.store import Entity
 from acquaint.trust import LABELS, is_iso_date
 
@@ -68,27 +66,43 @@ _DATE_FIELDS = ("recorded", "valid_from", "valid_to", "review_by")
 _FACT_KEYS = frozenset({"value", "label", "source", "supersedes", "status", *_DATE_FIELDS})
 _TOP_KEYS = frozenset({"schema", "facts", "to_confirm"})
 _SCALARS = (str, int, float, bool)
+_CONTROL_RE = re.compile(r"[\x00-\x1f\x7f-\x9f]")
 
 
-def _duplicate_names(text: str) -> set[str]:
-    """Names that appear twice under ``facts:``: YAML keeps the last, which hides which one was meant."""
-    try:
-        root = yaml.compose(text)
-    except yaml.YAMLError:
-        return set()
-    if not isinstance(root, yaml.MappingNode):
-        return set()
-    for key, value in root.value:
-        if getattr(key, "value", None) == "facts" and isinstance(value, yaml.MappingNode):
-            names = [getattr(k, "value", None) for k, _ in value.value]
-            return {n for n in names if names.count(n) > 1}
-    return set()
+def _safe_name(name: Any) -> str:
+    """A name fit to show in a message: only dotted words, else a placeholder (a key can hold anything, newlines and headings included)."""
+    return name if isinstance(name, str) and _NAME_RE.fullmatch(name) else "(an odd name)"
+
+
+def _file_problems(data: Any, key_problems: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
+    """Problems with the file as a whole: shape, schema, keys. A file with any of these shows no fact at all."""
+    if not isinstance(data, Mapping):
+        return [("error", "facts-shape", "facts.yaml must be a mapping with a `facts:` key")]
+    found: list[tuple[str, str, str]] = []
+    if data.get("schema") != SCHEMA:
+        found.append(("error", "facts-shape", f"schema must be {SCHEMA}"))
+    if unknown := set(map(str, data)) - _TOP_KEYS:
+        found.append(("error", "facts-shape", f"{len(unknown)} unknown top-level key(s); the keys are {', '.join(sorted(_TOP_KEYS))}"))
+    if not isinstance(data.get("facts"), Mapping):
+        found.append(("error", "facts-shape", "`facts:` must map field names to facts"))
+    if "to_confirm" in data and not (
+        isinstance(data["to_confirm"], list) and all(isinstance(x, str) for x in data["to_confirm"])
+    ):
+        found.append(("error", "facts-shape", "to_confirm must be a list of text items"))
+    for kind, key in key_problems:
+        found.append(("error", "facts-duplicate" if kind == "duplicate" else "facts-shape", f"{'a key listed twice' if kind == 'duplicate' else 'a key that is not text'}: {_safe_name(key)}; keep one, and move an old value under `supersedes` or delete it"))
+    names = [str(n).lower() for n in (data.get("facts") or {}) if isinstance(data.get("facts"), Mapping)]
+    for name in sorted({n for n in names if names.count(n) > 1}):
+        found.append(("error", "facts-duplicate", f"names that differ only by case: {_safe_name(name)}"))
+    return found
 
 
 def _value_problem(value: Any) -> str | None:
     items = value if isinstance(value, list) else [value]
     if value in (None, "", []) or not all(isinstance(i, _SCALARS) and str(i).strip() for i in items):
         return "value must be text, a number, or a list of them"
+    if any(_CONTROL_RE.search(str(i)) for i in items):
+        return "value must be one line, with no control characters"
     return None
 
 
@@ -120,52 +134,33 @@ def _fact_problems(name: str, fact: Any) -> list[tuple[str, str, str]]:
 
 
 def facts_problems(text: str, *, today: str) -> list[tuple[str, str, str]]:
-    """``(severity, rule, message)`` for one ``facts.yaml``: shape, label, source, dates, duplicates, a passed ``review_by``."""
-    data, errors = load_yaml(text)
+    """``(severity, rule, message)`` for one ``facts.yaml``: shape, label, source, dates, repeated keys, a passed ``review_by``. A message never echoes what was written."""
+    data, errors, key_problems = load_yaml_audited(text)
     if errors:
         return [("error", "unparseable", e) for e in errors]
-    if not isinstance(data, Mapping):
-        return [("error", "facts-shape", "facts.yaml must be a mapping with a `facts:` key")]
-    found: list[tuple[str, str, str]] = []
-    if data.get("schema") != SCHEMA:
-        found.append(("error", "facts-shape", f"schema must be {SCHEMA}"))
-    if unknown := set(map(str, data)) - _TOP_KEYS:
-        found.append(("error", "facts-shape", f"unknown top-level key(s): {', '.join(sorted(unknown))}"))
-    listed = data.get("facts")
-    if not isinstance(listed, Mapping):
-        return [*found, ("error", "facts-shape", "`facts:` must map field names to facts")]
-    if "to_confirm" in data and not (
-        isinstance(data["to_confirm"], list) and all(isinstance(x, str) for x in data["to_confirm"])
-    ):
-        found.append(("error", "facts-shape", "to_confirm must be a list of text items"))
-    for name in sorted(_duplicate_names(text)):
-        found.append(("error", "facts-duplicate", f"fact {name} is listed twice; keep one, and move the old value under `supersedes` or delete it"))
-    for name, fact in listed.items():
+    found = _file_problems(data, key_problems)
+    listed = data.get("facts") if isinstance(data, Mapping) else None
+    for name, fact in (listed.items() if isinstance(listed, Mapping) else []):
         found += _fact_problems(str(name), fact)
         review = fact.get("review_by") if isinstance(fact, Mapping) else None
-        if review is not None and is_iso_date(str(review)) and str(review) < today:
+        if _NAME_RE.fullmatch(str(name)) and review is not None and is_iso_date(str(review)) and str(review) < today:
             found.append(("warning", "facts-review", f"fact {name} was due for review on {review}"))
     return found
 
 
 def facts(entity: Entity) -> dict[str, dict]:
-    """The entity's facts by name; ``{}`` when there is no file or it does not parse (lint reports that)."""
-    text = entity.text(FACTS_FILE)
-    data, errors = load_yaml(text)
-    found = data.get("facts") if isinstance(data, Mapping) and not errors else None
-    return {
-        str(name): dict(fact)
-        for name, fact in (found.items() if isinstance(found, Mapping) else [])
-        if isinstance(fact, Mapping)
-    }
+    """The entity's facts by name; ``{}`` when there is no file, it does not parse, or the file as a whole has an error (lint reports that)."""
+    data, errors, key_problems = load_yaml_audited(entity.text(FACTS_FILE))
+    if errors or any(sev == "error" for sev, _, _ in _file_problems(data, key_problems)):
+        return {}
+    return {str(n): dict(f) for n, f in data["facts"].items() if isinstance(f, Mapping)}
 
 
 def _readable(entity: Entity, today: str) -> dict[str, dict]:
-    """The facts that may be shown as exact: ``clear``, free of lint errors, not a duplicate, ``current``, and inside their validity dates."""
-    duplicated = _duplicate_names(entity.text(FACTS_FILE))
+    """The facts that may be shown as exact: ``clear``, free of lint errors, ``current``, and inside their validity dates; none at all from a file with a file-level error."""
     found = {}
     for name, fact in facts(entity).items():
-        if name in duplicated or any(sev == "error" for sev, _, _ in _fact_problems(name, fact)):
+        if any(sev == "error" for sev, _, _ in _fact_problems(name, fact)):
             continue
         inside = (not fact.get("valid_from") or str(fact["valid_from"]) <= today) and (
             not fact.get("valid_to") or str(fact["valid_to"]) >= today

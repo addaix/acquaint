@@ -46,6 +46,7 @@ __all__ = [
     "items",
     "join_frontmatter",
     "load_yaml",
+    "load_yaml_audited",
     "next_log_id",
     "normalize_newlines",
     "normalize_title",
@@ -191,6 +192,45 @@ def _plain(value: Any) -> Any:
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
     return str(value)
+
+
+class _AuditLoader(_Loader):
+    """Notes every mapping key that is not text or that appears twice once merges are resolved (plain parsing keeps the last, silently)."""
+
+    def __init__(self, stream: str) -> None:
+        super().__init__(stream)
+        self.key_problems: list[tuple[str, str]] = []
+
+    def construct_mapping(self, node: Any, deep: bool = False) -> dict:
+        if isinstance(node, yaml.MappingNode):
+            self.flatten_mapping(node)
+            seen: set[str] = set()
+            for key_node, _ in node.value:
+                key = self.construct_object(key_node, deep=True)
+                if not isinstance(key, str):
+                    self.key_problems.append(("non-text", str(key)))
+                elif key in seen:
+                    self.key_problems.append(("duplicate", key))
+                seen.add(key if isinstance(key, str) else repr(key))
+        return super().construct_mapping(node, deep)
+
+
+def load_yaml_audited(text: str) -> tuple[Any, list[str], list[tuple[str, str]]]:
+    """:func:`load_yaml`, plus ``(kind, key)`` for each key that is not text (``non-text``) or is repeated in one mapping (``duplicate``).
+
+    >>> data, errors, odd = load_yaml_audited("a: 1\\na: 2\\n1: x\\n")
+    >>> odd
+    [('duplicate', 'a'), ('non-text', '1')]
+    """
+    loader = _AuditLoader(normalize_newlines(text))
+    try:
+        try:
+            data = loader.get_single_data()
+        finally:
+            loader.dispose()
+    except yaml.YAMLError as error:
+        return None, [f"YAML did not parse: {' '.join(str(error).split())}"], []
+    return _plain(data), [], loader.key_problems
 
 
 def load_yaml(text: str) -> tuple[Any, list[str]]:
