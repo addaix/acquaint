@@ -200,6 +200,10 @@ def mark_digest(
 BATCH_SECTIONS = ("Orientation", *ANCHORED_SECTIONS)
 
 
+#: What could hide or reveal other items from the lint's reading of the body.
+_HIDING_RE = re.compile(r"<!--|-->|```|~~~|[\r\n]")
+
+
 def _section(name: str) -> str:
     for section in BATCH_SECTIONS:
         if name.strip().rstrip(":").lower() == section.lower():
@@ -238,7 +242,10 @@ def parse_rows(rows: str | Mapping[str, Sequence[str]]) -> dict[str, list[str]]:
         except json.JSONDecodeError as error:
             raise AcquaintError(f"rows is not valid JSON: {error}") from error
     if isinstance(rows, Mapping):
-        return {_section(k): _lines_of(k, v) for k, v in rows.items()}
+        merged: dict[str, list[str]] = {}
+        for key, value in rows.items():
+            merged.setdefault(_section(key), []).extend(_lines_of(key, value))
+        return merged
     if not isinstance(rows, str):
         raise AcquaintError("rows must be a mapping {section: [line, ...]}, JSON text, or `section | line | anchor` rows")
     found: dict[str, list[str]] = {}
@@ -296,13 +303,17 @@ def append_batch(
     in the same write (``scope`` and ``force`` mean nothing without it).
     """
     heading = heading.strip().lstrip("#").strip()
-    if not heading or "\n" in heading:
+    if not heading or len(heading.splitlines()) != 1 or _HIDING_RE.search(heading):
         raise AcquaintError("a batch needs a one-line heading, e.g. the date range it covers")
     batch = {k: v for k, v in parse_rows(rows).items() if v}
     if not batch:
         raise AcquaintError("rows has no lines to add")
-    if any("\n" in line or "\r" in line for lines in batch.values() for line in lines):
-        raise AcquaintError("each line is one bullet: no line breaks inside a line")
+    for section, lines in batch.items():
+        for line in lines:
+            if len(line.splitlines()) != 1 or _HIDING_RE.search(line):
+                raise AcquaintError(f"each line is one bullet, with no line break, comment or code fence in it: {line!r}")
+            if section in ANCHORED_SECTIONS and not _ANCHOR_RE.search(line):
+                raise AcquaintError(f"an item under {section} needs [at: <ISO time>] or [source: …]: {line!r}")
     found, meta, body = _load(entity, ref)
     before = _unanchored(body)
     for section in BATCH_SECTIONS:  # template order, so the result does not depend on row order

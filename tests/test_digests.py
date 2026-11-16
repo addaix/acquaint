@@ -1,5 +1,7 @@
 """Digests: one file per conversation, a watermark per scope, anchored items, and the tools and brief that read them."""
 
+import re
+
 import pytest
 
 from acquaint import tools
@@ -117,16 +119,18 @@ def _unchanged_after(ada, **kwargs):
     "rows, match",
     [
         ({"Orientation": ["fine"], "Index": ["no anchor"]}, "needs \\[at"),
-        ({"Index": ["ok [at: 2026-11-05T10:00:00Z]\n- bare item"]}, "line breaks"),
-        ({"Index": ["x <!-- [at: 2026-11-05T10:00:00Z] -->"]}, "needs \\[at"),
+        ({"Index": ["ok [at: 2026-11-05T10:00:00Z]\n- bare item"]}, "one bullet"),
+        ({"Index": ["x <!-- [at: 2026-11-05T10:00:00Z] -->"]}, "comment or code fence"),
         ({"Orientation": "hello"}, "list of lines"),
         ({"Orientation": None}, "list of lines"),
+        ({"Index": ["x [at: 2026-11-05T10:00:00Z] <!--"], "Open threads": ["new bare -->"]}, "comment or code fence"),
+        ({"Index": ["```x [at: 2026-11-05T10:00:00Z]"]}, "comment or code fence"),
         ({"Mood": ["x"]}, "unknown section"),
         ({}, "no lines"),
     ],
 )
 def test_append_batch_refuses_bad_rows_and_writes_nothing(store, put, rows, match):
-    assert __import__("re").search(match, _unchanged_after(_ada(store, put), heading="w1", rows=rows, through="2026-11-12T09:00:00Z"))
+    assert re.search(match, _unchanged_after(_ada(store, put), heading="w1", rows=rows, through="2026-11-12T09:00:00Z"))
 
 
 def test_a_failing_watermark_leaves_the_digest_untouched_and_the_call_retryable(store, put):
@@ -174,3 +178,20 @@ def test_the_tool_reads_rows_from_a_file_only_with_an_at_sign(tmp_path, monkeypa
     with pytest.raises(AcquaintError, match="expected"):
         tools.digest_append("ada-lovelace", REF, heading="w2", rows=str(rows))
     assert tools.digest_append("ada-lovelace", REF, heading="w2", rows='{"Themes": ["x [at: 2026-11-06T00:00:00Z]"]}')["ok"]
+
+
+def test_a_carriage_return_heading_cannot_smuggle_a_section(store, put):
+    ada = _ada(store, put)
+    assert "one-line heading" in _unchanged_after(ada, heading="w1\r## Notes", rows={"Index": ["x [source: y]"]})
+
+
+def test_existing_unanchored_items_do_not_block_an_anchored_batch(store, put):
+    ada = _ada(store, put)
+    name = find_digest(ada, REF)["file"]
+    ada[name] = ada[name].replace("## Open threads", "## Open threads\n\n- old bare item", 1)
+    append_batch(ada, REF, heading="w1", rows=BATCH)
+    assert "### w1" in ada[name]
+
+
+def test_duplicate_section_keys_are_merged():
+    assert parse_rows({"Index": ["a [source: x]"], "index:": ["b [source: y]"]}) == {"Index": ["a [source: x]", "b [source: y]"]}
