@@ -929,263 +929,293 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="sync_push">
 <a class="viewcode-back" href="../../_autosummary/acquaint.tools.html#acquaint.sync_push">[docs]</a>
 </span><span data-line="759"><span class="k">def</span><span class="w"> </span><span class="nf">sync_push</span><span class="p">(</span>
-</span><span data-line="760">    <span class="o">*</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="761"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="762"><span class="w">    </span><span class="sd">"""Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility."""</span>
-</span><span data-line="763">    <span class="n">result</span> <span class="o">=</span> <span class="n">_sync</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">_data_dir</span><span class="p">(</span><span class="n">data_dir</span><span class="p">),</span> <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span> <span class="n">dry_run</span><span class="o">=</span><span class="n">dry_run</span><span class="p">)</span>
-</span><span data-line="764">    <span class="n">summary</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="765">        <span class="sa">f</span><span class="s2">"would commit </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'would_commit'</span><span class="p">]</span><span class="si">}</span><span class="s2"> change(s)"</span>
-</span><span data-line="766">        <span class="k">if</span> <span class="n">dry_run</span>
-</span><span data-line="767">        <span class="k">else</span> <span class="sa">f</span><span class="s2">"pushed to </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'repo'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="768">        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pushed"</span><span class="p">)</span>
-</span><span data-line="769">        <span class="k">else</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"note"</span><span class="p">,</span> <span class="s2">"nothing pushed"</span><span class="p">)</span>
-</span><span data-line="770">    <span class="p">)</span>
-</span><span data-line="771">    <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">result</span><span class="p">,</span> <span class="s2">"summary"</span><span class="p">:</span> <span class="n">summary</span><span class="p">}</span></div>
+</span><span data-line="760">    <span class="n">ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="761">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="762">    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="763">    <span class="nb">all</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="764">    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="765">    <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="766"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="767"><span class="w">    </span><span class="sd">"""Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility. With ``ids`` (records, e.g. ``person:ada-lovelace``), commit only those records and leave other uncommitted records alone; without, commit everything, but a ``message`` must then name every record it commits unless ``all``."""</span>
+</span><span data-line="768">    <span class="n">root</span> <span class="o">=</span> <span class="n">_data_dir</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
+</span><span data-line="769">    <span class="n">result</span> <span class="o">=</span> <span class="n">_sync</span><span class="o">.</span><span class="n">push</span><span class="p">(</span>
+</span><span data-line="770">        <span class="n">root</span><span class="p">,</span>
+</span><span data-line="771">        <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span>
+</span><span data-line="772">        <span class="n">entities</span><span class="o">=</span><span class="n">_record_refs</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">ids</span> <span class="ow">or</span> <span class="p">[]),</span>
+</span><span data-line="773">        <span class="n">everything</span><span class="o">=</span><span class="nb">all</span><span class="p">,</span>
+</span><span data-line="774">        <span class="n">dry_run</span><span class="o">=</span><span class="n">dry_run</span><span class="p">,</span>
+</span><span data-line="775">    <span class="p">)</span>
+</span><span data-line="776">    <span class="n">summary</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="777">        <span class="p">(</span>
+</span><span data-line="778">            <span class="sa">f</span><span class="s2">"would refuse: the message does not name </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">'unnamed_in_message'</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="779">            <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">"unnamed_in_message"</span><span class="p">]</span>
+</span><span data-line="780">            <span class="k">else</span> <span class="sa">f</span><span class="s2">"would commit </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'would_commit'</span><span class="p">]</span><span class="si">}</span><span class="s2"> change(s) in </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">'entities'</span><span class="p">])</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'no records'</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="781">        <span class="p">)</span>
+</span><span data-line="782">        <span class="k">if</span> <span class="n">dry_run</span>
+</span><span data-line="783">        <span class="k">else</span> <span class="sa">f</span><span class="s2">"pushed to </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'repo'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="784">        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pushed"</span><span class="p">)</span>
+</span><span data-line="785">        <span class="k">else</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"note"</span><span class="p">,</span> <span class="s2">"nothing pushed"</span><span class="p">)</span>
+</span><span data-line="786">    <span class="p">)</span>
+</span><span data-line="787">    <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">result</span><span class="p">,</span> <span class="s2">"summary"</span><span class="p">:</span> <span class="n">summary</span><span class="p">}</span></div>
 
-</span><span data-line="772">
-</span><span data-line="773">
+</span><span data-line="788">
+</span><span data-line="789">
+</span><span data-line="790"><span class="k">def</span><span class="w"> </span><span class="nf">_record_refs</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="791"><span class="w">    </span><span class="sd">"""Record folders for ``ids``: a record that exists, or (a deleted one) a ``kind/slug`` folder named outright."""</span>
+</span><span data-line="792">    <span class="n">store</span> <span class="o">=</span> <span class="n">Store</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+</span><span data-line="793">    <span class="n">folders</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="794">    <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+</span><span data-line="795">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="796">            <span class="n">folders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">find_entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+</span><span data-line="797">        <span class="k">except</span> <span class="n">AcquaintError</span><span class="p">:</span>
+</span><span data-line="798">            <span class="k">if</span> <span class="n">ref</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+</span><span data-line="799">                <span class="k">raise</span>
+</span><span data-line="800">            <span class="n">folders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>  <span class="c1"># e.g. people/ada-lovelace after `forget`; sync validates the shape</span>
+</span><span data-line="801">    <span class="k">return</span> <span class="n">folders</span>
+</span><span data-line="802">
+</span><span data-line="803">
 <div class="viewcode-block" id="sync_pull">
 <a class="viewcode-back" href="../../_autosummary/acquaint.tools.html#acquaint.sync_pull">[docs]</a>
-</span><span data-line="774"><span class="k">def</span><span class="w"> </span><span class="nf">sync_pull</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="775"><span class="w">    </span><span class="sd">"""Pull the store from its private remote, rebasing local work on top."""</span>
-</span><span data-line="776">    <span class="n">result</span> <span class="o">=</span> <span class="n">_sync</span><span class="o">.</span><span class="n">pull</span><span class="p">(</span><span class="n">_data_dir</span><span class="p">(</span><span class="n">data_dir</span><span class="p">),</span> <span class="n">dry_run</span><span class="o">=</span><span class="n">dry_run</span><span class="p">)</span>
-</span><span data-line="777">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="778">        <span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="779">        <span class="o">**</span><span class="n">result</span><span class="p">,</span>
-</span><span data-line="780">        <span class="s2">"summary"</span><span class="p">:</span> <span class="s2">"dry run: "</span> <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">"plan"</span><span class="p">])</span>
-</span><span data-line="781">        <span class="k">if</span> <span class="n">dry_run</span>
-</span><span data-line="782">        <span class="k">else</span> <span class="sa">f</span><span class="s2">"pulled </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'repo'</span><span class="p">]</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'head'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="783">    <span class="p">}</span></div>
+</span><span data-line="804"><span class="k">def</span><span class="w"> </span><span class="nf">sync_pull</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="805"><span class="w">    </span><span class="sd">"""Pull the store from its private remote, rebasing local work on top."""</span>
+</span><span data-line="806">    <span class="n">result</span> <span class="o">=</span> <span class="n">_sync</span><span class="o">.</span><span class="n">pull</span><span class="p">(</span><span class="n">_data_dir</span><span class="p">(</span><span class="n">data_dir</span><span class="p">),</span> <span class="n">dry_run</span><span class="o">=</span><span class="n">dry_run</span><span class="p">)</span>
+</span><span data-line="807">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="808">        <span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="809">        <span class="o">**</span><span class="n">result</span><span class="p">,</span>
+</span><span data-line="810">        <span class="s2">"summary"</span><span class="p">:</span> <span class="s2">"dry run: "</span> <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">"plan"</span><span class="p">])</span>
+</span><span data-line="811">        <span class="k">if</span> <span class="n">dry_run</span>
+</span><span data-line="812">        <span class="k">else</span> <span class="sa">f</span><span class="s2">"pulled </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'repo'</span><span class="p">]</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'head'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="813">    <span class="p">}</span></div>
 
-</span><span data-line="784">
-</span><span data-line="785">
+</span><span data-line="814">
+</span><span data-line="815">
 <div class="viewcode-block" id="sync_status">
 <a class="viewcode-back" href="../../_autosummary/acquaint.tools.html#acquaint.sync_status">[docs]</a>
-</span><span data-line="786"><span class="k">def</span><span class="w"> </span><span class="nf">sync_status</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">check_visibility</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="787"><span class="w">    </span><span class="sd">"""Whether the store is synced, to which repository, uncommitted changes, ahead/behind, the guard, and live visibility."""</span>
-</span><span data-line="788">    <span class="n">result</span> <span class="o">=</span> <span class="n">_sync</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="n">_data_dir</span><span class="p">(</span><span class="n">data_dir</span><span class="p">),</span> <span class="n">check_visibility</span><span class="o">=</span><span class="n">check_visibility</span><span class="p">)</span>
-</span><span data-line="789">    <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">[</span><span class="s2">"synced"</span><span class="p">]:</span>
-</span><span data-line="790">        <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">result</span><span class="p">,</span> <span class="s2">"summary"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"note"</span><span class="p">]}</span>
-</span><span data-line="791">    <span class="n">problems</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="792">        <span class="n">p</span>
-</span><span data-line="793">        <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">bad</span> <span class="ow">in</span> <span class="p">(</span>
-</span><span data-line="794">            <span class="p">(</span>
-</span><span data-line="795">                <span class="s2">"visibility is not PRIVATE"</span><span class="p">,</span>
-</span><span data-line="796">                <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"visibility"</span><span class="p">,</span> <span class="s2">"PRIVATE"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"PRIVATE"</span><span class="p">,</span>
-</span><span data-line="797">            <span class="p">),</span>
-</span><span data-line="798">            <span class="p">(</span>
-</span><span data-line="799">                <span class="s2">"pre-push guard missing, changed or not active"</span><span class="p">,</span>
-</span><span data-line="800">                <span class="ow">not</span> <span class="n">result</span><span class="p">[</span><span class="s2">"hook_installed"</span><span class="p">],</span>
-</span><span data-line="801">            <span class="p">),</span>
-</span><span data-line="802">        <span class="p">)</span>
-</span><span data-line="803">        <span class="k">if</span> <span class="n">bad</span>
-</span><span data-line="804">    <span class="p">]</span>
-</span><span data-line="805">    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">"synced"</span><span class="p">]</span>
-</span><span data-line="806">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="807">        <span class="s2">"ok"</span><span class="p">:</span> <span class="ow">not</span> <span class="n">problems</span><span class="p">,</span>
-</span><span data-line="808">        <span class="o">**</span><span class="n">result</span><span class="p">,</span>
-</span><span data-line="809">        <span class="s2">"problems"</span><span class="p">:</span> <span class="n">problems</span><span class="p">,</span>
-</span><span data-line="810">        <span class="s2">"summary"</span><span class="p">:</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"synced to </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'repo'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="811">        <span class="s2">"text"</span><span class="p">:</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span> <span class="o">+</span> <span class="n">problems</span><span class="p">),</span>
-</span><span data-line="812">    <span class="p">}</span></div>
+</span><span data-line="816"><span class="k">def</span><span class="w"> </span><span class="nf">sync_status</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">check_visibility</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="817"><span class="w">    </span><span class="sd">"""Whether the store is synced, to which repository, uncommitted changes, ahead/behind, the guard, and live visibility."""</span>
+</span><span data-line="818">    <span class="n">result</span> <span class="o">=</span> <span class="n">_sync</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="n">_data_dir</span><span class="p">(</span><span class="n">data_dir</span><span class="p">),</span> <span class="n">check_visibility</span><span class="o">=</span><span class="n">check_visibility</span><span class="p">)</span>
+</span><span data-line="819">    <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">[</span><span class="s2">"synced"</span><span class="p">]:</span>
+</span><span data-line="820">        <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">result</span><span class="p">,</span> <span class="s2">"summary"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"note"</span><span class="p">]}</span>
+</span><span data-line="821">    <span class="n">problems</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="822">        <span class="n">p</span>
+</span><span data-line="823">        <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">bad</span> <span class="ow">in</span> <span class="p">(</span>
+</span><span data-line="824">            <span class="p">(</span>
+</span><span data-line="825">                <span class="s2">"visibility is not PRIVATE"</span><span class="p">,</span>
+</span><span data-line="826">                <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"visibility"</span><span class="p">,</span> <span class="s2">"PRIVATE"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"PRIVATE"</span><span class="p">,</span>
+</span><span data-line="827">            <span class="p">),</span>
+</span><span data-line="828">            <span class="p">(</span>
+</span><span data-line="829">                <span class="s2">"pre-push guard missing, changed or not active"</span><span class="p">,</span>
+</span><span data-line="830">                <span class="ow">not</span> <span class="n">result</span><span class="p">[</span><span class="s2">"hook_installed"</span><span class="p">],</span>
+</span><span data-line="831">            <span class="p">),</span>
+</span><span data-line="832">        <span class="p">)</span>
+</span><span data-line="833">        <span class="k">if</span> <span class="n">bad</span>
+</span><span data-line="834">    <span class="p">]</span>
+</span><span data-line="835">    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">"synced"</span><span class="p">]</span>
+</span><span data-line="836">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="837">        <span class="s2">"ok"</span><span class="p">:</span> <span class="ow">not</span> <span class="n">problems</span><span class="p">,</span>
+</span><span data-line="838">        <span class="o">**</span><span class="n">result</span><span class="p">,</span>
+</span><span data-line="839">        <span class="s2">"problems"</span><span class="p">:</span> <span class="n">problems</span><span class="p">,</span>
+</span><span data-line="840">        <span class="s2">"summary"</span><span class="p">:</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"synced to </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'repo'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="841">        <span class="s2">"text"</span><span class="p">:</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span> <span class="o">+</span> <span class="n">problems</span><span class="p">),</span>
+</span><span data-line="842">    <span class="p">}</span></div>
 
-</span><span data-line="813">
-</span><span data-line="814">
+</span><span data-line="843">
+</span><span data-line="844">
 <div class="viewcode-block" id="todo_preflight">
 <a class="viewcode-back" href="../../_autosummary/acquaint.tools.html#acquaint.todo_preflight">[docs]</a>
-</span><span data-line="815"><span class="k">def</span><span class="w"> </span><span class="nf">todo_preflight</span><span class="p">(</span><span class="n">project</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">people</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="816"><span class="w">    </span><span class="sd">"""Before filing a meeting's todos as GitHub issues: is the project unambiguous, is every participant (comma-separated) registered and linked to it, and does it declare a meta repository that is private now? Returns the repository, each person's GitHub login, and a fix for every problem."""</span>
-</span><span data-line="817">    <span class="n">found</span> <span class="o">=</span> <span class="n">_meta</span><span class="o">.</span><span class="n">todo_preflight</span><span class="p">(</span><span class="n">_store</span><span class="p">(</span><span class="n">data_dir</span><span class="p">),</span> <span class="n">project</span><span class="p">,</span> <span class="n">people</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">))</span>
-</span><span data-line="818">    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="819">        <span class="sa">f</span><span class="s2">"project: </span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'project'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'?'</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="820">        <span class="sa">f</span><span class="s2">"meta repo: </span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'meta_repo'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'?'</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="821">    <span class="p">]</span>
-</span><span data-line="822">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">'ref'</span><span class="p">]</span><span class="si">}</span><span class="s2">: github </span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">'github'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'(none)'</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">found</span><span class="p">[</span><span class="s2">"people"</span><span class="p">]]</span>
-</span><span data-line="823">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
-</span><span data-line="824">        <span class="sa">f</span><span class="s2">"PROBLEM (</span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">'check'</span><span class="p">]</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">'message'</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">  fix: </span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">'fix'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="825">        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">found</span><span class="p">[</span><span class="s2">"problems"</span><span class="p">]</span>
-</span><span data-line="826">    <span class="p">]</span>
-</span><span data-line="827">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"warning: </span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">found</span><span class="p">[</span><span class="s2">"warnings"</span><span class="p">]]</span>
-</span><span data-line="828">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="829">        <span class="o">**</span><span class="n">found</span><span class="p">,</span>
-</span><span data-line="830">        <span class="s2">"summary"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"todos for </span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'project'</span><span class="p">]</span><span class="si">}</span><span class="s2"> go to </span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'meta_repo'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="831">        <span class="k">if</span> <span class="n">found</span><span class="p">[</span><span class="s2">"ok"</span><span class="p">]</span>
-</span><span data-line="832">        <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">[</span><span class="s1">'problems'</span><span class="p">])</span><span class="si">}</span><span class="s2"> precondition(s) unmet; fix them before filing todos"</span><span class="p">,</span>
-</span><span data-line="833">        <span class="s2">"text"</span><span class="p">:</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">),</span>
-</span><span data-line="834">    <span class="p">}</span></div>
+</span><span data-line="845"><span class="k">def</span><span class="w"> </span><span class="nf">todo_preflight</span><span class="p">(</span><span class="n">project</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">people</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="846"><span class="w">    </span><span class="sd">"""Before filing a meeting's todos as GitHub issues: is the project unambiguous, is every participant (comma-separated) registered and linked to it, and does it declare a meta repository that is private now? Returns the repository, each person's GitHub login, and a fix for every problem."""</span>
+</span><span data-line="847">    <span class="n">found</span> <span class="o">=</span> <span class="n">_meta</span><span class="o">.</span><span class="n">todo_preflight</span><span class="p">(</span><span class="n">_store</span><span class="p">(</span><span class="n">data_dir</span><span class="p">),</span> <span class="n">project</span><span class="p">,</span> <span class="n">people</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">))</span>
+</span><span data-line="848">    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="849">        <span class="sa">f</span><span class="s2">"project: </span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'project'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'?'</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="850">        <span class="sa">f</span><span class="s2">"meta repo: </span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'meta_repo'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'?'</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="851">    <span class="p">]</span>
+</span><span data-line="852">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">'ref'</span><span class="p">]</span><span class="si">}</span><span class="s2">: github </span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">'github'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'(none)'</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">found</span><span class="p">[</span><span class="s2">"people"</span><span class="p">]]</span>
+</span><span data-line="853">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
+</span><span data-line="854">        <span class="sa">f</span><span class="s2">"PROBLEM (</span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">'check'</span><span class="p">]</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">'message'</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">  fix: </span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">'fix'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="855">        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">found</span><span class="p">[</span><span class="s2">"problems"</span><span class="p">]</span>
+</span><span data-line="856">    <span class="p">]</span>
+</span><span data-line="857">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"warning: </span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">found</span><span class="p">[</span><span class="s2">"warnings"</span><span class="p">]]</span>
+</span><span data-line="858">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="859">        <span class="o">**</span><span class="n">found</span><span class="p">,</span>
+</span><span data-line="860">        <span class="s2">"summary"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"todos for </span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'project'</span><span class="p">]</span><span class="si">}</span><span class="s2"> go to </span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'meta_repo'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="861">        <span class="k">if</span> <span class="n">found</span><span class="p">[</span><span class="s2">"ok"</span><span class="p">]</span>
+</span><span data-line="862">        <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">[</span><span class="s1">'problems'</span><span class="p">])</span><span class="si">}</span><span class="s2"> precondition(s) unmet; fix them before filing todos"</span><span class="p">,</span>
+</span><span data-line="863">        <span class="s2">"text"</span><span class="p">:</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">),</span>
+</span><span data-line="864">    <span class="p">}</span></div>
 
-</span><span data-line="835">
-</span><span data-line="836">
-</span><span data-line="837"><span class="c1"># ------------------------------------------------------------------------ digests</span>
-</span><span data-line="838">
-</span><span data-line="839">
+</span><span data-line="865">
+</span><span data-line="866">
+</span><span data-line="867"><span class="c1"># ------------------------------------------------------------------------ digests</span>
+</span><span data-line="868">
+</span><span data-line="869">
 <div class="viewcode-block" id="digest">
 <a class="viewcode-back" href="../../_autosummary/acquaint.tools.html#acquaint.digest">[docs]</a>
-</span><span data-line="840"><span class="k">def</span><span class="w"> </span><span class="nf">digest</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="841"><span class="w">    </span><span class="sd">"""The digests of an entity's conversations (notes on what each said, kept in ``digests/``) and their watermarks: how far each was processed, per scope (``content``, ``style``). With ``ref`` (a correspond reference, e.g. ``whatsapp:ada-lovelace``), that one digest and ``since``, the time to hand to ``correspond read &lt;ref&gt; --since`` for what is new. Reads only."""</span>
-</span><span data-line="842">    <span class="n">store</span> <span class="o">=</span> <span class="n">_store</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
-</span><span data-line="843">    <span class="n">found</span> <span class="o">=</span> <span class="n">Entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">find_entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">entity</span><span class="p">))</span>
-</span><span data-line="844">    <span class="k">if</span> <span class="n">ref</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="845">        <span class="n">listed</span> <span class="o">=</span> <span class="n">_digests</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
-</span><span data-line="846">        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="847">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">d</span><span class="p">[</span><span class="s1">'ref'</span><span class="p">]</span><span class="si">}</span><span class="s2">: content through </span><span class="si">{</span><span class="n">d</span><span class="p">[</span><span class="s1">'through'</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'content'</span><span class="p">,</span><span class="w"> </span><span class="s1">'(nothing)'</span><span class="p">)</span><span class="si">}</span><span class="s2">, style through </span><span class="si">{</span><span class="n">d</span><span class="p">[</span><span class="s1">'through'</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'style'</span><span class="p">,</span><span class="w"> </span><span class="s1">'(nothing)'</span><span class="p">)</span><span class="si">}</span><span class="s2"> · </span><span class="si">{</span><span class="n">d</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="848">            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">listed</span>
-</span><span data-line="849">        <span class="p">]</span>
-</span><span data-line="850">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="851">            <span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="852">            <span class="s2">"id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="p">,</span>
-</span><span data-line="853">            <span class="s2">"digests"</span><span class="p">:</span> <span class="n">listed</span><span class="p">,</span>
-</span><span data-line="854">            <span class="s2">"summary"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">listed</span><span class="p">)</span><span class="si">}</span><span class="s2"> digest(s) for </span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="855">            <span class="s2">"text"</span><span class="p">:</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"no digests for </span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="856">        <span class="p">}</span>
-</span><span data-line="857">    <span class="n">one</span> <span class="o">=</span> <span class="n">find_digest</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">ref</span><span class="p">)</span>
-</span><span data-line="858">    <span class="k">if</span> <span class="n">one</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="859">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="860">            <span class="s2">"ok"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="861">            <span class="s2">"id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="p">,</span>
-</span><span data-line="862">            <span class="s2">"ref"</span><span class="p">:</span> <span class="n">ref</span><span class="p">,</span>
-</span><span data-line="863">            <span class="s2">"since"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="864">            <span class="s2">"summary"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2"> has no digest of </span><span class="si">{</span><span class="n">ref</span><span class="si">}</span><span class="s2">: nothing processed yet; create one with acquaint digest-new </span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">ref</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="865">        <span class="p">}</span>
-</span><span data-line="866">    <span class="n">since</span> <span class="o">=</span> <span class="n">one</span><span class="p">[</span><span class="s2">"through"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"content"</span><span class="p">)</span>
-</span><span data-line="867">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="868">        <span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="869">        <span class="s2">"id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="p">,</span>
-</span><span data-line="870">        <span class="o">**</span><span class="n">one</span><span class="p">,</span>
-</span><span data-line="871">        <span class="s2">"since"</span><span class="p">:</span> <span class="n">since</span><span class="p">,</span>
-</span><span data-line="872">        <span class="s2">"summary"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ref</span><span class="si">}</span><span class="s2">: content through </span><span class="si">{</span><span class="n">since</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'(nothing)'</span><span class="si">}</span><span class="s2">; style through </span><span class="si">{</span><span class="n">one</span><span class="p">[</span><span class="s1">'through'</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'style'</span><span class="p">,</span><span class="w"> </span><span class="s1">'(nothing)'</span><span class="p">)</span><span class="si">}</span><span class="s2"> · </span><span class="si">{</span><span class="n">one</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="873">    <span class="p">}</span></div>
-
-</span><span data-line="874">
-</span><span data-line="875">
-<div class="viewcode-block" id="digest_new">
-<a class="viewcode-back" href="../../_autosummary/acquaint.tools.html#acquaint.digest_new">[docs]</a>
-</span><span data-line="876"><span class="k">def</span><span class="w"> </span><span class="nf">digest_new</span><span class="p">(</span>
-</span><span data-line="877">    <span class="n">entity</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">archive</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"correspond"</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="878"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="879"><span class="w">    </span><span class="sd">"""Create the digest of one conversation (``ref``, a correspond reference) for an entity, from the template: Orientation, Takeaways, Themes, Index, Open threads, and an empty watermark. ``archive`` names where the messages themselves live (never this store)."""</span>
-</span><span data-line="880">    <span class="n">store</span> <span class="o">=</span> <span class="n">_store</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
-</span><span data-line="881">    <span class="n">found</span> <span class="o">=</span> <span class="n">new_digest</span><span class="p">(</span><span class="n">Entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">find_entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">entity</span><span class="p">)),</span> <span class="n">ref</span><span class="p">,</span> <span class="n">archive</span><span class="o">=</span><span class="n">archive</span><span class="p">)</span>
-</span><span data-line="882">    <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">found</span><span class="p">,</span> <span class="s2">"summary"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"created </span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">}</span></div>
-
-</span><span data-line="883">
-</span><span data-line="884">
-<div class="viewcode-block" id="digest_mark">
-<a class="viewcode-back" href="../../_autosummary/acquaint.tools.html#acquaint.digest_mark">[docs]</a>
-</span><span data-line="885"><span class="k">def</span><span class="w"> </span><span class="nf">digest_mark</span><span class="p">(</span>
-</span><span data-line="886">    <span class="n">entity</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="887">    <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="888">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="889">    <span class="n">through</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="890">    <span class="n">scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"content"</span><span class="p">,</span>
-</span><span data-line="891">    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="892">    <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="893"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="894"><span class="w">    </span><span class="sd">"""Record that a conversation has been processed through ``through`` (the ISO time of the last message processed), for ``scope`` (``content`` or ``style``). Moving a watermark back needs ``force``."""</span>
-</span><span data-line="895">    <span class="n">store</span> <span class="o">=</span> <span class="n">_store</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
-</span><span data-line="896">    <span class="n">found</span> <span class="o">=</span> <span class="n">mark_digest</span><span class="p">(</span>
-</span><span data-line="897">        <span class="n">Entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">find_entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">entity</span><span class="p">)),</span> <span class="n">ref</span><span class="p">,</span> <span class="n">through</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="n">force</span>
-</span><span data-line="898">    <span class="p">)</span>
-</span><span data-line="899">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="900">        <span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="901">        <span class="o">**</span><span class="n">found</span><span class="p">,</span>
-</span><span data-line="902">        <span class="s2">"summary"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ref</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">scope</span><span class="si">}</span><span class="s2"> processed through </span><span class="si">{</span><span class="n">through</span><span class="si">}</span><span class="s2"> (was </span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'previous'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'nothing'</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+</span><span data-line="870"><span class="k">def</span><span class="w"> </span><span class="nf">digest</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="871"><span class="w">    </span><span class="sd">"""The digests of an entity's conversations (notes on what each said, kept in ``digests/``) and their watermarks: how far each was processed, per scope (``content``, ``style``). With ``ref`` (a correspond reference, e.g. ``whatsapp:ada-lovelace``), that one digest and ``since``, the time to hand to ``correspond read &lt;ref&gt; --since`` for what is new. Reads only."""</span>
+</span><span data-line="872">    <span class="n">store</span> <span class="o">=</span> <span class="n">_store</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
+</span><span data-line="873">    <span class="n">found</span> <span class="o">=</span> <span class="n">Entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">find_entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">entity</span><span class="p">))</span>
+</span><span data-line="874">    <span class="k">if</span> <span class="n">ref</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="875">        <span class="n">listed</span> <span class="o">=</span> <span class="n">_digests</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
+</span><span data-line="876">        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="877">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">d</span><span class="p">[</span><span class="s1">'ref'</span><span class="p">]</span><span class="si">}</span><span class="s2">: content through </span><span class="si">{</span><span class="n">d</span><span class="p">[</span><span class="s1">'through'</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'content'</span><span class="p">,</span><span class="w"> </span><span class="s1">'(nothing)'</span><span class="p">)</span><span class="si">}</span><span class="s2">, style through </span><span class="si">{</span><span class="n">d</span><span class="p">[</span><span class="s1">'through'</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'style'</span><span class="p">,</span><span class="w"> </span><span class="s1">'(nothing)'</span><span class="p">)</span><span class="si">}</span><span class="s2"> · </span><span class="si">{</span><span class="n">d</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="878">            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">listed</span>
+</span><span data-line="879">        <span class="p">]</span>
+</span><span data-line="880">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="881">            <span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="882">            <span class="s2">"id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="p">,</span>
+</span><span data-line="883">            <span class="s2">"digests"</span><span class="p">:</span> <span class="n">listed</span><span class="p">,</span>
+</span><span data-line="884">            <span class="s2">"summary"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">listed</span><span class="p">)</span><span class="si">}</span><span class="s2"> digest(s) for </span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="885">            <span class="s2">"text"</span><span class="p">:</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"no digests for </span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="886">        <span class="p">}</span>
+</span><span data-line="887">    <span class="n">one</span> <span class="o">=</span> <span class="n">find_digest</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">ref</span><span class="p">)</span>
+</span><span data-line="888">    <span class="k">if</span> <span class="n">one</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="889">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="890">            <span class="s2">"ok"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="891">            <span class="s2">"id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="p">,</span>
+</span><span data-line="892">            <span class="s2">"ref"</span><span class="p">:</span> <span class="n">ref</span><span class="p">,</span>
+</span><span data-line="893">            <span class="s2">"since"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="894">            <span class="s2">"summary"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2"> has no digest of </span><span class="si">{</span><span class="n">ref</span><span class="si">}</span><span class="s2">: nothing processed yet; create one with acquaint digest-new </span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">ref</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="895">        <span class="p">}</span>
+</span><span data-line="896">    <span class="n">since</span> <span class="o">=</span> <span class="n">one</span><span class="p">[</span><span class="s2">"through"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"content"</span><span class="p">)</span>
+</span><span data-line="897">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="898">        <span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="899">        <span class="s2">"id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="p">,</span>
+</span><span data-line="900">        <span class="o">**</span><span class="n">one</span><span class="p">,</span>
+</span><span data-line="901">        <span class="s2">"since"</span><span class="p">:</span> <span class="n">since</span><span class="p">,</span>
+</span><span data-line="902">        <span class="s2">"summary"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ref</span><span class="si">}</span><span class="s2">: content through </span><span class="si">{</span><span class="n">since</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'(nothing)'</span><span class="si">}</span><span class="s2">; style through </span><span class="si">{</span><span class="n">one</span><span class="p">[</span><span class="s1">'through'</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'style'</span><span class="p">,</span><span class="w"> </span><span class="s1">'(nothing)'</span><span class="p">)</span><span class="si">}</span><span class="s2"> · </span><span class="si">{</span><span class="n">one</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
 </span><span data-line="903">    <span class="p">}</span></div>
 
 </span><span data-line="904">
 </span><span data-line="905">
+<div class="viewcode-block" id="digest_new">
+<a class="viewcode-back" href="../../_autosummary/acquaint.tools.html#acquaint.digest_new">[docs]</a>
+</span><span data-line="906"><span class="k">def</span><span class="w"> </span><span class="nf">digest_new</span><span class="p">(</span>
+</span><span data-line="907">    <span class="n">entity</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">archive</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"correspond"</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="908"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="909"><span class="w">    </span><span class="sd">"""Create the digest of one conversation (``ref``, a correspond reference) for an entity, from the template: Orientation, Takeaways, Themes, Index, Open threads, and an empty watermark. ``archive`` names where the messages themselves live (never this store)."""</span>
+</span><span data-line="910">    <span class="n">store</span> <span class="o">=</span> <span class="n">_store</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
+</span><span data-line="911">    <span class="n">found</span> <span class="o">=</span> <span class="n">new_digest</span><span class="p">(</span><span class="n">Entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">find_entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">entity</span><span class="p">)),</span> <span class="n">ref</span><span class="p">,</span> <span class="n">archive</span><span class="o">=</span><span class="n">archive</span><span class="p">)</span>
+</span><span data-line="912">    <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">found</span><span class="p">,</span> <span class="s2">"summary"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"created </span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">}</span></div>
+
+</span><span data-line="913">
+</span><span data-line="914">
+<div class="viewcode-block" id="digest_mark">
+<a class="viewcode-back" href="../../_autosummary/acquaint.tools.html#acquaint.digest_mark">[docs]</a>
+</span><span data-line="915"><span class="k">def</span><span class="w"> </span><span class="nf">digest_mark</span><span class="p">(</span>
+</span><span data-line="916">    <span class="n">entity</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="917">    <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="918">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="919">    <span class="n">through</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="920">    <span class="n">scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"content"</span><span class="p">,</span>
+</span><span data-line="921">    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="922">    <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="923"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="924"><span class="w">    </span><span class="sd">"""Record that a conversation has been processed through ``through`` (the ISO time of the last message processed), for ``scope`` (``content`` or ``style``). Moving a watermark back needs ``force``."""</span>
+</span><span data-line="925">    <span class="n">store</span> <span class="o">=</span> <span class="n">_store</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
+</span><span data-line="926">    <span class="n">found</span> <span class="o">=</span> <span class="n">mark_digest</span><span class="p">(</span>
+</span><span data-line="927">        <span class="n">Entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">find_entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">entity</span><span class="p">)),</span> <span class="n">ref</span><span class="p">,</span> <span class="n">through</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="n">force</span>
+</span><span data-line="928">    <span class="p">)</span>
+</span><span data-line="929">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="930">        <span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="931">        <span class="o">**</span><span class="n">found</span><span class="p">,</span>
+</span><span data-line="932">        <span class="s2">"summary"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ref</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">scope</span><span class="si">}</span><span class="s2"> processed through </span><span class="si">{</span><span class="n">through</span><span class="si">}</span><span class="s2"> (was </span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'previous'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'nothing'</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+</span><span data-line="933">    <span class="p">}</span></div>
+
+</span><span data-line="934">
+</span><span data-line="935">
 <div class="viewcode-block" id="digest_append">
 <a class="viewcode-back" href="../../_autosummary/acquaint.tools.html#acquaint.digest_append">[docs]</a>
-</span><span data-line="906"><span class="k">def</span><span class="w"> </span><span class="nf">digest_append</span><span class="p">(</span>
-</span><span data-line="907">    <span class="n">entity</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="908">    <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="909">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="910">    <span class="n">heading</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="911">    <span class="n">rows</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="912">    <span class="n">through</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="913">    <span class="n">scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"content"</span><span class="p">,</span>
-</span><span data-line="914">    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="915">    <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="916"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="917"><span class="w">    </span><span class="sd">"""Add a dated batch to a digest: a ``### &lt;heading&gt;`` block (e.g. the date range) at the end of each section named in ``rows``. ``rows`` is JSON ``{"Takeaways": ["line [at: &lt;ISO time&gt;]"]}``, or ``section | line | anchor`` rows (one per line), or ``@&lt;path&gt;`` to read either from a file. Lines under Takeaways, Themes, Index and Open threads need an ``[at: …]`` or ``[source: …]`` anchor, else nothing is written. With ``through`` (ISO time of the last message processed), the watermark moves in the same call."""</span>
-</span><span data-line="918">    <span class="n">store</span> <span class="o">=</span> <span class="n">_store</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
-</span><span data-line="919">    <span class="k">if</span> <span class="n">rows</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"@"</span><span class="p">):</span>
-</span><span data-line="920">        <span class="k">try</span><span class="p">:</span>
-</span><span data-line="921">            <span class="n">rows</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
-</span><span data-line="922">        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
-</span><span data-line="923">            <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"cannot read the rows file: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
-</span><span data-line="924">    <span class="n">found</span> <span class="o">=</span> <span class="n">append_batch</span><span class="p">(</span>
-</span><span data-line="925">        <span class="n">Entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">find_entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">entity</span><span class="p">)),</span>
-</span><span data-line="926">        <span class="n">ref</span><span class="p">,</span>
-</span><span data-line="927">        <span class="n">heading</span><span class="o">=</span><span class="n">heading</span><span class="p">,</span>
-</span><span data-line="928">        <span class="n">rows</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span>
-</span><span data-line="929">        <span class="n">through</span><span class="o">=</span><span class="n">through</span><span class="p">,</span>
-</span><span data-line="930">        <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">,</span>
-</span><span data-line="931">        <span class="n">force</span><span class="o">=</span><span class="n">force</span><span class="p">,</span>
-</span><span data-line="932">    <span class="p">)</span>
-</span><span data-line="933">    <span class="n">moved</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"; </span><span class="si">{</span><span class="n">scope</span><span class="si">}</span><span class="s2"> watermark now </span><span class="si">{</span><span class="n">through</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">through</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="934">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="935">        <span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="936">        <span class="o">**</span><span class="n">found</span><span class="p">,</span>
-</span><span data-line="937">        <span class="s2">"summary"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'lines'</span><span class="p">]</span><span class="si">}</span><span class="s2"> line(s) under </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">found</span><span class="p">[</span><span class="s1">'sections'</span><span class="p">])</span><span class="si">}</span><span class="s2"> as `</span><span class="si">{</span><span class="n">heading</span><span class="si">}</span><span class="s2">`</span><span class="si">{</span><span class="n">moved</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="938">    <span class="p">}</span></div>
+</span><span data-line="936"><span class="k">def</span><span class="w"> </span><span class="nf">digest_append</span><span class="p">(</span>
+</span><span data-line="937">    <span class="n">entity</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="938">    <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="939">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="940">    <span class="n">heading</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="941">    <span class="n">rows</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="942">    <span class="n">through</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="943">    <span class="n">scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"content"</span><span class="p">,</span>
+</span><span data-line="944">    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="945">    <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="946"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="947"><span class="w">    </span><span class="sd">"""Add a dated batch to a digest: a ``### &lt;heading&gt;`` block (e.g. the date range) at the end of each section named in ``rows``. ``rows`` is JSON ``{"Takeaways": ["line [at: &lt;ISO time&gt;]"]}``, or ``section | line | anchor`` rows (one per line), or ``@&lt;path&gt;`` to read either from a file. Lines under Takeaways, Themes, Index and Open threads need an ``[at: …]`` or ``[source: …]`` anchor, else nothing is written. With ``through`` (ISO time of the last message processed), the watermark moves in the same call."""</span>
+</span><span data-line="948">    <span class="n">store</span> <span class="o">=</span> <span class="n">_store</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
+</span><span data-line="949">    <span class="k">if</span> <span class="n">rows</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"@"</span><span class="p">):</span>
+</span><span data-line="950">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="951">            <span class="n">rows</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+</span><span data-line="952">        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+</span><span data-line="953">            <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"cannot read the rows file: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+</span><span data-line="954">    <span class="n">found</span> <span class="o">=</span> <span class="n">append_batch</span><span class="p">(</span>
+</span><span data-line="955">        <span class="n">Entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">find_entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">entity</span><span class="p">)),</span>
+</span><span data-line="956">        <span class="n">ref</span><span class="p">,</span>
+</span><span data-line="957">        <span class="n">heading</span><span class="o">=</span><span class="n">heading</span><span class="p">,</span>
+</span><span data-line="958">        <span class="n">rows</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span>
+</span><span data-line="959">        <span class="n">through</span><span class="o">=</span><span class="n">through</span><span class="p">,</span>
+</span><span data-line="960">        <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">,</span>
+</span><span data-line="961">        <span class="n">force</span><span class="o">=</span><span class="n">force</span><span class="p">,</span>
+</span><span data-line="962">    <span class="p">)</span>
+</span><span data-line="963">    <span class="n">moved</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"; </span><span class="si">{</span><span class="n">scope</span><span class="si">}</span><span class="s2"> watermark now </span><span class="si">{</span><span class="n">through</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">through</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="964">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="965">        <span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="966">        <span class="o">**</span><span class="n">found</span><span class="p">,</span>
+</span><span data-line="967">        <span class="s2">"summary"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="s1">'lines'</span><span class="p">]</span><span class="si">}</span><span class="s2"> line(s) under </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">found</span><span class="p">[</span><span class="s1">'sections'</span><span class="p">])</span><span class="si">}</span><span class="s2"> as `</span><span class="si">{</span><span class="n">heading</span><span class="si">}</span><span class="s2">`</span><span class="si">{</span><span class="n">moved</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="968">    <span class="p">}</span></div>
 
-</span><span data-line="939">
-</span><span data-line="940">
-</span><span data-line="941"><span class="c1">#: Every tool, in the order surfaces list them.</span>
-</span><span data-line="942"><span class="n">TOOLS</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="943">    <span class="n">who</span><span class="p">,</span>
-</span><span data-line="944">    <span class="n">resolve</span><span class="p">,</span>
-</span><span data-line="945">    <span class="n">check</span><span class="p">,</span>
-</span><span data-line="946">    <span class="n">reach</span><span class="p">,</span>
-</span><span data-line="947">    <span class="n">brief</span><span class="p">,</span>
-</span><span data-line="948">    <span class="n">remember</span><span class="p">,</span>
-</span><span data-line="949">    <span class="n">lint</span><span class="p">,</span>
-</span><span data-line="950">    <span class="n">new</span><span class="p">,</span>
-</span><span data-line="951">    <span class="n">rename</span><span class="p">,</span>
-</span><span data-line="952">    <span class="n">forget</span><span class="p">,</span>
-</span><span data-line="953">    <span class="n">sync_init</span><span class="p">,</span>
-</span><span data-line="954">    <span class="n">sync_push</span><span class="p">,</span>
-</span><span data-line="955">    <span class="n">sync_pull</span><span class="p">,</span>
-</span><span data-line="956">    <span class="n">sync_status</span><span class="p">,</span>
-</span><span data-line="957">    <span class="n">style_lint</span><span class="p">,</span>
-</span><span data-line="958">    <span class="n">disclosure</span><span class="p">,</span>
-</span><span data-line="959">    <span class="n">review</span><span class="p">,</span>
-</span><span data-line="960">    <span class="n">todo_preflight</span><span class="p">,</span>
-</span><span data-line="961">    <span class="n">digest</span><span class="p">,</span>
-</span><span data-line="962">    <span class="n">digest_new</span><span class="p">,</span>
-</span><span data-line="963">    <span class="n">digest_append</span><span class="p">,</span>
-</span><span data-line="964">    <span class="n">digest_mark</span><span class="p">,</span>
-</span><span data-line="965"><span class="p">]</span>
-</span><span data-line="966">
-</span><span data-line="967"><span class="c1">#: What each tool changes, for surfaces that must decide what to expose or confirm.</span>
-</span><span data-line="968"><span class="c1">#: ``read`` changes nothing and stays local; ``append`` adds to a log; ``create`` adds a</span>
-</span><span data-line="969"><span class="c1">#: record; ``rewrite`` changes existing records; ``destructive`` removes data;</span>
-</span><span data-line="970"><span class="c1">#: ``external-read`` queries a remote service; ``external`` acts on one.</span>
-</span><span data-line="971"><span class="n">SIDE_EFFECTS</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="972">    <span class="s2">"who"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="973">    <span class="s2">"resolve"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="974">    <span class="s2">"check"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="975">    <span class="s2">"reach"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="976">    <span class="s2">"brief"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="977">    <span class="s2">"lint"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="978">    <span class="s2">"style_lint"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="979">    <span class="s2">"disclosure"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="980">    <span class="s2">"review"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="981">    <span class="s2">"remember"</span><span class="p">:</span> <span class="s2">"append"</span><span class="p">,</span>
-</span><span data-line="982">    <span class="s2">"new"</span><span class="p">:</span> <span class="s2">"create"</span><span class="p">,</span>
-</span><span data-line="983">    <span class="s2">"rename"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
-</span><span data-line="984">    <span class="s2">"sync_pull"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
-</span><span data-line="985">    <span class="s2">"forget"</span><span class="p">:</span> <span class="s2">"destructive"</span><span class="p">,</span>
-</span><span data-line="986">    <span class="s2">"sync_status"</span><span class="p">:</span> <span class="s2">"external-read"</span><span class="p">,</span>
-</span><span data-line="987">    <span class="s2">"sync_init"</span><span class="p">:</span> <span class="s2">"external"</span><span class="p">,</span>
-</span><span data-line="988">    <span class="s2">"sync_push"</span><span class="p">:</span> <span class="s2">"external"</span><span class="p">,</span>
-</span><span data-line="989">    <span class="s2">"todo_preflight"</span><span class="p">:</span> <span class="s2">"external-read"</span><span class="p">,</span>
-</span><span data-line="990">    <span class="s2">"digest"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="991">    <span class="s2">"digest_new"</span><span class="p">:</span> <span class="s2">"create"</span><span class="p">,</span>
-</span><span data-line="992">    <span class="s2">"digest_append"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
-</span><span data-line="993">    <span class="s2">"digest_mark"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
-</span><span data-line="994"><span class="p">}</span>
+</span><span data-line="969">
+</span><span data-line="970">
+</span><span data-line="971"><span class="c1">#: Every tool, in the order surfaces list them.</span>
+</span><span data-line="972"><span class="n">TOOLS</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="973">    <span class="n">who</span><span class="p">,</span>
+</span><span data-line="974">    <span class="n">resolve</span><span class="p">,</span>
+</span><span data-line="975">    <span class="n">check</span><span class="p">,</span>
+</span><span data-line="976">    <span class="n">reach</span><span class="p">,</span>
+</span><span data-line="977">    <span class="n">brief</span><span class="p">,</span>
+</span><span data-line="978">    <span class="n">remember</span><span class="p">,</span>
+</span><span data-line="979">    <span class="n">lint</span><span class="p">,</span>
+</span><span data-line="980">    <span class="n">new</span><span class="p">,</span>
+</span><span data-line="981">    <span class="n">rename</span><span class="p">,</span>
+</span><span data-line="982">    <span class="n">forget</span><span class="p">,</span>
+</span><span data-line="983">    <span class="n">sync_init</span><span class="p">,</span>
+</span><span data-line="984">    <span class="n">sync_push</span><span class="p">,</span>
+</span><span data-line="985">    <span class="n">sync_pull</span><span class="p">,</span>
+</span><span data-line="986">    <span class="n">sync_status</span><span class="p">,</span>
+</span><span data-line="987">    <span class="n">style_lint</span><span class="p">,</span>
+</span><span data-line="988">    <span class="n">disclosure</span><span class="p">,</span>
+</span><span data-line="989">    <span class="n">review</span><span class="p">,</span>
+</span><span data-line="990">    <span class="n">todo_preflight</span><span class="p">,</span>
+</span><span data-line="991">    <span class="n">digest</span><span class="p">,</span>
+</span><span data-line="992">    <span class="n">digest_new</span><span class="p">,</span>
+</span><span data-line="993">    <span class="n">digest_append</span><span class="p">,</span>
+</span><span data-line="994">    <span class="n">digest_mark</span><span class="p">,</span>
+</span><span data-line="995"><span class="p">]</span>
+</span><span data-line="996">
+</span><span data-line="997"><span class="c1">#: What each tool changes, for surfaces that must decide what to expose or confirm.</span>
+</span><span data-line="998"><span class="c1">#: ``read`` changes nothing and stays local; ``append`` adds to a log; ``create`` adds a</span>
+</span><span data-line="999"><span class="c1">#: record; ``rewrite`` changes existing records; ``destructive`` removes data;</span>
+</span><span data-line="1000"><span class="c1">#: ``external-read`` queries a remote service; ``external`` acts on one.</span>
+</span><span data-line="1001"><span class="n">SIDE_EFFECTS</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="1002">    <span class="s2">"who"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1003">    <span class="s2">"resolve"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1004">    <span class="s2">"check"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1005">    <span class="s2">"reach"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1006">    <span class="s2">"brief"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1007">    <span class="s2">"lint"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1008">    <span class="s2">"style_lint"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1009">    <span class="s2">"disclosure"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1010">    <span class="s2">"review"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1011">    <span class="s2">"remember"</span><span class="p">:</span> <span class="s2">"append"</span><span class="p">,</span>
+</span><span data-line="1012">    <span class="s2">"new"</span><span class="p">:</span> <span class="s2">"create"</span><span class="p">,</span>
+</span><span data-line="1013">    <span class="s2">"rename"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
+</span><span data-line="1014">    <span class="s2">"sync_pull"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
+</span><span data-line="1015">    <span class="s2">"forget"</span><span class="p">:</span> <span class="s2">"destructive"</span><span class="p">,</span>
+</span><span data-line="1016">    <span class="s2">"sync_status"</span><span class="p">:</span> <span class="s2">"external-read"</span><span class="p">,</span>
+</span><span data-line="1017">    <span class="s2">"sync_init"</span><span class="p">:</span> <span class="s2">"external"</span><span class="p">,</span>
+</span><span data-line="1018">    <span class="s2">"sync_push"</span><span class="p">:</span> <span class="s2">"external"</span><span class="p">,</span>
+</span><span data-line="1019">    <span class="s2">"todo_preflight"</span><span class="p">:</span> <span class="s2">"external-read"</span><span class="p">,</span>
+</span><span data-line="1020">    <span class="s2">"digest"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1021">    <span class="s2">"digest_new"</span><span class="p">:</span> <span class="s2">"create"</span><span class="p">,</span>
+</span><span data-line="1022">    <span class="s2">"digest_append"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
+</span><span data-line="1023">    <span class="s2">"digest_mark"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
+</span><span data-line="1024"><span class="p">}</span>
 </span></pre></div>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -1213,7 +1243,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=2fd7553c"></script>
+      <script src="../../_static/documentation_options.js?v=056c92e6"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

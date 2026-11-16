@@ -42,7 +42,7 @@ Every `git` and `gh` call goes through `run`, so tests can script `gh` while
 |--------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`init`](#acquaint.sync.init)(root, repo, \*[, remote_url, create, ...]) | Make `root` a checkout of the private GitHub repository `repo`, creating it (private) if needed.                                                                          |
 | [`pull`](#acquaint.sync.pull)(root, \*[, dry_run, run])                  | Re-check the remote and its visibility, then rebase local work onto it (uncommitted edits are stashed and restored).                                                      |
-| [`push`](#acquaint.sync.push)(root, \*[, message, dry_run, run])         | Commit everything, rebase onto the remote, and push, after re-checking the remote, the guard and the visibility.                                                          |
+| [`push`](#acquaint.sync.push)(root, \*[, message, entities, ...])        | Commit, rebase onto the remote, and push, after re-checking the remote, the guard and the visibility.                                                                     |
 | [`run_command`](#acquaint.sync.run_command)(args, \*[, cwd])                    | Run `git` or `gh` (`gh` pinned to github.com), capturing text output.                                                                                                     |
 | [`sole_access`](#acquaint.sync.sole_access)(repo, \*[, run])                    | Whether only the repository's owner can read it, and why not: private, owned by a person (not an organisation), that person its only collaborator, no invitation pending. |
 | [`status`](#acquaint.sync.status)(root, \*[, check_visibility, run])       | Whether the store is synced, where to, uncommitted changes, ahead/behind, the guard, and live visibility.                                                                 |
@@ -74,9 +74,18 @@ Re-check the remote and its visibility, then rebase local work onto it (uncommit
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
 
-### acquaint.sync.push(root, \*, message=None, dry_run=False, run=<function run_command>)
+### acquaint.sync.push(root, \*, message=None, entities=(), everything=False, dry_run=False, run=<function run_command>)
 
-Commit everything, rebase onto the remote, and push, after re-checking the remote, the guard and the visibility.
+Commit, rebase onto the remote, and push, after re-checking the remote, the guard and the visibility.
+
+`entities` are record folders (`people/ada-lovelace`): only those, plus
+`STORE_FILES` when they changed, are committed; everything else stays
+uncommitted, so one session does not sweep up another’s unfinished records. Without
+`entities` every change is committed, but when a `message` is given it must name
+each record being committed (its id appears in the text as a word) unless
+`everything` is set; a message naming only some of them is refused, listing the
+rest. With no `message` the default one lists the records. Other sessions’ tombstones
+travel with a scoped push, and a renamed record needs both its old and new folder named.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]

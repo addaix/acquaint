@@ -38,7 +38,7 @@ files (a `dol` files store by default).
 | [`style_lint`](#acquaint.style_lint)(text, \*[, recipient, tolerance, ...])  | The deterministic half of deslop: machine-writing tells in a draft, at the recipient's tolerance and against their blocklist.                                                                                                                                                                                                            |
 | [`sync_init`](#acquaint.sync_init)(\*, repo[, remote_url, ...])             | Make the data root a checkout of a PRIVATE GitHub repository (created private through `gh` unless `existing_only`), with a pre-push guard.                                                                                                                                                                                               |
 | [`sync_pull`](#acquaint.sync_pull)(\*[, dry_run, data_dir])                 | Pull the store from its private remote, rebasing local work on top.                                                                                                                                                                                                                                                                      |
-| [`sync_push`](#acquaint.sync_push)(\*[, message, dry_run, data_dir])        | Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility.                                                                                                                                                                                                                           |
+| [`sync_push`](#acquaint.sync_push)([ids, message, all, dry_run, data_dir])  | Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility.                                                                                                                                                                                                                           |
 | [`sync_status`](#acquaint.sync_status)(\*[, check_visibility, data_dir])      | Whether the store is synced, to which repository, uncommitted changes, ahead/behind, the guard, and live visibility.                                                                                                                                                                                                                     |
 | [`who`](#acquaint.who)(name, \*[, field, brief, data_dir])            | Look up one person, project, org or group by exact id, name, alias, handle or email.                                                                                                                                                                                                                                                     |
 
@@ -351,9 +351,9 @@ Pull the store from its private remote, rebasing local work on top.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### acquaint.sync_push(, message=None, dry_run=False, data_dir=None)
+### acquaint.sync_push(ids=None, , message=None, all=False, dry_run=False, data_dir=None)
 
-Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility.
+Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility. With `ids` (records, e.g. `person:ada-lovelace`), commit only those records and leave other uncommitted records alone; without, commit everything, but a `message` must then name every record it commits unless `all`.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
