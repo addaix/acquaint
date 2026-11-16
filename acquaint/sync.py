@@ -94,10 +94,14 @@ class SyncNamespace:
 
     def __post_init__(self) -> None:
         if not re.fullmatch(r"[A-Za-z][A-Za-z0-9-]*", self.name):
-            raise AcquaintError(f"namespace name {self.name!r} must be letters, digits and '-' (it prefixes git config keys)")
+            raise AcquaintError(
+                f"namespace name {self.name!r} must be letters, digits and '-' (it prefixes git config keys)"
+            )
         for field in ("command", "subject", "store"):
             if re.search(r"[\"`$\\\r\n]|__[A-Z]+__", getattr(self, field)):
-                raise AcquaintError(f"namespace {field} {getattr(self, field)!r} may not contain quotes, backticks, $, backslashes, line breaks or __TOKEN__s")
+                raise AcquaintError(
+                    f"namespace {field} {getattr(self, field)!r} may not contain quotes, backticks, $, backslashes, line breaks or __TOKEN__s"
+                )
 
     @property
     def repo_key(self) -> str:
@@ -116,8 +120,17 @@ class SyncNamespace:
 
     def hook_text(self) -> str:
         """The shipped pre-push guard with this namespace filled in."""
-        values = {"NAME": self.name, "COMMAND": self.command, "SUBJECT": self.subject, "STORE": self.store}
-        return re.sub(r"__(NAME|COMMAND|SUBJECT|STORE)__", lambda m: values[m.group(1)], data_text("hooks/pre-push"))
+        values = {
+            "NAME": self.name,
+            "COMMAND": self.command,
+            "SUBJECT": self.subject,
+            "STORE": self.store,
+        }
+        return re.sub(
+            r"__(NAME|COMMAND|SUBJECT|STORE)__",
+            lambda m: values[m.group(1)],
+            data_text("hooks/pre-push"),
+        )
 
 
 #: The default: acquaint's own store.
@@ -366,7 +379,9 @@ def _install_hook(root: Path, run: Runner, ns: SyncNamespace) -> Path:
     return hook
 
 
-def _check_existing_checkout(root: Path, repo: str, run: Runner, ns: SyncNamespace) -> None:
+def _check_existing_checkout(
+    root: Path, repo: str, run: Runner, ns: SyncNamespace
+) -> None:
     """Refuse to take over a repository that is neither this store nor a clone of ``repo``."""
     if not (root / ".git").exists():
         return
@@ -482,12 +497,21 @@ def init(
         cwd=root,
         what="recording the remote",
     )
-    for name, text in ((".gitignore", namespace.gitignore), (".gitattributes", _GITATTRIBUTES)):
+    for name, text in (
+        (".gitignore", namespace.gitignore),
+        (".gitattributes", _GITATTRIBUTES),
+    ):
         if not (root / name).exists():
             (root / name).write_text(text, encoding="utf-8", newline="\n")
     hook = _install_hook(root, run, namespace)
     try:
-        pushed = push(root, message=namespace.init_message, everything=True, namespace=namespace, run=run)
+        pushed = push(
+            root,
+            message=namespace.init_message,
+            everything=True,
+            namespace=namespace,
+            run=run,
+        )
     except AcquaintError as error:
         raise AcquaintError(
             f"the store is set up for {repo}, but the first push failed: {error}. Fix that, then run `{namespace.command} push`"
@@ -579,7 +603,15 @@ def _plan(
     }
 
 
-def _commit(root: Path, run: Runner, plan: dict[str, Any], *, message: str | None, scoped: bool, ns: SyncNamespace) -> None:
+def _commit(
+    root: Path,
+    run: Runner,
+    plan: dict[str, Any],
+    *,
+    message: str | None,
+    scoped: bool,
+    ns: SyncNamespace,
+) -> None:
     """Commit the planned paths (only those when ``scoped``; literal pathspecs, so no glob in a file name matches more)."""
     changed, touched = plan["changed"], plan["entities"]
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
@@ -648,7 +680,9 @@ def push(
             f"run `{namespace.command} init --repo {repo} --existing-only` first"
         )
     _require_private(repo, run, namespace)
-    _refuse_conflicts(root, run, doing="commit and push")  # nothing is unresolved from here on, so anything after is new
+    _refuse_conflicts(
+        root, run, doing="commit and push"
+    )  # nothing is unresolved from here on, so anything after is new
     if plan["changed"]:
         _commit(root, run, plan, message=message, scoped=scoped, ns=namespace)
     if run(["git", "rev-parse", "--verify", "HEAD"], cwd=root).returncode != 0:
