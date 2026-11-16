@@ -593,8 +593,14 @@ def _plan(
     changed = _changed_paths(root, run)
     if entities:
         inside = tuple(f"{e}/" for e in entities)
-        carries_store_files = any(not (root / e).exists() for e in entities)  # a deleted record: its tombstone goes with it
-        changed = [p for p in changed if p.startswith(inside) or (carries_store_files and p in STORE_FILES)]
+        carries_store_files = any(
+            not (root / e).exists() for e in entities
+        )  # a deleted record: its tombstone goes with it
+        changed = [
+            p
+            for p in changed
+            if p.startswith(inside) or (carries_store_files and p in STORE_FILES)
+        ]
     touched = sorted({e for e in map(_entity_of, changed) if e})
     unnamed = [e for e in touched if message and not _is_named(e, message)]
     return {
