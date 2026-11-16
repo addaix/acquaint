@@ -63,7 +63,9 @@ STATUSES = ("current", "proposed", "conflicting")
 OPEN_LABELS = ("clear",)
 _NAME_RE = re.compile(r"[A-Za-z][A-Za-z0-9]*(\.[A-Za-z][A-Za-z0-9]*)*")
 _DATE_FIELDS = ("recorded", "valid_from", "valid_to", "review_by")
-_FACT_KEYS = frozenset({"value", "label", "source", "supersedes", "status", *_DATE_FIELDS})
+_FACT_KEYS = frozenset(
+    {"value", "label", "source", "supersedes", "status", *_DATE_FIELDS}
+)
 _TOP_KEYS = frozenset({"schema", "facts", "to_confirm"})
 _SCALARS = (str, int, float, bool)
 _CONTROL_RE = re.compile(r"[\x00-\x1f\x7f-\x9f]")
@@ -74,32 +76,61 @@ def _safe_name(name: Any) -> str:
     return name if isinstance(name, str) and _NAME_RE.fullmatch(name) else "(an odd name)"
 
 
-def _file_problems(data: Any, key_problems: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
+def _file_problems(
+    data: Any, key_problems: list[tuple[str, str]]
+) -> list[tuple[str, str, str]]:
     """Problems with the file as a whole: shape, schema, keys. A file with any of these shows no fact at all."""
     if not isinstance(data, Mapping):
-        return [("error", "facts-shape", "facts.yaml must be a mapping with a `facts:` key")]
+        return [
+            ("error", "facts-shape", "facts.yaml must be a mapping with a `facts:` key")
+        ]
     found: list[tuple[str, str, str]] = []
     if data.get("schema") != SCHEMA:
         found.append(("error", "facts-shape", f"schema must be {SCHEMA}"))
     if unknown := set(map(str, data)) - _TOP_KEYS:
-        found.append(("error", "facts-shape", f"{len(unknown)} unknown top-level key(s); the keys are {', '.join(sorted(_TOP_KEYS))}"))
+        found.append(
+            (
+                "error",
+                "facts-shape",
+                f"{len(unknown)} unknown top-level key(s); the keys are {', '.join(sorted(_TOP_KEYS))}",
+            )
+        )
     if not isinstance(data.get("facts"), Mapping):
         found.append(("error", "facts-shape", "`facts:` must map field names to facts"))
     if "to_confirm" in data and not (
-        isinstance(data["to_confirm"], list) and all(isinstance(x, str) for x in data["to_confirm"])
+        isinstance(data["to_confirm"], list)
+        and all(isinstance(x, str) for x in data["to_confirm"])
     ):
         found.append(("error", "facts-shape", "to_confirm must be a list of text items"))
     for kind, key in key_problems:
-        found.append(("error", "facts-duplicate" if kind == "duplicate" else "facts-shape", f"{'a key listed twice' if kind == 'duplicate' else 'a key that is not text'}: {_safe_name(key)}; keep one, and move an old value under `supersedes` or delete it"))
-    names = [str(n).lower() for n in (data.get("facts") or {}) if isinstance(data.get("facts"), Mapping)]
+        found.append(
+            (
+                "error",
+                "facts-duplicate" if kind == "duplicate" else "facts-shape",
+                f"{'a key listed twice' if kind == 'duplicate' else 'a key that is not text'}: {_safe_name(key)}; keep one, and move an old value under `supersedes` or delete it",
+            )
+        )
+    names = [
+        str(n).lower()
+        for n in (data.get("facts") or {})
+        if isinstance(data.get("facts"), Mapping)
+    ]
     for name in sorted({n for n in names if names.count(n) > 1}):
-        found.append(("error", "facts-duplicate", f"names that differ only by case: {_safe_name(name)}"))
+        found.append(
+            (
+                "error",
+                "facts-duplicate",
+                f"names that differ only by case: {_safe_name(name)}",
+            )
+        )
     return found
 
 
 def _value_problem(value: Any) -> str | None:
     items = value if isinstance(value, list) else [value]
-    if value in (None, "", []) or not all(isinstance(i, _SCALARS) and str(i).strip() for i in items):
+    if value in (None, "", []) or not all(
+        isinstance(i, _SCALARS) and str(i).strip() for i in items
+    ):
         return "value must be text, a number, or a list of them"
     if any(_CONTROL_RE.search(str(i)) for i in items):
         return "value must be one line, with no control characters"
@@ -110,26 +141,61 @@ def _fact_problems(name: str, fact: Any) -> list[tuple[str, str, str]]:
     """``(severity, rule, message)`` for one fact; a message names the field, never echoes what was written in it."""
     where = f"fact {name}"
     if not _NAME_RE.fullmatch(name):
-        return [("error", "facts-shape", "a field name is dotted words like titles.current")]
+        return [
+            ("error", "facts-shape", "a field name is dotted words like titles.current")
+        ]
     if not isinstance(fact, Mapping):
-        return [("error", "facts-shape", f"{where} must be a mapping with value, label, source, recorded")]
+        return [
+            (
+                "error",
+                "facts-shape",
+                f"{where} must be a mapping with value, label, source, recorded",
+            )
+        ]
     found: list[tuple[str, str, str]] = []
     for key in sorted(set(map(str, fact)) - _FACT_KEYS):
-        found.append(("error", "facts-shape", f"{where}: unknown key {key!r} (a typo hides a field from the checks)" if _NAME_RE.fullmatch(key) else f"{where}: unknown key"))
+        found.append(
+            (
+                "error",
+                "facts-shape",
+                f"{where}: unknown key {key!r} (a typo hides a field from the checks)"
+                if _NAME_RE.fullmatch(key)
+                else f"{where}: unknown key",
+            )
+        )
     if problem := _value_problem(fact.get("value")):
         found.append(("error", "facts-shape", f"{where}: {problem}"))
     if fact.get("label") not in LABELS:
-        found.append(("error", "facts-label", f"{where}: label must be one of {', '.join(LABELS)}"))
+        found.append(
+            ("error", "facts-label", f"{where}: label must be one of {', '.join(LABELS)}")
+        )
     source = fact.get("source")
-    if not isinstance(source, str) or "]" in source or "\n" in source or source_problem(f"[source: {source}]"):
-        found.append(("error", "facts-unsourced", f"{where} has no usable source (a date alone is not one)"))
+    if (
+        not isinstance(source, str)
+        or "]" in source
+        or "\n" in source
+        or source_problem(f"[source: {source}]")
+    ):
+        found.append(
+            (
+                "error",
+                "facts-unsourced",
+                f"{where} has no usable source (a date alone is not one)",
+            )
+        )
     for field in _DATE_FIELDS:
         if fact.get(field) is not None and not is_iso_date(str(fact[field])):
             found.append(("error", "facts-date", f"{where}: {field} must be YYYY-MM-DD"))
     if fact.get("recorded") is None:
         found.append(("error", "facts-date", f"{where} has no recorded date"))
     if fact.get("status") is not None and fact["status"] not in STATUSES:
-        found.append(("error", "facts-shape", f"{where}: status must be one of {', '.join(STATUSES)}"))
+        found.append(
+            (
+                "error",
+                "facts-shape",
+                f"{where}: status must be one of {', '.join(STATUSES)}",
+            )
+        )
     return found
 
 
@@ -140,11 +206,18 @@ def facts_problems(text: str, *, today: str) -> list[tuple[str, str, str]]:
         return [("error", "unparseable", e) for e in errors]
     found = _file_problems(data, key_problems)
     listed = data.get("facts") if isinstance(data, Mapping) else None
-    for name, fact in (listed.items() if isinstance(listed, Mapping) else []):
+    for name, fact in listed.items() if isinstance(listed, Mapping) else []:
         found += _fact_problems(str(name), fact)
         review = fact.get("review_by") if isinstance(fact, Mapping) else None
-        if _NAME_RE.fullmatch(str(name)) and review is not None and is_iso_date(str(review)) and str(review) < today:
-            found.append(("warning", "facts-review", f"fact {name} was due for review on {review}"))
+        if (
+            _NAME_RE.fullmatch(str(name))
+            and review is not None
+            and is_iso_date(str(review))
+            and str(review) < today
+        ):
+            found.append(
+                ("warning", "facts-review", f"fact {name} was due for review on {review}")
+            )
     return found
 
 
@@ -165,7 +238,11 @@ def _readable(entity: Entity, today: str) -> dict[str, dict]:
         inside = (not fact.get("valid_from") or str(fact["valid_from"]) <= today) and (
             not fact.get("valid_to") or str(fact["valid_to"]) >= today
         )
-        if fact.get("label") in OPEN_LABELS and (fact.get("status") or "current") == "current" and inside:
+        if (
+            fact.get("label") in OPEN_LABELS
+            and (fact.get("status") or "current") == "current"
+            and inside
+        ):
             found[name] = fact
     return found
 
@@ -179,7 +256,9 @@ def brief_lines(entity: Entity, *, max_chars: int, today: str | None = None) -> 
     """``- name: value`` for each readable fact, within ``max_chars`` (the overflow note included); what does not fit is counted, not cut mid-line."""
     readable = _readable(entity, today or date.today().isoformat())
     # the person's own name first: it is what a reader most needs if the budget bites
-    ordered = sorted(readable.items(), key=lambda item: (not item[0].startswith("name."), item[0]))
+    ordered = sorted(
+        readable.items(), key=lambda item: (not item[0].startswith("name."), item[0])
+    )
     lines = [f"- {name}: {_render(fact['value'])}" for name, fact in ordered]
     note = lambda n: f"- (+{n} more: `acquaint who {entity.slug} -f <name>`)"  # noqa: E731
     kept, used = [], 0
@@ -194,7 +273,9 @@ def brief_lines(entity: Entity, *, max_chars: int, today: str | None = None) -> 
     return [*kept, note(dropped)] if dropped else kept
 
 
-def fact_value(entity: Entity, name: str, *, today: str | None = None) -> tuple[Any, str | None]:
+def fact_value(
+    entity: Entity, name: str, *, today: str | None = None
+) -> tuple[Any, str | None]:
     """``(value, refusal)`` of a fact by dotted name (any case): the value when it is readable, else ``None`` and why not (``None, None`` when there is no such fact)."""
     every = facts(entity)
     key = next((k for k in every if k.lower() == name.lower()), None)
@@ -202,5 +283,8 @@ def fact_value(entity: Entity, name: str, *, today: str | None = None) -> tuple[
         return None, None
     readable = _readable(entity, today or date.today().isoformat())
     if key not in readable:
-        return None, f"{entity.slug} has a fact of that name, but it is not readable without knowing the reader (or it is not current or valid)"
+        return (
+            None,
+            f"{entity.slug} has a fact of that name, but it is not readable without knowing the reader (or it is not current or valid)",
+        )
     return readable[key].get("value"), None

@@ -85,7 +85,10 @@ def _store(data_dir: str | None) -> Store:
 
 
 def _field(store: Store, entity: Entity, field: str) -> Any:
-    named, field = field.strip(), field.strip().lower()  # fact names keep their case (speakToAs.pronouns)
+    named, field = (
+        field.strip(),
+        field.strip().lower(),
+    )  # fact names keep their case (speakToAs.pronouns)
 
     def by_platform(platform: str) -> list:
         return [
@@ -174,7 +177,13 @@ def who(
         try:
             value = _field(store, entity, field)
         except AcquaintError as refusal:  # a fact that needs to know its reader
-            return {**base, "ok": False, "refused": True, "field": field, "summary": str(refusal)}
+            return {
+                **base,
+                "ok": False,
+                "refused": True,
+                "field": field,
+                "summary": str(refusal),
+            }
         if (
             field.strip().lower() == "tier"
             and effective_tier(entity.trust, today=date.today().isoformat())[1]

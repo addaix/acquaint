@@ -527,7 +527,9 @@ def _sections(entity, brief: dict[str, Any]) -> list[tuple[str, str | None, list
         if brief["card"][heading]
     ]
     if brief["facts"]:
-        out.append(("Facts", "Facts (exact values: use these, do not guess)", brief["facts"]))
+        out.append(
+            ("Facts", "Facts (exact values: use these, do not guess)", brief["facts"])
+        )
     if brief["affiliations"]:
         out.append(
             ("Affiliations", "Affiliations", [f"- {a}" for a in brief["affiliations"]])
