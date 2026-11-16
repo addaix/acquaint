@@ -46,12 +46,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from acquaint.edit import TOMBSTONES
 from acquaint.resources import data_text
 from acquaint.store import AcquaintError
 
 __all__ = [
     "BRANCH",
-    "STORE_FILES",
     "GITHUB_HOST",
     "github_urls",
     "init",
@@ -448,7 +448,7 @@ def init(
 
 
 #: Files at the top of the store that belong to no record; a scoped push carries them when they changed.
-STORE_FILES = ("_tombstones.yaml",)
+STORE_FILES = (TOMBSTONES,)
 
 
 def _changed_paths(root: Path, run: Runner) -> list[str]:
@@ -456,14 +456,13 @@ def _changed_paths(root: Path, run: Runner) -> list[str]:
     done = run(["git", "-c", "core.quotePath=false", "status", "--porcelain", "-z", "-uall"], cwd=root)
     if done.returncode != 0:
         raise AcquaintError(f"git status failed: {(done.stderr or '').strip()}")
-    out = done.stdout or ""  # not stripped: a leading space is part of the first entry
     paths: list[str] = []
-    entries = iter(out.split("\0"))
+    entries = iter((done.stdout or "").split("\0"))  # not stripped: a leading space is part of the first entry
     for entry in entries:
         if len(entry) < 4:
             continue
         paths.append(entry[3:])
-        if entry[0] in "RC":  # the next entry is the rename's old name
+        if entry[0] in "RC" or entry[1] in "RC":  # the next entry is the rename's old name
             next(entries, None)
     return paths
 
@@ -475,12 +474,57 @@ def _entity_of(path: str) -> str | None:
 
 
 def _is_named(entity: str, message: str) -> bool:
-    return entity.rsplit("/", 1)[-1].lower() in message.lower()
+    """Whether the record's id appears in ``message`` as a whole word (``ada`` is not named by ``canada``)."""
+    slug = re.escape(entity.rsplit("/", 1)[-1])
+    return re.search(rf"(?<![\w-]){slug}(?![\w-])", message, re.I) is not None
 
 
-def _scoped(paths: Sequence[str], folders: Sequence[str]) -> list[str]:
-    inside = tuple(f.rstrip("/") + "/" for f in folders)
-    return [p for p in paths if p.startswith(inside) or p in STORE_FILES]
+def _record_folders(root: Path, run: Runner, folders: Sequence[str]) -> list[str]:
+    """``folders`` normalised and checked: ``kind/slug``, and present in the working tree or in git."""
+    checked = []
+    for folder in folders:
+        parts = folder.strip("/").split("/")
+        if len(parts) != 2 or ".." in parts or not all(parts):
+            raise AcquaintError(f"{folder!r} is not a record folder like people/ada-lovelace")
+        name = "/".join(parts)
+        if not (root / name).exists() and not _lines(root, run, "ls-files", "--", name):
+            raise AcquaintError(f"no record folder {name} in {root} (a typo in the id?)")
+        checked.append(name)
+    return checked
+
+
+def _plan(root: Path, run: Runner, entities: Sequence[str], message: str | None) -> dict[str, Any]:
+    """What a push would commit: the changed paths, the records they belong to, and those the message leaves unnamed."""
+    changed = _changed_paths(root, run)
+    if entities:
+        inside = tuple(f"{e}/" for e in entities)
+        changed = [p for p in changed if p.startswith(inside) or p in STORE_FILES]
+    touched = sorted({e for e in map(_entity_of, changed) if e})
+    unnamed = [e for e in touched if message and not _is_named(e, message)]
+    return {"changed": changed, "entities": touched, "unnamed": [] if entities else unnamed}
+
+
+def _commit(root: Path, run: Runner, plan: dict[str, Any], *, message: str | None, scoped: bool) -> None:
+    """Commit the planned paths (only those when ``scoped``; literal pathspecs, so no glob in a file name matches more)."""
+    changed, touched = plan["changed"], plan["entities"]
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
+    listed = ", ".join(e.rsplit("/", 1)[-1] for e in touched) or f"{len(changed)} files"
+    only = ["--", *changed] if scoped else []
+    _ok(run, ["git", "--literal-pathspecs", "add", "-A", *only], cwd=root, what="git add")
+    _ok(
+        run,
+        [
+            "git",
+            "--literal-pathspecs",
+            "commit",
+            "-q",
+            "-m",
+            message or f"acquaint: sync {stamp} ({listed})",
+            *(["--only", *only] if scoped else []),
+        ],
+        cwd=root,
+        what="git commit",
+    )
 
 
 def push(
@@ -498,31 +542,26 @@ def push(
     :data:`STORE_FILES` when they changed, are committed; everything else stays
     uncommitted, so one session does not sweep up another's unfinished records. Without
     ``entities`` every change is committed, but when a ``message`` is given it must name
-    each record being committed (its id appears in the text) unless ``everything`` is set;
-    a message naming only some of them is refused, listing the rest. With no ``message``
-    the default one lists the records.
+    each record being committed (its id appears in the text as a word) unless
+    ``everything`` is set; a message naming only some of them is refused, listing the
+    rest. With no ``message`` the default one lists the records. Other sessions' tombstones
+    travel with a scoped push, and a renamed record needs both its old and new folder named.
     """
     root = Path(root)
-    for folder in entities:
-        parts = folder.strip("/").split("/")
-        if len(parts) != 2 or ".." in parts or not all(parts):
-            raise AcquaintError(f"{folder!r} is not a record folder like people/ada-lovelace")
     repo, remote = _configured(root, run)
-    changed = _changed_paths(root, run)
-    if entities:
-        changed = _scoped(changed, entities)
-    touched = sorted({e for e in map(_entity_of, changed) if e})
-    unnamed = [e for e in touched if message and not _is_named(e, message)]
+    scoped = bool(entities)
+    plan = _plan(root, run, _record_folders(root, run, entities), message)
+    unnamed = [] if everything else plan["unnamed"]
     if dry_run:
         return {
             "repo": repo,
             "dry_run": True,
-            "would_commit": len(changed),
-            "entities": touched,
-            "unnamed_in_message": [] if entities or everything else unnamed,
+            "would_commit": len(plan["changed"]),
+            "entities": plan["entities"],
+            "unnamed_in_message": unnamed,
             "conflicted": _conflicted(root, run),
         }
-    if unnamed and not entities and not everything:
+    if unnamed:
         raise AcquaintError(
             f"the message does not name {', '.join(unnamed)}, which would be committed with it. "
             "Name them, push only your own records (`sync push <id> ...`), or pass --all to commit everything"
@@ -534,52 +573,26 @@ def push(
         )
     _require_private(repo, run)
     _refuse_conflicts(root, run, doing="commit and push")
-    committed = False
-    if changed:
-        stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
-        listed = ", ".join(e.rsplit("/", 1)[-1] for e in touched) or f"{len(changed)} files"
-        _ok(run, ["git", "add", "-A", "--", *(changed if entities else [])], cwd=root, what="git add")
-        _ok(
-            run,
-            [
-                "git",
-                "commit",
-                "-q",
-                "-m",
-                message or f"acquaint: sync {stamp} ({listed})",
-                *(["--only", "--", *changed] if entities else []),
-            ],
-            cwd=root,
-            what="git commit",
-        )
-        committed = True
+    if plan["changed"]:
+        _commit(root, run, plan, message=message, scoped=scoped)
     if run(["git", "rev-parse", "--verify", "HEAD"], cwd=root).returncode != 0:
-        return {
-            "repo": repo,
-            "committed": False,
-            "pushed": False,
-            "note": "nothing to push yet",
-        }
+        return {"repo": repo, "committed": False, "pushed": False, "note": "nothing to push yet"}
     if run(["git", "fetch", "-q", "origin", BRANCH], cwd=root).returncode == 0:
-        _ok(
-            run,
-            ["git", "rebase", "-q", "--autostash", f"origin/{BRANCH}"],
-            cwd=root,
-            what="rebasing onto the remote",
-        )
-        _refuse_conflicts(root, run, doing="finish the rebase")
+        _ok(run, ["git", "rebase", "-q", "--autostash", f"origin/{BRANCH}"], cwd=root, what="rebasing onto the remote")
     _ok(
         run,
         ["git", "push", "-q", "-u", "origin", f"HEAD:{BRANCH}"],
         cwd=root,
         what="git push (the pre-push guard may have refused)",
     )
+    # `rebase --autostash` exits 0 when re-applying another session's uncommitted edits conflicts.
+    _refuse_conflicts(root, run, doing="leave the store as it is: your commits were pushed, but uncommitted edits now conflict with the remote")
     return {
         "repo": repo,
         "remote": remote,
-        "committed": committed,
-        "changed_files": len(changed),
-        "entities": touched,
+        "committed": bool(plan["changed"]),
+        "changed_files": len(plan["changed"]),
+        "entities": plan["entities"],
         "pushed": True,
     }
 

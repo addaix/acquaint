@@ -769,12 +769,16 @@ def sync_push(
     result = _sync.push(
         root,
         message=message,
-        entities=_record_folders(root, ids or []),
+        entities=_record_refs(root, ids or []),
         everything=all,
         dry_run=dry_run,
     )
     summary = (
-        f"would commit {result['would_commit']} change(s) in {', '.join(result['entities']) or 'no records'}"
+        (
+            f"would refuse: the message does not name {', '.join(result['unnamed_in_message'])}"
+            if result["unnamed_in_message"]
+            else f"would commit {result['would_commit']} change(s) in {', '.join(result['entities']) or 'no records'}"
+        )
         if dry_run
         else f"pushed to {result['repo']}"
         if result.get("pushed")
@@ -783,7 +787,7 @@ def sync_push(
     return {"ok": True, **result, "summary": summary}
 
 
-def _record_folders(root: Any, ids: list[str]) -> list[str]:
+def _record_refs(root: Any, ids: list[str]) -> list[str]:
     """Record folders for ``ids``: a record that exists, or (a deleted one) a ``kind/slug`` folder named outright."""
     store = Store(root)
     folders = []

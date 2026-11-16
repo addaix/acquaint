@@ -457,7 +457,56 @@ def test_the_default_message_lists_the_records_and_needs_no_naming(store_root, g
     assert "ada-lovelace, grace-example" in _git("log", "-1", "--format=%s", cwd=store_root).stdout
 
 
-def test_a_scoped_push_rejects_anything_but_a_record_folder(store_root):
+@posix_only
+def test_a_scoped_push_rejects_anything_but_an_existing_record_folder(store_root, github, scripted_gh):
+    gh = FakeGh()
+    sync.init(store_root, REPO, run=gh)
     for bad in ("people", "people/ada/../../x", "../people/a", "people/a/b"):
         with pytest.raises(AcquaintError, match="record folder"):
-            sync.push(store_root, entities=[bad], run=FakeGh())
+            sync.push(store_root, entities=[bad], run=gh)
+    with pytest.raises(AcquaintError, match="no record folder people/typo"):
+        sync.push(store_root, entities=["/people/typo/"], run=gh)
+    assert sync.push(store_root, entities=["/people/ada-lovelace/"], run=gh)["entities"] == []
+
+
+def test_a_record_is_named_only_by_its_whole_id():
+    assert sync._is_named("people/ada", "ada: new aka") and sync._is_named("people/ada", "Update for Ada.")
+    assert not sync._is_named("people/ada", "trip to canada") and not sync._is_named("people/ada", "ada-lovelace: aka")
+
+
+@posix_only
+def test_a_scoped_push_pushes_before_reporting_a_conflict_in_another_records_edits(tmp_path, store_root, github, scripted_gh):
+    gh = FakeGh()
+    people = _two_dirty_records(store_root, gh)
+    sync.push(store_root, everything=True, run=gh)
+    other = tmp_path / "other-clone"
+    assert _git("clone", "-q", "--branch", "main", URL, str(other)).returncode == 0
+    (other / "people" / "grace-example" / "PROFILE.md").write_text("---\nname: grace-example\nnote: remote\n---\n")
+    _git("commit", "-aqm", "remote edit", cwd=other)
+    assert _git("push", "-q", "origin", "main", cwd=other).returncode == 0
+    (people / "grace-example" / "PROFILE.md").write_text("---\nname: grace-example\nnote: local\n---\n")  # uncommitted
+    (people / "ada-lovelace" / "PROFILE.md").write_text("---\nname: Ada Lovelace\nnote: newer\n---\n")
+    with pytest.raises(AcquaintError, match="your commits were pushed.*people/grace-example/PROFILE.md"):
+        sync.push(store_root, entities=["people/ada-lovelace"], run=gh)
+    assert "newer" in _git("--git-dir", str(github[URL]), "show", "main:people/ada-lovelace/PROFILE.md").stdout
+
+
+@posix_only
+def test_the_tool_scopes_by_id_and_a_dry_run_says_when_it_would_refuse(tmp_path, github, scripted_gh, monkeypatch):
+    from acquaint import tools
+
+    monkeypatch.setenv("ACQUAINT_DATA_DIR", str(tmp_path / "data"))
+    tools.new("person", "Ada Lovelace")
+    tools.new("person", "Grace Example")
+    gh, real = FakeGh(), sync.run_command
+    fake = lambda args, *, cwd=None: gh(args, cwd=cwd) if args[0] == "gh" else real(args, cwd=cwd)  # noqa: E731
+    for fn in (sync.init, sync.push, sync.pull, sync.status, sync.visibility, sync.sole_access):
+        monkeypatch.setattr(fn, "__kwdefaults__", {**(fn.__kwdefaults__ or {}), "run": fake})
+    sync.init(tmp_path / "data", REPO)
+    tools.remember("ada-lovelace", "likes tea", kind="preference", source="note")
+    tools.remember("grace-example", "likes coffee", kind="preference", source="note")
+    plan = tools.sync_push(message="ada-lovelace: tea", dry_run=True)
+    assert plan["summary"].startswith("would refuse") and "grace-example" in plan["summary"]
+    done = tools.sync_push(["person:ada-lovelace"], message="ada-lovelace: tea")
+    assert done["pushed"] and done["entities"] == ["people/ada-lovelace"]
+    assert "people/grace-example" in _git("status", "--porcelain", "-uall", cwd=tmp_path / "data").stdout
