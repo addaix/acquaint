@@ -40,6 +40,8 @@ __all__ = [
     "fact_tags",
     "format_log_entry",
     "item_blocks",
+    "headings",
+    "section_spans",
     "visible_lines",
     "items",
     "join_frontmatter",
@@ -349,6 +351,39 @@ def sections(body: str) -> dict[str, str]:
         t: ("\n".join(lines).strip("\n") + "\n") if "".join(lines).strip() else ""
         for t, lines in result.items()
     }
+
+
+def headings(text: str) -> list[tuple[int, int, str]]:
+    """``(line, level, normalized title)`` for every real heading: not in a code fence or an HTML comment.
+
+    >>> headings("## Who:\\n```\\n## Not\\n```\\n  ### Detail ###\\n")
+    [(1, 2, 'Who'), (5, 3, 'Detail')]
+    """
+    found = []
+    for number, line, in_code in _lines(text):
+        match = None if in_code else _HEADING_RE.match(line)
+        if match:
+            found.append((number, len(match.group("hashes")), normalize_title(match.group("title"))))
+    return found
+
+
+def section_spans(body: str) -> dict[str, tuple[int, int]]:
+    """``{title: (heading line, first line after the section)}`` for each ``##`` section, read as :func:`sections` reads it.
+
+    A ``#`` or ``##`` heading ends a section; deeper ones stay inside it. The first of a repeated title wins.
+
+    >>> section_spans("intro\\n## Who\\nAda\\n### Detail\\n# Aside\\n## Now:\\n- busy\\n")
+    {'Who': (2, 5), 'Now': (6, 9)}
+    """
+    marks = headings(body)
+    total = len(normalize_newlines(body).split("\n"))
+    spans: dict[str, tuple[int, int]] = {}
+    for index, (number, level, title) in enumerate(marks):
+        if level != 2 or title in spans:
+            continue
+        end = next((n for n, lvl, _ in marks[index + 1 :] if lvl <= 2), total + 1)
+        spans[title] = (number, end)
+    return spans
 
 
 def visible_lines(text: str) -> list[tuple[int, str, bool]]:
