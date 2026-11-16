@@ -42,7 +42,7 @@ from string import Template
 from datetime import date, datetime
 from typing import Any
 
-from acquaint.records import join_frontmatter, split_frontmatter
+from acquaint.records import join_frontmatter, split_frontmatter, visible_lines
 from acquaint.resources import data_text
 from acquaint.store import AcquaintError, Entity
 
@@ -274,17 +274,21 @@ def parse_rows(rows: str | Mapping[str, Sequence[str]]) -> dict[str, list[str]]:
 
 
 def _append_under(body: str, section: str, heading: str, lines: Sequence[str]) -> str:
-    start = re.search(rf"^## {re.escape(section)}:?[ \t]*\r?$", body, re.M)
-    if start is None:
+    """``body`` with a ``### heading`` block at the end of ``## section``; headings inside code fences or comments do not count."""
+    seen = visible_lines(body)
+    starts = [n for n, line, code in seen if not code and re.fullmatch(rf"## {re.escape(section)}:?[ \t]*", line)]
+    if not starts:
         raise AcquaintError(f"the digest has no `## {section}` section")
-    following = re.search(r"^## ", body[start.end() :], re.M)
-    end = start.end() + following.start() if following else len(body)
-    if re.search(rf"^### {re.escape(heading)}[ \t]*\r?$", body[start.end() : end], re.M):
+    first = starts[0]
+    nxt = next((n for n, line, code in seen if n > first and not code and line.startswith("## ")), len(seen) + 1)
+    if any(first < n < nxt and not code and re.fullmatch(rf"### {re.escape(heading)}[ \t]*", line) for n, line, code in seen):
         raise AcquaintError(f"`## {section}` already has a `### {heading}` batch")
-    items = "\n".join(f"- {line}" for line in lines)
-    kept = body[start.end() : end].rstrip("\r\n")
-    tail = "\n" if following else ""
-    return f"{body[: start.end()]}{kept}\n\n### {heading}\n\n{items}\n{tail}{body[end:]}"
+    rows = body.split("\n")
+    kept = rows[first : nxt - 1]
+    while kept and not kept[-1].strip():
+        kept.pop()
+    block = ["", f"### {heading}", "", *(f"- {line}" for line in lines), ""]  # blank line before the next section, or the final newline
+    return "\n".join(rows[:first] + kept + block + rows[nxt - 1 :])
 
 
 def _unanchored(body: str) -> int:

@@ -40,6 +40,7 @@ __all__ = [
     "fact_tags",
     "format_log_entry",
     "item_blocks",
+    "visible_lines",
     "items",
     "join_frontmatter",
     "load_yaml",
@@ -348,6 +349,11 @@ def sections(body: str) -> dict[str, str]:
         t: ("\n".join(lines).strip("\n") + "\n") if "".join(lines).strip() else ""
         for t, lines in result.items()
     }
+
+
+def visible_lines(text: str) -> list[tuple[int, str, bool]]:
+    """``(number, line, in_code)`` for every line of ``text``, HTML comments blanked and fences marked: the reading every lint rule uses."""
+    return list(_lines(text))
 
 
 def item_blocks(text: str) -> list[tuple[str | None, int, int, str]]:
