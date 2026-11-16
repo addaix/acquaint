@@ -600,3 +600,14 @@ def test_the_tombstone_travels_with_a_deleted_record_only(store_root, github, sc
     assert done["pushed"] and "_tombstones.yaml" in _pushed_files(github[URL])
     assert "people/ada-lovelace/PROFILE.md" not in _pushed_files(github[URL])
     assert sync.status(store_root, run=gh, check_visibility=False)["uncommitted"] == 0
+
+
+@posix_only
+def test_status_counts_the_files_of_a_new_record_folder(store_root, github, scripted_gh):
+    gh = FakeGh()
+    sync.init(store_root, REPO, run=gh)
+    folder = store_root / "people" / "new-person"
+    folder.mkdir()
+    (folder / "PROFILE.md").write_text("---\nname: n\n---\n")
+    (folder / "notes.md").write_text("x\n")
+    assert sync.status(store_root, run=gh, check_visibility=False)["uncommitted"] == 2

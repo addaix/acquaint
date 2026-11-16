@@ -526,7 +526,7 @@ def init(
     }
 
 
-#: Files at the top of the store that belong to no record; a scoped push carries them when they changed.
+#: Files at the top of the store that belong to no record; a scoped push carries them only together with a deleted record.
 STORE_FILES = (TOMBSTONES,)
 
 
