@@ -219,3 +219,24 @@ def test_the_file_ends_with_one_newline_and_sections_stay_separated(store, put):
     text = ada[find_digest(ada, REF)["file"]]
     assert text.endswith("\n") and not text.endswith("\n\n")
     assert "\n\n## Themes" in text and "\n\n\n" not in text.split("---", 2)[2]
+
+
+def test_the_splice_reads_sections_as_the_lint_does(store, put):
+    ada = _ada(store, put)
+    name = find_digest(ada, REF)["file"]
+    ada[name] = ada[name].replace("## Themes", "  ## Themes:", 1).replace("## Index", "# Aside\n\n## Index", 1)
+    append_batch(ada, REF, heading="w1", rows={"Themes": ["t [source: y]"], "Index": ["i [source: y]"]})
+    text = ada[name]
+    assert text.index("- t [source: y]") < text.index("# Aside") < text.index("- i [source: y]")
+    assert text.index("- i [source: y]") < text.index("## Open threads")
+    ada[name] = text.replace("### w1", "### w1 ###", 1)  # the same heading, as the lint reads it
+    with pytest.raises(AcquaintError, match="already has"):
+        append_batch(ada, REF, heading="w1", rows={"Themes": ["again [source: y]"]})
+
+
+def test_a_section_ending_in_an_unclosed_fence_refuses_the_batch(store, put):
+    ada = _ada(store, put)
+    name = find_digest(ada, REF)["file"]
+    ada[name] = ada[name].rstrip("\n") + "\n\n```\nnever closed\n"
+    with pytest.raises(AcquaintError, match="unclosed code fence"):
+        append_batch(ada, REF, heading="w1", rows={"Open threads": ["x [source: y]"]})

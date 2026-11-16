@@ -43,8 +43,10 @@ from datetime import date, datetime
 from typing import Any
 
 from acquaint.records import (
+    headings,
     join_frontmatter,
     normalize_newlines,
+    section_spans,
     split_frontmatter,
     visible_lines,
 )
@@ -279,43 +281,22 @@ def parse_rows(rows: str | Mapping[str, Sequence[str]]) -> dict[str, list[str]]:
 
 
 def _append_under(body: str, section: str, heading: str, lines: Sequence[str]) -> str:
-    """``body`` with a ``### heading`` block at the end of ``## section``; headings inside code fences or comments do not count."""
+    """``body`` with a ``### heading`` block at the end of ``## section``, both read as the lint reads them."""
     body = normalize_newlines(body)
-    seen = visible_lines(body)
-    starts = [
-        n
-        for n, line, code in seen
-        if not code and re.fullmatch(rf"## {re.escape(section)}:?[ \t]*", line)
-    ]
-    if not starts:
+    span = section_spans(body).get(section)
+    if span is None:
         raise AcquaintError(f"the digest has no `## {section}` section")
-    first = starts[0]
-    nxt = next(
-        (
-            n
-            for n, line, code in seen
-            if n > first and not code and line.startswith("## ")
-        ),
-        len(seen) + 1,
-    )
-    if any(
-        first < n < nxt
-        and not code
-        and re.fullmatch(rf"### {re.escape(heading)}[ \t]*", line)
-        for n, line, code in seen
-    ):
+    first, nxt = span
+    if any(first < n < nxt and level == 3 and title == heading for n, level, title in headings(body)):
         raise AcquaintError(f"`## {section}` already has a `### {heading}` batch")
+    seen = [(n, line, code) for n, line, code in visible_lines(body) if first < n < nxt and line.strip()]
+    if seen and seen[-1][2]:
+        raise AcquaintError(f"`## {section}` ends inside an unclosed code fence; close it first, or the batch would be invisible to lint")
     rows = body.split("\n")
     kept = rows[first : nxt - 1]
     while kept and not kept[-1].strip():
         kept.pop()
-    block = [
-        "",
-        f"### {heading}",
-        "",
-        *(f"- {line}" for line in lines),
-        "",
-    ]  # blank line before the next section, or the final newline
+    block = ["", f"### {heading}", "", *(f"- {line}" for line in lines), ""]  # blank line before the next section, or the final newline
     return "\n".join(rows[:first] + kept + block + rows[nxt - 1 :])
 
 
