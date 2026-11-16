@@ -46,6 +46,7 @@ from acquaint.records import (
     headings,
     join_frontmatter,
     normalize_newlines,
+    normalize_title,
     section_spans,
     split_frontmatter,
     visible_lines,
@@ -287,10 +288,10 @@ def _append_under(body: str, section: str, heading: str, lines: Sequence[str]) -
     if span is None:
         raise AcquaintError(f"the digest has no `## {section}` section")
     first, nxt = span
-    if any(first < n < nxt and level == 3 and title == heading for n, level, title in headings(body)):
+    if any(first < n < nxt and level == 3 and title == normalize_title(heading) for n, level, title in headings(body)):
         raise AcquaintError(f"`## {section}` already has a `### {heading}` batch")
-    seen = [(n, line, code) for n, line, code in visible_lines(body) if first < n < nxt and line.strip()]
-    if seen and seen[-1][2]:
+    total = len(body.split("\n"))
+    if nxt > total and visible_lines(body + "\nx")[-1][2]:  # an unclosed fence hides every later heading, so it runs to the end
         raise AcquaintError(f"`## {section}` ends inside an unclosed code fence; close it first, or the batch would be invisible to lint")
     rows = body.split("\n")
     kept = rows[first : nxt - 1]

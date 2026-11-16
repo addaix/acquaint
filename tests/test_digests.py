@@ -240,3 +240,22 @@ def test_a_section_ending_in_an_unclosed_fence_refuses_the_batch(store, put):
     ada[name] = ada[name].rstrip("\n") + "\n\n```\nnever closed\n"
     with pytest.raises(AcquaintError, match="unclosed code fence"):
         append_batch(ada, REF, heading="w1", rows={"Open threads": ["x [source: y]"]})
+
+
+def test_a_closed_fence_at_the_end_of_a_section_does_not_block_the_batch(store, put):
+    ada = _ada(store, put)
+    name = find_digest(ada, REF)["file"]
+    ada[name] = ada[name].replace("## Themes", "## Themes\n\n```\ncode\n```\n", 1)
+    append_batch(ada, REF, heading="w1:", rows={"Themes": ["t [source: y]"]})
+    with pytest.raises(AcquaintError, match="already has"):
+        append_batch(ada, REF, heading="w1", rows={"Themes": ["again [source: y]"]})  # "w1:" and "w1" are one heading
+    assert "- t [source: y]" in ada[name]
+
+
+def test_headings_and_section_spans_agree_with_sections():
+    from acquaint.records import headings, section_spans, sections
+
+    body = "intro\n## A\n```\n## no\n```\n### sub\n# Aside\n## B:\n<!-- ## no -->\nx\n"
+    assert headings(body) == [(2, 2, "A"), (6, 3, "sub"), (7, 1, "Aside"), (8, 2, "B")]
+    assert section_spans(body) == {"A": (2, 7), "B": (8, 12)}
+    assert list(section_spans(body)) == list(sections(body))
