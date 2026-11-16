@@ -42,7 +42,12 @@ from string import Template
 from datetime import date, datetime
 from typing import Any
 
-from acquaint.records import join_frontmatter, normalize_newlines, split_frontmatter, visible_lines
+from acquaint.records import (
+    join_frontmatter,
+    normalize_newlines,
+    split_frontmatter,
+    visible_lines,
+)
 from acquaint.resources import data_text
 from acquaint.store import AcquaintError, Entity
 
@@ -277,18 +282,40 @@ def _append_under(body: str, section: str, heading: str, lines: Sequence[str]) -
     """``body`` with a ``### heading`` block at the end of ``## section``; headings inside code fences or comments do not count."""
     body = normalize_newlines(body)
     seen = visible_lines(body)
-    starts = [n for n, line, code in seen if not code and re.fullmatch(rf"## {re.escape(section)}:?[ \t]*", line)]
+    starts = [
+        n
+        for n, line, code in seen
+        if not code and re.fullmatch(rf"## {re.escape(section)}:?[ \t]*", line)
+    ]
     if not starts:
         raise AcquaintError(f"the digest has no `## {section}` section")
     first = starts[0]
-    nxt = next((n for n, line, code in seen if n > first and not code and line.startswith("## ")), len(seen) + 1)
-    if any(first < n < nxt and not code and re.fullmatch(rf"### {re.escape(heading)}[ \t]*", line) for n, line, code in seen):
+    nxt = next(
+        (
+            n
+            for n, line, code in seen
+            if n > first and not code and line.startswith("## ")
+        ),
+        len(seen) + 1,
+    )
+    if any(
+        first < n < nxt
+        and not code
+        and re.fullmatch(rf"### {re.escape(heading)}[ \t]*", line)
+        for n, line, code in seen
+    ):
         raise AcquaintError(f"`## {section}` already has a `### {heading}` batch")
     rows = body.split("\n")
     kept = rows[first : nxt - 1]
     while kept and not kept[-1].strip():
         kept.pop()
-    block = ["", f"### {heading}", "", *(f"- {line}" for line in lines), ""]  # blank line before the next section, or the final newline
+    block = [
+        "",
+        f"### {heading}",
+        "",
+        *(f"- {line}" for line in lines),
+        "",
+    ]  # blank line before the next section, or the final newline
     return "\n".join(rows[:first] + kept + block + rows[nxt - 1 :])
 
 
