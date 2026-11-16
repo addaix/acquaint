@@ -18,6 +18,7 @@ with a :class:`~acquaint.store.Store`.
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path
 from typing import Any
 
 from acquaint import meta as _meta
@@ -913,13 +914,18 @@ def digest_append(
     force: bool = False,
     data_dir: str | None = None,
 ) -> dict:
-    """Add a dated batch to a digest: a ``### <heading>`` block (e.g. the date range) at the end of each section named in ``rows``. ``rows`` is JSON ``{"Takeaways": ["line [at: <ISO time>]"]}``, or ``section | line | anchor`` rows, or the path of a file holding either. Lines under Takeaways, Themes, Index and Open threads need an ``[at: …]`` or ``[source: …]`` anchor, else nothing is written. With ``through`` (ISO time of the last message processed), the watermark moves in the same call."""
+    """Add a dated batch to a digest: a ``### <heading>`` block (e.g. the date range) at the end of each section named in ``rows``. ``rows`` is JSON ``{"Takeaways": ["line [at: <ISO time>]"]}``, or ``section | line | anchor`` rows (one per line), or ``@<path>`` to read either from a file. Lines under Takeaways, Themes, Index and Open threads need an ``[at: …]`` or ``[source: …]`` anchor, else nothing is written. With ``through`` (ISO time of the last message processed), the watermark moves in the same call."""
     store = _store(data_dir)
+    if rows.startswith("@"):
+        try:
+            rows = Path(rows[1:]).expanduser().read_text(encoding="utf-8")
+        except OSError as error:
+            raise AcquaintError(f"cannot read the rows file: {error}") from error
     found = append_batch(
         Entity(store, find_entity(store, entity)),
         ref,
-        heading,
-        rows,
+        heading=heading,
+        rows=rows,
         through=through,
         scope=scope,
         force=force,
