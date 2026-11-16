@@ -130,6 +130,23 @@ def match(store: Store, query: str) -> dict[str, list]:
     return {"exact": exact, "partial": partial, "unreadable": broken}
 
 
+#: The alias for the record that is the operator's own (``operator: true`` in its frontmatter).
+SELF = "self"
+
+
+def operator_keys(store: Store) -> list[str]:
+    """Store keys of the records marked ``operator: true`` (only a person counts); a record that cannot be read is skipped here, ``lint`` reports it."""
+    found = []
+    for key in store:
+        try:
+            marked = key.startswith("people/") and store[key].meta.get("operator") is True
+        except Exception:  # noqa: BLE001 - one unreadable record must not stop a lookup
+            continue
+        if marked:
+            found.append(key)
+    return found
+
+
 def find_entity(store: Store, ref: str, *, names: bool = True) -> str:
     """The one store key a reference names, or an :class:`AcquaintError` saying why not.
 
@@ -140,6 +157,15 @@ def find_entity(store: Store, ref: str, *, names: bool = True) -> str:
     Operations that rewrite or remove records pass ``names=False`` and need the id.
     """
     text = ref.strip()
+    if text.lower() == SELF and not store.find_id(text):  # a record literally named self wins
+        operators = operator_keys(store)
+        if len(operators) == 1:
+            return operators[0]
+        raise AcquaintError(
+            "no record is marked `operator: true` in its PROFILE.md frontmatter, so `self` names no one"
+            if not operators
+            else f"`self` is ambiguous: {', '.join(operators)} are all marked `operator: true`; keep one"
+        )
     if ":" in text or "/" in text:
         try:
             return store.find(text)

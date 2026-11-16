@@ -50,7 +50,7 @@ The same twenty-one functions are the Python API (`acquaint.tools`), the CLI, an
 
 | Verb | Does |
 |---|---|
-| `who NAME [-f FIELD] [-b]` | one field (`email`, `aka`, `label`, `tier`, any frontmatter key, a dotted `clear` fact such as `name.full`), the identity block, or the whole entry file; lists candidates instead of guessing |
+| `who NAME [-f FIELD] [-b]` (`self` names the one person marked `operator: true` in its PROFILE.md frontmatter; every command that takes a record accepts it) | one field (`email`, `aka`, `label`, `tier`, any frontmatter key, a dotted `clear` fact such as `name.full`), the identity block, or the whole entry file; lists candidates instead of guessing |
 | `resolve HANDLE` | `github:octocat`, `email:…` → the person, with the evidence; a handle without its platform, a match by name only, or an inactive identity is reported, never acted on |
 | `check TEXT` | before publishing: one person written as two ("Ada or Lovelace"), shared names, unknown names |
 | `reach PERSON [--purpose --urgency --project --message-type --topic]` | ordered channels: the person's own rules > the operator's rules > project norms > observed habits > defaults |
