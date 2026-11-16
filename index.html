@@ -208,8 +208,8 @@ data-aria-dark="Switch to auto color mode">
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">todo-preflight</span> <span class="pre">PROJECT</span> <span class="pre">PEOPLE</span></code></p></td>
 <td><p>before filing a meeting’s todos as issues: the project is unambiguous, every participant (comma-separated) is registered and linked to it, and its meta repository (<code class="docutils literal notranslate"><span class="pre">meta_repo:</span> <span class="pre">owner/name</span></code>, or <code class="docutils literal notranslate"><span class="pre">github_org:</span> <span class="pre">&lt;org&gt;</span></code> meaning <code class="docutils literal notranslate"><span class="pre">&lt;org&gt;/meta</span></code>, in the record’s frontmatter) is private now; returns each person’s GitHub login and a fix for every problem</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">digest</span> <span class="pre">ENTITY</span> <span class="pre">[REF]</span></code> · <code class="docutils literal notranslate"><span class="pre">digest-new</span> <span class="pre">ENTITY</span> <span class="pre">REF</span></code> · <code class="docutils literal notranslate"><span class="pre">digest-mark</span> <span class="pre">ENTITY</span> <span class="pre">REF</span> <span class="pre">--through</span> <span class="pre">TIME</span> <span class="pre">[--scope</span> <span class="pre">content|style</span> <span class="pre">--force]</span></code></p></td>
-<td><p>notes on what a conversation said (<code class="docutils literal notranslate"><span class="pre">digests/&lt;conversation&gt;.md</span></code>: orientation, takeaways, themes, a dated index, open threads, every item anchored to a message time) and its watermark per scope; <code class="docutils literal notranslate"><span class="pre">digest</span> <span class="pre">ENTITY</span> <span class="pre">REF</span></code> gives <code class="docutils literal notranslate"><span class="pre">since</span></code>, the time to hand to <code class="docutils literal notranslate"><span class="pre">correspond</span> <span class="pre">read</span> <span class="pre">REF</span> <span class="pre">--since</span></code> for what is new. The messages stay in correspond’s local archive</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">digest</span> <span class="pre">ENTITY</span> <span class="pre">[REF]</span></code> · <code class="docutils literal notranslate"><span class="pre">digest-new</span> <span class="pre">ENTITY</span> <span class="pre">REF</span></code> · <code class="docutils literal notranslate"><span class="pre">digest-append</span> <span class="pre">ENTITY</span> <span class="pre">REF</span> <span class="pre">--heading</span> <span class="pre">RANGE</span> <span class="pre">--rows</span> <span class="pre">ROWS</span> <span class="pre">[--through</span> <span class="pre">TIME]</span></code> (a dated batch under every section in one call, anchors enforced; ROWS is JSON, `section</p></td>
+<td><p>line</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lint</span> <span class="pre">[ENTITY]</span></code></p></td>
 <td><p>sources on every preference; tiers, labels and seals set by the operator, with known values and review dates; parseable files; entry-file budget; policy tripwires</p></td>
@@ -335,7 +335,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-16 04:11 UTC from <a href="https://github.com/thorwhalen/acquaint/commit/bba1cc39cd936f4a254fe5e1f69197a823004a78">bba1cc3</a> (main) · acquaint 0.0.18 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-16 04:22 UTC from <a href="https://github.com/thorwhalen/acquaint/commit/5869a04ea3ce7d4a64fb017527a1d85e8e90d5ed">5869a04</a> (main) · acquaint 0.0.19 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -370,7 +370,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=8bafd125"></script>
+      <script src="_static/documentation_options.js?v=2fd7553c"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

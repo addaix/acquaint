@@ -98,12 +98,14 @@ data-aria-dark="Switch to auto color mode">
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#acquaint.digests.ANCHORED_SECTIONS"><code class="docutils literal notranslate"><span class="pre">ANCHORED_SECTIONS</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.digests.SCOPES"><code class="docutils literal notranslate"><span class="pre">SCOPES</span></code></a></li>
+<li><a class="reference internal" href="#acquaint.digests.append_batch"><code class="docutils literal notranslate"><span class="pre">append_batch()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.digests.digest_name"><code class="docutils literal notranslate"><span class="pre">digest_name()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.digests.digest_problems"><code class="docutils literal notranslate"><span class="pre">digest_problems()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.digests.digests"><code class="docutils literal notranslate"><span class="pre">digests()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.digests.find_digest"><code class="docutils literal notranslate"><span class="pre">find_digest()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.digests.mark_digest"><code class="docutils literal notranslate"><span class="pre">mark_digest()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.digests.new_digest"><code class="docutils literal notranslate"><span class="pre">new_digest()</span></code></a></li>
+<li><a class="reference internal" href="#acquaint.digests.parse_rows"><code class="docutils literal notranslate"><span class="pre">parse_rows()</span></code></a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -191,23 +193,29 @@ bodies).</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.digests.digest_name" title="acquaint.digests.digest_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">digest_name</span></code></a>(ref)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.digests.append_batch" title="acquaint.digests.append_batch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">append_batch</span></code></a>(entity, ref, *, heading, rows)</p></td>
+<td><p>Add a dated batch (<code class="docutils literal notranslate"><span class="pre">###</span> <span class="pre">heading</span></code>) at the end of each named section of a digest, in one write.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#acquaint.digests.digest_name" title="acquaint.digests.digest_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">digest_name</span></code></a>(ref)</p></td>
 <td><p>The digest's file name inside the entity's folder, derived from the reference.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#acquaint.digests.digest_problems" title="acquaint.digests.digest_problems"><code class="xref py py-obj docutils literal notranslate"><span class="pre">digest_problems</span></code></a>(text)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.digests.digest_problems" title="acquaint.digests.digest_problems"><code class="xref py py-obj docutils literal notranslate"><span class="pre">digest_problems</span></code></a>(text)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">(severity,</span> <span class="pre">line,</span> <span class="pre">rule,</span> <span class="pre">message)</span></code> for one digest file: frontmatter shape, unanchored items, long quotes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.digests.digests" title="acquaint.digests.digests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">digests</span></code></a>(entity)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#acquaint.digests.digests" title="acquaint.digests.digests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">digests</span></code></a>(entity)</p></td>
 <td><p>Every digest of the entity: its reference, file and watermarks.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#acquaint.digests.find_digest" title="acquaint.digests.find_digest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_digest</span></code></a>(entity, ref)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.digests.find_digest" title="acquaint.digests.find_digest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_digest</span></code></a>(entity, ref)</p></td>
 <td><p>The digest of one conversation, found by the <code class="docutils literal notranslate"><span class="pre">ref</span></code> in its frontmatter (else by file name).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.digests.mark_digest" title="acquaint.digests.mark_digest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mark_digest</span></code></a>(entity, ref, through, *[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#acquaint.digests.mark_digest" title="acquaint.digests.mark_digest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mark_digest</span></code></a>(entity, ref, through, *[, ...])</p></td>
 <td><p>Move the watermark of <code class="docutils literal notranslate"><span class="pre">scope</span></code> to <code class="docutils literal notranslate"><span class="pre">through</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#acquaint.digests.new_digest" title="acquaint.digests.new_digest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">new_digest</span></code></a>(entity, ref, *[, archive, today])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.digests.new_digest" title="acquaint.digests.new_digest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">new_digest</span></code></a>(entity, ref, *[, archive, today])</p></td>
 <td><p>Create the digest of <code class="docutils literal notranslate"><span class="pre">ref</span></code> from its template, with no watermark yet.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#acquaint.digests.parse_rows" title="acquaint.digests.parse_rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_rows</span></code></a>(rows)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{section:</span> <span class="pre">[line,</span> <span class="pre">...]}</span></code> from a mapping, JSON text, or <code class="docutils literal notranslate"><span class="pre">section</span> <span class="pre">|</span> <span class="pre">line</span> <span class="pre">|</span> <span class="pre">anchor</span></code> rows (one per line; the anchor is optional).</p></td>
 </tr>
 </tbody>
 </table>
@@ -225,6 +233,22 @@ bodies).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>What a watermark can cover</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="acquaint.digests.append_batch">
+<span class="sig-prename descclassname"><span class="pre">acquaint.digests.</span></span><span class="sig-name descname"><span class="pre">append_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">heading</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">through</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'content'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">today</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/digests.html#append_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.digests.append_batch" title="Link to this definition">#</a></dt>
+<dd><p>Add a dated batch (<code class="docutils literal notranslate"><span class="pre">###</span> <span class="pre">heading</span></code>) at the end of each named section of a digest, in one write.</p>
+<p><code class="docutils literal notranslate"><span class="pre">rows</span></code> is <code class="docutils literal notranslate"><span class="pre">{section:</span> <span class="pre">[line,</span> <span class="pre">...]}</span></code>, JSON text of that, or <code class="docutils literal notranslate"><span class="pre">section</span> <span class="pre">|</span> <span class="pre">line</span> <span class="pre">|</span> <span class="pre">anchor</span></code>
+rows. Each line becomes one bullet and must be one line. Anything that would add an item
+<a class="reference internal" href="#acquaint.digests.digest_problems" title="acquaint.digests.digest_problems"><code class="xref py py-func docutils literal notranslate"><span class="pre">digest_problems()</span></code></a> flags as unanchored under Takeaways, Themes, Index or Open threads
+is refused, and then nothing is written. With <code class="docutils literal notranslate"><span class="pre">through</span></code> the watermark of <code class="docutils literal notranslate"><span class="pre">scope</span></code> moves
+in the same write (<code class="docutils literal notranslate"><span class="pre">scope</span></code> and <code class="docutils literal notranslate"><span class="pre">force</span></code> mean nothing without it).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -295,6 +319,25 @@ bodies).</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="acquaint.digests.parse_rows">
+<span class="sig-prename descclassname"><span class="pre">acquaint.digests.</span></span><span class="sig-name descname"><span class="pre">parse_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/digests.html#parse_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.digests.parse_rows" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">{section:</span> <span class="pre">[line,</span> <span class="pre">...]}</span></code> from a mapping, JSON text, or <code class="docutils literal notranslate"><span class="pre">section</span> <span class="pre">|</span> <span class="pre">line</span> <span class="pre">|</span> <span class="pre">anchor</span></code> rows (one per line; the anchor is optional).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_rows</span><span class="p">(</span><span class="s2">"takeaways | Agreed to ship | [at: 2026-11-03T10:00:00Z]"</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">{'Takeaways': ['Agreed to ship [at: 2026-11-03T10:00:00Z]']}</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_rows</span><span class="p">(</span><span class="s2">"Index | Kickoff | 2026-11-03T10:00:00Z"</span><span class="p">)</span>
+</span><span data-line="4"><span class="go">{'Index': ['Kickoff [at: 2026-11-03T10:00:00Z]']}</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_rows</span><span class="p">(</span><span class="s1">'{"Themes": ["Pricing [source: thread-1]"]}'</span><span class="p">)</span>
+</span><span data-line="6"><span class="go">{'Themes': ['Pricing [source: thread-1]']}</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article><button class="back-to-top" type="button">
@@ -337,7 +380,7 @@ bodies).</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=8bafd125"></script>
+      <script src="../_static/documentation_options.js?v=2fd7553c"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -18,6 +18,7 @@ acquaint.tools
       brief
       check
       digest
+      digest_append
       digest_mark
       digest_new
       disclosure

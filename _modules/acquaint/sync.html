@@ -367,370 +367,387 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="227">
 </span><span data-line="228"><span class="k">def</span><span class="w"> </span><span class="nf">_conflicted</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 </span><span data-line="229"><span class="w">    </span><span class="sd">"""Paths left unresolved in the working tree: unmerged index entries, or text files that still hold conflict markers."""</span>
-</span><span data-line="230">    <span class="n">unmerged</span> <span class="o">=</span> <span class="n">_lines</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="s2">"core.quotePath=false"</span><span class="p">,</span> <span class="s2">"diff"</span><span class="p">,</span> <span class="s2">"--name-only"</span><span class="p">,</span> <span class="s2">"--diff-filter=U"</span><span class="p">)</span>
-</span><span data-line="231">    <span class="n">grep</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">_MARKER_PATTERNS</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"-e"</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)]</span>
-</span><span data-line="232">    <span class="n">found</span> <span class="o">=</span> <span class="n">run</span><span class="p">(</span>
-</span><span data-line="233">        <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="s2">"core.quotePath=false"</span><span class="p">,</span> <span class="s2">"grep"</span><span class="p">,</span> <span class="s2">"--untracked"</span><span class="p">,</span> <span class="s2">"-I"</span><span class="p">,</span> <span class="s2">"-l"</span><span class="p">,</span> <span class="s2">"--all-match"</span><span class="p">,</span> <span class="s2">"-E"</span><span class="p">,</span> <span class="o">*</span><span class="n">grep</span><span class="p">],</span>
-</span><span data-line="234">        <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
-</span><span data-line="235">    <span class="p">)</span>
-</span><span data-line="236">    <span class="k">if</span> <span class="n">found</span><span class="o">.</span><span class="n">returncode</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># 1 is "no match"; anything else means the check itself failed</span>
-</span><span data-line="237">        <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"could not scan </span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2"> for conflict markers: </span><span class="si">{</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">stderr</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">''</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="238">    <span class="n">marked</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
-</span><span data-line="239">    <span class="k">return</span> <span class="nb">sorted</span><span class="p">({</span><span class="o">*</span><span class="n">unmerged</span><span class="p">,</span> <span class="o">*</span><span class="n">marked</span><span class="p">})</span>
-</span><span data-line="240">
-</span><span data-line="241">
-</span><span data-line="242"><span class="k">def</span><span class="w"> </span><span class="nf">_refuse_conflicts</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">doing</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="243">    <span class="n">paths</span> <span class="o">=</span> <span class="n">_conflicted</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
-</span><span data-line="244">    <span class="k">if</span> <span class="n">paths</span><span class="p">:</span>
-</span><span data-line="245">        <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
-</span><span data-line="246">            <span class="sa">f</span><span class="s2">"refusing to </span><span class="si">{</span><span class="n">doing</span><span class="si">}</span><span class="s2">: unresolved conflicts in </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="si">}</span><span class="s2">. "</span>
-</span><span data-line="247">            <span class="s2">"Resolve them in the data root (a kept `git stash` may hold your edits), then try again"</span>
-</span><span data-line="248">        <span class="p">)</span>
-</span><span data-line="249">
-</span><span data-line="250">
-</span><span data-line="251"><span class="k">def</span><span class="w"> </span><span class="nf">_hook_path</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-</span><span data-line="252">    <span class="n">effective</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
-</span><span data-line="253">        <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="254">            <span class="n">run</span><span class="p">,</span>
-</span><span data-line="255">            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--git-path"</span><span class="p">,</span> <span class="s2">"hooks/pre-push"</span><span class="p">],</span>
-</span><span data-line="256">            <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
-</span><span data-line="257">            <span class="n">what</span><span class="o">=</span><span class="s2">"locating the hook"</span><span class="p">,</span>
-</span><span data-line="258">        <span class="p">)</span>
-</span><span data-line="259">    <span class="p">)</span>
-</span><span data-line="260">    <span class="k">return</span> <span class="n">effective</span> <span class="k">if</span> <span class="n">effective</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">()</span> <span class="k">else</span> <span class="n">root</span> <span class="o">/</span> <span class="n">effective</span>
-</span><span data-line="261">
-</span><span data-line="262">
-</span><span data-line="263"><span class="k">def</span><span class="w"> </span><span class="nf">_hook_active</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="264"><span class="w">    </span><span class="sd">"""Whether git will run the shipped guard here: the effective hook path holds it, unchanged and executable."""</span>
-</span><span data-line="265">    <span class="n">hook</span> <span class="o">=</span> <span class="n">_hook_path</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
-</span><span data-line="266">    <span class="k">if</span> <span class="ow">not</span> <span class="n">hook</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">or</span> <span class="n">hook</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">data_text</span><span class="p">(</span>
-</span><span data-line="267">        <span class="s2">"hooks/pre-push"</span>
-</span><span data-line="268">    <span class="p">):</span>
-</span><span data-line="269">        <span class="k">return</span> <span class="kc">False</span>
-</span><span data-line="270">    <span class="k">return</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"win32"</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">hook</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">X_OK</span><span class="p">)</span>
-</span><span data-line="271">
-</span><span data-line="272">
-</span><span data-line="273"><span class="k">def</span><span class="w"> </span><span class="nf">_install_hook</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-</span><span data-line="274">    <span class="n">common</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
-</span><span data-line="275">        <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="276">            <span class="n">run</span><span class="p">,</span>
-</span><span data-line="277">            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--git-common-dir"</span><span class="p">],</span>
-</span><span data-line="278">            <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
-</span><span data-line="279">            <span class="n">what</span><span class="o">=</span><span class="s2">"locating the repository"</span><span class="p">,</span>
-</span><span data-line="280">        <span class="p">)</span>
-</span><span data-line="281">    <span class="p">)</span>
-</span><span data-line="282">    <span class="n">hooks</span> <span class="o">=</span> <span class="p">(</span><span class="n">common</span> <span class="k">if</span> <span class="n">common</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">()</span> <span class="k">else</span> <span class="n">root</span> <span class="o">/</span> <span class="n">common</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"hooks"</span>
-</span><span data-line="283">    <span class="n">hooks</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="284">    <span class="n">hook</span> <span class="o">=</span> <span class="n">hooks</span> <span class="o">/</span> <span class="s2">"pre-push"</span>
-</span><span data-line="285">    <span class="n">hook</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">data_text</span><span class="p">(</span><span class="s2">"hooks/pre-push"</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="286">    <span class="n">hook</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="mo">0o755</span><span class="p">)</span>
-</span><span data-line="287">    <span class="c1"># Absolute on purpose: a relative core.hooksPath is not found from a linked worktree.</span>
-</span><span data-line="288">    <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="289">        <span class="n">run</span><span class="p">,</span>
-</span><span data-line="290">        <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"core.hooksPath"</span><span class="p">,</span> <span class="n">hooks</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()],</span>
-</span><span data-line="291">        <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
-</span><span data-line="292">        <span class="n">what</span><span class="o">=</span><span class="s2">"pointing git at the pre-push guard"</span><span class="p">,</span>
-</span><span data-line="293">    <span class="p">)</span>
-</span><span data-line="294">    <span class="k">return</span> <span class="n">hook</span>
-</span><span data-line="295">
-</span><span data-line="296">
-</span><span data-line="297"><span class="k">def</span><span class="w"> </span><span class="nf">_check_existing_checkout</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="298"><span class="w">    </span><span class="sd">"""Refuse to take over a repository that is neither this store nor a clone of ``repo``."""</span>
-</span><span data-line="299">    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s2">".git"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-</span><span data-line="300">        <span class="k">return</span>
-</span><span data-line="301">    <span class="n">recorded</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">_lines</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"--get"</span><span class="p">,</span> <span class="s2">"acquaint.repo"</span><span class="p">)),</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="302">    <span class="k">if</span> <span class="n">recorded</span><span class="p">:</span>
-</span><span data-line="303">        <span class="k">if</span> <span class="n">recorded</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="n">repo</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
-</span><span data-line="304">            <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
-</span><span data-line="305">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2"> already syncs to </span><span class="si">{</span><span class="n">recorded</span><span class="si">}</span><span class="s2">; refusing to point it at </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="306">            <span class="p">)</span>
-</span><span data-line="307">        <span class="k">return</span>
-</span><span data-line="308">    <span class="n">origins</span> <span class="o">=</span> <span class="n">_lines</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"--get-all"</span><span class="p">,</span> <span class="s2">"remote.origin.url"</span><span class="p">)</span>
-</span><span data-line="309">    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">origins</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">_same_repo</span><span class="p">(</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">repo</span><span class="p">)):</span>
-</span><span data-line="310">        <span class="n">found</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"origin </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">origins</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">origins</span> <span class="k">else</span> <span class="s2">"no origin"</span>
-</span><span data-line="311">        <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
-</span><span data-line="312">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2"> is already a git repository (</span><span class="si">{</span><span class="n">found</span><span class="si">}</span><span class="s2">); acquaint takes over only an empty folder or a clone of </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="313">        <span class="p">)</span>
-</span><span data-line="314">
-</span><span data-line="315">
+</span><span data-line="230">    <span class="n">unmerged</span> <span class="o">=</span> <span class="n">_lines</span><span class="p">(</span>
+</span><span data-line="231">        <span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="s2">"core.quotePath=false"</span><span class="p">,</span> <span class="s2">"diff"</span><span class="p">,</span> <span class="s2">"--name-only"</span><span class="p">,</span> <span class="s2">"--diff-filter=U"</span>
+</span><span data-line="232">    <span class="p">)</span>
+</span><span data-line="233">    <span class="n">grep</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">_MARKER_PATTERNS</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"-e"</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)]</span>
+</span><span data-line="234">    <span class="n">found</span> <span class="o">=</span> <span class="n">run</span><span class="p">(</span>
+</span><span data-line="235">        <span class="p">[</span>
+</span><span data-line="236">            <span class="s2">"git"</span><span class="p">,</span>
+</span><span data-line="237">            <span class="s2">"-c"</span><span class="p">,</span>
+</span><span data-line="238">            <span class="s2">"core.quotePath=false"</span><span class="p">,</span>
+</span><span data-line="239">            <span class="s2">"grep"</span><span class="p">,</span>
+</span><span data-line="240">            <span class="s2">"--untracked"</span><span class="p">,</span>
+</span><span data-line="241">            <span class="s2">"-I"</span><span class="p">,</span>
+</span><span data-line="242">            <span class="s2">"-l"</span><span class="p">,</span>
+</span><span data-line="243">            <span class="s2">"--all-match"</span><span class="p">,</span>
+</span><span data-line="244">            <span class="s2">"-E"</span><span class="p">,</span>
+</span><span data-line="245">            <span class="o">*</span><span class="n">grep</span><span class="p">,</span>
+</span><span data-line="246">        <span class="p">],</span>
+</span><span data-line="247">        <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+</span><span data-line="248">    <span class="p">)</span>
+</span><span data-line="249">    <span class="k">if</span> <span class="p">(</span>
+</span><span data-line="250">        <span class="n">found</span><span class="o">.</span><span class="n">returncode</span> <span class="o">&gt;</span> <span class="mi">1</span>
+</span><span data-line="251">    <span class="p">):</span>  <span class="c1"># 1 is "no match"; anything else means the check itself failed</span>
+</span><span data-line="252">        <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
+</span><span data-line="253">            <span class="sa">f</span><span class="s2">"could not scan </span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2"> for conflict markers: </span><span class="si">{</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">stderr</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">''</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="254">        <span class="p">)</span>
+</span><span data-line="255">    <span class="n">marked</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+</span><span data-line="256">    <span class="k">return</span> <span class="nb">sorted</span><span class="p">({</span><span class="o">*</span><span class="n">unmerged</span><span class="p">,</span> <span class="o">*</span><span class="n">marked</span><span class="p">})</span>
+</span><span data-line="257">
+</span><span data-line="258">
+</span><span data-line="259"><span class="k">def</span><span class="w"> </span><span class="nf">_refuse_conflicts</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">doing</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="260">    <span class="n">paths</span> <span class="o">=</span> <span class="n">_conflicted</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
+</span><span data-line="261">    <span class="k">if</span> <span class="n">paths</span><span class="p">:</span>
+</span><span data-line="262">        <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
+</span><span data-line="263">            <span class="sa">f</span><span class="s2">"refusing to </span><span class="si">{</span><span class="n">doing</span><span class="si">}</span><span class="s2">: unresolved conflicts in </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="si">}</span><span class="s2">. "</span>
+</span><span data-line="264">            <span class="s2">"Resolve them in the data root (a kept `git stash` may hold your edits), then try again"</span>
+</span><span data-line="265">        <span class="p">)</span>
+</span><span data-line="266">
+</span><span data-line="267">
+</span><span data-line="268"><span class="k">def</span><span class="w"> </span><span class="nf">_hook_path</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+</span><span data-line="269">    <span class="n">effective</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
+</span><span data-line="270">        <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="271">            <span class="n">run</span><span class="p">,</span>
+</span><span data-line="272">            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--git-path"</span><span class="p">,</span> <span class="s2">"hooks/pre-push"</span><span class="p">],</span>
+</span><span data-line="273">            <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+</span><span data-line="274">            <span class="n">what</span><span class="o">=</span><span class="s2">"locating the hook"</span><span class="p">,</span>
+</span><span data-line="275">        <span class="p">)</span>
+</span><span data-line="276">    <span class="p">)</span>
+</span><span data-line="277">    <span class="k">return</span> <span class="n">effective</span> <span class="k">if</span> <span class="n">effective</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">()</span> <span class="k">else</span> <span class="n">root</span> <span class="o">/</span> <span class="n">effective</span>
+</span><span data-line="278">
+</span><span data-line="279">
+</span><span data-line="280"><span class="k">def</span><span class="w"> </span><span class="nf">_hook_active</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="281"><span class="w">    </span><span class="sd">"""Whether git will run the shipped guard here: the effective hook path holds it, unchanged and executable."""</span>
+</span><span data-line="282">    <span class="n">hook</span> <span class="o">=</span> <span class="n">_hook_path</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
+</span><span data-line="283">    <span class="k">if</span> <span class="ow">not</span> <span class="n">hook</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">or</span> <span class="n">hook</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">data_text</span><span class="p">(</span>
+</span><span data-line="284">        <span class="s2">"hooks/pre-push"</span>
+</span><span data-line="285">    <span class="p">):</span>
+</span><span data-line="286">        <span class="k">return</span> <span class="kc">False</span>
+</span><span data-line="287">    <span class="k">return</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"win32"</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">hook</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">X_OK</span><span class="p">)</span>
+</span><span data-line="288">
+</span><span data-line="289">
+</span><span data-line="290"><span class="k">def</span><span class="w"> </span><span class="nf">_install_hook</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+</span><span data-line="291">    <span class="n">common</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
+</span><span data-line="292">        <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="293">            <span class="n">run</span><span class="p">,</span>
+</span><span data-line="294">            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--git-common-dir"</span><span class="p">],</span>
+</span><span data-line="295">            <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+</span><span data-line="296">            <span class="n">what</span><span class="o">=</span><span class="s2">"locating the repository"</span><span class="p">,</span>
+</span><span data-line="297">        <span class="p">)</span>
+</span><span data-line="298">    <span class="p">)</span>
+</span><span data-line="299">    <span class="n">hooks</span> <span class="o">=</span> <span class="p">(</span><span class="n">common</span> <span class="k">if</span> <span class="n">common</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">()</span> <span class="k">else</span> <span class="n">root</span> <span class="o">/</span> <span class="n">common</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"hooks"</span>
+</span><span data-line="300">    <span class="n">hooks</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="301">    <span class="n">hook</span> <span class="o">=</span> <span class="n">hooks</span> <span class="o">/</span> <span class="s2">"pre-push"</span>
+</span><span data-line="302">    <span class="n">hook</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">data_text</span><span class="p">(</span><span class="s2">"hooks/pre-push"</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="303">    <span class="n">hook</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="mo">0o755</span><span class="p">)</span>
+</span><span data-line="304">    <span class="c1"># Absolute on purpose: a relative core.hooksPath is not found from a linked worktree.</span>
+</span><span data-line="305">    <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="306">        <span class="n">run</span><span class="p">,</span>
+</span><span data-line="307">        <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"core.hooksPath"</span><span class="p">,</span> <span class="n">hooks</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()],</span>
+</span><span data-line="308">        <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+</span><span data-line="309">        <span class="n">what</span><span class="o">=</span><span class="s2">"pointing git at the pre-push guard"</span><span class="p">,</span>
+</span><span data-line="310">    <span class="p">)</span>
+</span><span data-line="311">    <span class="k">return</span> <span class="n">hook</span>
+</span><span data-line="312">
+</span><span data-line="313">
+</span><span data-line="314"><span class="k">def</span><span class="w"> </span><span class="nf">_check_existing_checkout</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="315"><span class="w">    </span><span class="sd">"""Refuse to take over a repository that is neither this store nor a clone of ``repo``."""</span>
+</span><span data-line="316">    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s2">".git"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+</span><span data-line="317">        <span class="k">return</span>
+</span><span data-line="318">    <span class="n">recorded</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">_lines</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"--get"</span><span class="p">,</span> <span class="s2">"acquaint.repo"</span><span class="p">)),</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="319">    <span class="k">if</span> <span class="n">recorded</span><span class="p">:</span>
+</span><span data-line="320">        <span class="k">if</span> <span class="n">recorded</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="n">repo</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+</span><span data-line="321">            <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
+</span><span data-line="322">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2"> already syncs to </span><span class="si">{</span><span class="n">recorded</span><span class="si">}</span><span class="s2">; refusing to point it at </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="323">            <span class="p">)</span>
+</span><span data-line="324">        <span class="k">return</span>
+</span><span data-line="325">    <span class="n">origins</span> <span class="o">=</span> <span class="n">_lines</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"--get-all"</span><span class="p">,</span> <span class="s2">"remote.origin.url"</span><span class="p">)</span>
+</span><span data-line="326">    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">origins</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">_same_repo</span><span class="p">(</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">repo</span><span class="p">)):</span>
+</span><span data-line="327">        <span class="n">found</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"origin </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">origins</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">origins</span> <span class="k">else</span> <span class="s2">"no origin"</span>
+</span><span data-line="328">        <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
+</span><span data-line="329">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2"> is already a git repository (</span><span class="si">{</span><span class="n">found</span><span class="si">}</span><span class="s2">); acquaint takes over only an empty folder or a clone of </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="330">        <span class="p">)</span>
+</span><span data-line="331">
+</span><span data-line="332">
 <div class="viewcode-block" id="init">
 <a class="viewcode-back" href="../../_autosummary/acquaint.sync.html#acquaint.sync.init">[docs]</a>
-</span><span data-line="316"><span class="k">def</span><span class="w"> </span><span class="nf">init</span><span class="p">(</span>
-</span><span data-line="317">    <span class="n">root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span>
-</span><span data-line="318">    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="319">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="320">    <span class="n">remote_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="321">    <span class="n">create</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="322">    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="323">    <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">,</span>
-</span><span data-line="324"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span data-line="325"><span class="w">    </span><span class="sd">"""Make ``root`` a checkout of the private GitHub repository ``repo``, creating it (private) if needed."""</span>
-</span><span data-line="326">    <span class="k">if</span> <span class="ow">not</span> <span class="n">_REPO_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">repo</span><span class="p">):</span>
-</span><span data-line="327">        <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"repo is written owner/name, got </span><span class="si">{</span><span class="n">repo</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="328">    <span class="k">if</span> <span class="n">remote_url</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="329">        <span class="k">if</span> <span class="n">remote_url</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"gcrypt::"</span><span class="p">):</span>
-</span><span data-line="330">            <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
-</span><span data-line="331">                <span class="s2">"gcrypt remotes are not supported yet: the pre-push guard does not recognise git-remote-gcrypt's own push"</span>
-</span><span data-line="332">            <span class="p">)</span>
-</span><span data-line="333">        <span class="k">if</span> <span class="ow">not</span> <span class="n">_same_repo</span><span class="p">(</span><span class="n">remote_url</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
-</span><span data-line="334">            <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
-</span><span data-line="335">                <span class="sa">f</span><span class="s2">"--remote-url </span><span class="si">{</span><span class="n">remote_url</span><span class="si">!r}</span><span class="s2"> is not a url of the GitHub repository </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> (one of: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">github_urls</span><span class="p">(</span><span class="n">repo</span><span class="p">))</span><span class="si">}</span><span class="s2">); "</span>
-</span><span data-line="336">                <span class="s2">"the visibility check must cover the repository that receives the data"</span>
-</span><span data-line="337">            <span class="p">)</span>
-</span><span data-line="338">    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
-</span><span data-line="339">    <span class="n">_check_existing_checkout</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
-</span><span data-line="340">    <span class="n">plan</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="341">        <span class="sa">f</span><span class="s2">"gh repo view </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> (create it with `gh repo create </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> --private` if missing)"</span>
-</span><span data-line="342">        <span class="k">if</span> <span class="n">create</span>
-</span><span data-line="343">        <span class="k">else</span> <span class="sa">f</span><span class="s2">"gh repo view </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="344">        <span class="sa">f</span><span class="s2">"refuse unless gh reports </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> on github.com as PRIVATE"</span><span class="p">,</span>
-</span><span data-line="345">        <span class="sa">f</span><span class="s2">"git init </span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2"> (branch </span><span class="si">{</span><span class="n">BRANCH</span><span class="si">}</span><span class="s2">), or adopt an existing clone of </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">; origin = </span><span class="si">{</span><span class="n">remote_url</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'the repository SSH URL from gh'</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="346">        <span class="s2">"record acquaint.repo and acquaint.remote in the repository's git config"</span><span class="p">,</span>
-</span><span data-line="347">        <span class="s2">"install the pre-push guard (absolute core.hooksPath); commit and push the current store"</span><span class="p">,</span>
-</span><span data-line="348">    <span class="p">]</span>
-</span><span data-line="349">    <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
-</span><span data-line="350">        <span class="k">return</span> <span class="p">{</span><span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span> <span class="s2">"root"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="p">),</span> <span class="s2">"dry_run"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"plan"</span><span class="p">:</span> <span class="n">plan</span><span class="p">}</span>
-</span><span data-line="351">
-</span><span data-line="352">    <span class="n">exists</span> <span class="o">=</span> <span class="n">run</span><span class="p">([</span><span class="s2">"gh"</span><span class="p">,</span> <span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"view"</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="s2">"--json"</span><span class="p">,</span> <span class="s2">"visibility"</span><span class="p">])</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span>
-</span><span data-line="353">    <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">:</span>
-</span><span data-line="354">        <span class="k">if</span> <span class="ow">not</span> <span class="n">create</span><span class="p">:</span>
-</span><span data-line="355">            <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
-</span><span data-line="356">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> does not exist (drop --existing-only to create it, private)"</span>
-</span><span data-line="357">            <span class="p">)</span>
-</span><span data-line="358">        <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="359">            <span class="n">run</span><span class="p">,</span>
-</span><span data-line="360">            <span class="p">[</span>
-</span><span data-line="361">                <span class="s2">"gh"</span><span class="p">,</span>
-</span><span data-line="362">                <span class="s2">"repo"</span><span class="p">,</span>
-</span><span data-line="363">                <span class="s2">"create"</span><span class="p">,</span>
-</span><span data-line="364">                <span class="n">repo</span><span class="p">,</span>
-</span><span data-line="365">                <span class="s2">"--private"</span><span class="p">,</span>
-</span><span data-line="366">                <span class="s2">"--description"</span><span class="p">,</span>
-</span><span data-line="367">                <span class="s2">"acquaint profile store (private)"</span><span class="p">,</span>
-</span><span data-line="368">            <span class="p">],</span>
-</span><span data-line="369">            <span class="n">what</span><span class="o">=</span><span class="s2">"creating the repository"</span><span class="p">,</span>
-</span><span data-line="370">        <span class="p">)</span>
-</span><span data-line="371">    <span class="n">seen</span> <span class="o">=</span> <span class="n">_require_private</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
-</span><span data-line="372">    <span class="n">url</span> <span class="o">=</span> <span class="n">remote_url</span> <span class="ow">or</span> <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="373">        <span class="n">run</span><span class="p">,</span>
-</span><span data-line="374">        <span class="p">[</span><span class="s2">"gh"</span><span class="p">,</span> <span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"view"</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="s2">"--json"</span><span class="p">,</span> <span class="s2">"sshUrl"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">".sshUrl"</span><span class="p">],</span>
-</span><span data-line="375">        <span class="n">what</span><span class="o">=</span><span class="s2">"reading the SSH URL"</span><span class="p">,</span>
-</span><span data-line="376">    <span class="p">)</span>
-</span><span data-line="377">    <span class="k">if</span> <span class="ow">not</span> <span class="n">_same_repo</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
-</span><span data-line="378">        <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"gh reported </span><span class="si">{</span><span class="n">url</span><span class="si">!r}</span><span class="s2"> as the URL of </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">; refusing"</span><span class="p">)</span>
-</span><span data-line="379">
-</span><span data-line="380">    <span class="n">root</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="381">    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s2">".git"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-</span><span data-line="382">        <span class="n">_ok</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"init"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"git init"</span><span class="p">)</span>
-</span><span data-line="383">        <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="384">            <span class="n">run</span><span class="p">,</span>
-</span><span data-line="385">            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"symbolic-ref"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"refs/heads/</span><span class="si">{</span><span class="n">BRANCH</span><span class="si">}</span><span class="s2">"</span><span class="p">],</span>
-</span><span data-line="386">            <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
-</span><span data-line="387">            <span class="n">what</span><span class="o">=</span><span class="s2">"setting the branch"</span><span class="p">,</span>
-</span><span data-line="388">        <span class="p">)</span>
-</span><span data-line="389">    <span class="k">if</span> <span class="n">_lines</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"--get-all"</span><span class="p">,</span> <span class="s2">"remote.origin.url"</span><span class="p">):</span>
-</span><span data-line="390">        <span class="n">run</span><span class="p">([</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"--unset-all"</span><span class="p">,</span> <span class="s2">"remote.origin.url"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
-</span><span data-line="391">        <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="392">            <span class="n">run</span><span class="p">,</span>
-</span><span data-line="393">            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"remote.origin.url"</span><span class="p">,</span> <span class="n">url</span><span class="p">],</span>
-</span><span data-line="394">            <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
-</span><span data-line="395">            <span class="n">what</span><span class="o">=</span><span class="s2">"setting origin"</span><span class="p">,</span>
-</span><span data-line="396">        <span class="p">)</span>
-</span><span data-line="397">    <span class="k">else</span><span class="p">:</span>
-</span><span data-line="398">        <span class="n">_ok</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"remote"</span><span class="p">,</span> <span class="s2">"add"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="n">url</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"adding origin"</span><span class="p">)</span>
-</span><span data-line="399">    <span class="n">run</span><span class="p">([</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"--unset-all"</span><span class="p">,</span> <span class="s2">"remote.origin.pushurl"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
-</span><span data-line="400">    <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="401">        <span class="n">run</span><span class="p">,</span>
-</span><span data-line="402">        <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"acquaint.repo"</span><span class="p">,</span> <span class="n">repo</span><span class="p">],</span>
-</span><span data-line="403">        <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
-</span><span data-line="404">        <span class="n">what</span><span class="o">=</span><span class="s2">"recording the repository"</span><span class="p">,</span>
-</span><span data-line="405">    <span class="p">)</span>
-</span><span data-line="406">    <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="407">        <span class="n">run</span><span class="p">,</span>
-</span><span data-line="408">        <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"acquaint.remote"</span><span class="p">,</span> <span class="n">url</span><span class="p">],</span>
-</span><span data-line="409">        <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
-</span><span data-line="410">        <span class="n">what</span><span class="o">=</span><span class="s2">"recording the remote"</span><span class="p">,</span>
-</span><span data-line="411">    <span class="p">)</span>
-</span><span data-line="412">    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">".gitignore"</span><span class="p">,</span> <span class="n">_GITIGNORE</span><span class="p">),</span> <span class="p">(</span><span class="s2">".gitattributes"</span><span class="p">,</span> <span class="n">_GITATTRIBUTES</span><span class="p">)):</span>
-</span><span data-line="413">        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-</span><span data-line="414">            <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="415">    <span class="n">hook</span> <span class="o">=</span> <span class="n">_install_hook</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
-</span><span data-line="416">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="417">        <span class="n">pushed</span> <span class="o">=</span> <span class="n">push</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s2">"acquaint: initialise store"</span><span class="p">,</span> <span class="n">run</span><span class="o">=</span><span class="n">run</span><span class="p">)</span>
-</span><span data-line="418">    <span class="k">except</span> <span class="n">AcquaintError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
-</span><span data-line="419">        <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
-</span><span data-line="420">            <span class="sa">f</span><span class="s2">"the store is set up for </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">, but the first push failed: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">. Fix that, then run `acquaint sync push`"</span>
-</span><span data-line="421">        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
-</span><span data-line="422">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="423">        <span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
-</span><span data-line="424">        <span class="s2">"root"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="p">),</span>
-</span><span data-line="425">        <span class="s2">"remote"</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
-</span><span data-line="426">        <span class="s2">"visibility"</span><span class="p">:</span> <span class="n">seen</span><span class="p">,</span>
-</span><span data-line="427">        <span class="s2">"hook"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">hook</span><span class="p">),</span>
-</span><span data-line="428">        <span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">pushed</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"committed"</span><span class="p">,</span> <span class="s2">"pushed"</span><span class="p">)},</span>
-</span><span data-line="429">    <span class="p">}</span></div>
+</span><span data-line="333"><span class="k">def</span><span class="w"> </span><span class="nf">init</span><span class="p">(</span>
+</span><span data-line="334">    <span class="n">root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span>
+</span><span data-line="335">    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="336">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="337">    <span class="n">remote_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="338">    <span class="n">create</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="339">    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="340">    <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">,</span>
+</span><span data-line="341"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span data-line="342"><span class="w">    </span><span class="sd">"""Make ``root`` a checkout of the private GitHub repository ``repo``, creating it (private) if needed."""</span>
+</span><span data-line="343">    <span class="k">if</span> <span class="ow">not</span> <span class="n">_REPO_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">repo</span><span class="p">):</span>
+</span><span data-line="344">        <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"repo is written owner/name, got </span><span class="si">{</span><span class="n">repo</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="345">    <span class="k">if</span> <span class="n">remote_url</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="346">        <span class="k">if</span> <span class="n">remote_url</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"gcrypt::"</span><span class="p">):</span>
+</span><span data-line="347">            <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
+</span><span data-line="348">                <span class="s2">"gcrypt remotes are not supported yet: the pre-push guard does not recognise git-remote-gcrypt's own push"</span>
+</span><span data-line="349">            <span class="p">)</span>
+</span><span data-line="350">        <span class="k">if</span> <span class="ow">not</span> <span class="n">_same_repo</span><span class="p">(</span><span class="n">remote_url</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
+</span><span data-line="351">            <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
+</span><span data-line="352">                <span class="sa">f</span><span class="s2">"--remote-url </span><span class="si">{</span><span class="n">remote_url</span><span class="si">!r}</span><span class="s2"> is not a url of the GitHub repository </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> (one of: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">github_urls</span><span class="p">(</span><span class="n">repo</span><span class="p">))</span><span class="si">}</span><span class="s2">); "</span>
+</span><span data-line="353">                <span class="s2">"the visibility check must cover the repository that receives the data"</span>
+</span><span data-line="354">            <span class="p">)</span>
+</span><span data-line="355">    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+</span><span data-line="356">    <span class="n">_check_existing_checkout</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
+</span><span data-line="357">    <span class="n">plan</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="358">        <span class="sa">f</span><span class="s2">"gh repo view </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> (create it with `gh repo create </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> --private` if missing)"</span>
+</span><span data-line="359">        <span class="k">if</span> <span class="n">create</span>
+</span><span data-line="360">        <span class="k">else</span> <span class="sa">f</span><span class="s2">"gh repo view </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="361">        <span class="sa">f</span><span class="s2">"refuse unless gh reports </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> on github.com as PRIVATE"</span><span class="p">,</span>
+</span><span data-line="362">        <span class="sa">f</span><span class="s2">"git init </span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2"> (branch </span><span class="si">{</span><span class="n">BRANCH</span><span class="si">}</span><span class="s2">), or adopt an existing clone of </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">; origin = </span><span class="si">{</span><span class="n">remote_url</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'the repository SSH URL from gh'</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="363">        <span class="s2">"record acquaint.repo and acquaint.remote in the repository's git config"</span><span class="p">,</span>
+</span><span data-line="364">        <span class="s2">"install the pre-push guard (absolute core.hooksPath); commit and push the current store"</span><span class="p">,</span>
+</span><span data-line="365">    <span class="p">]</span>
+</span><span data-line="366">    <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
+</span><span data-line="367">        <span class="k">return</span> <span class="p">{</span><span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span> <span class="s2">"root"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="p">),</span> <span class="s2">"dry_run"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"plan"</span><span class="p">:</span> <span class="n">plan</span><span class="p">}</span>
+</span><span data-line="368">
+</span><span data-line="369">    <span class="n">exists</span> <span class="o">=</span> <span class="n">run</span><span class="p">([</span><span class="s2">"gh"</span><span class="p">,</span> <span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"view"</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="s2">"--json"</span><span class="p">,</span> <span class="s2">"visibility"</span><span class="p">])</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span>
+</span><span data-line="370">    <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">:</span>
+</span><span data-line="371">        <span class="k">if</span> <span class="ow">not</span> <span class="n">create</span><span class="p">:</span>
+</span><span data-line="372">            <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
+</span><span data-line="373">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> does not exist (drop --existing-only to create it, private)"</span>
+</span><span data-line="374">            <span class="p">)</span>
+</span><span data-line="375">        <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="376">            <span class="n">run</span><span class="p">,</span>
+</span><span data-line="377">            <span class="p">[</span>
+</span><span data-line="378">                <span class="s2">"gh"</span><span class="p">,</span>
+</span><span data-line="379">                <span class="s2">"repo"</span><span class="p">,</span>
+</span><span data-line="380">                <span class="s2">"create"</span><span class="p">,</span>
+</span><span data-line="381">                <span class="n">repo</span><span class="p">,</span>
+</span><span data-line="382">                <span class="s2">"--private"</span><span class="p">,</span>
+</span><span data-line="383">                <span class="s2">"--description"</span><span class="p">,</span>
+</span><span data-line="384">                <span class="s2">"acquaint profile store (private)"</span><span class="p">,</span>
+</span><span data-line="385">            <span class="p">],</span>
+</span><span data-line="386">            <span class="n">what</span><span class="o">=</span><span class="s2">"creating the repository"</span><span class="p">,</span>
+</span><span data-line="387">        <span class="p">)</span>
+</span><span data-line="388">    <span class="n">seen</span> <span class="o">=</span> <span class="n">_require_private</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
+</span><span data-line="389">    <span class="n">url</span> <span class="o">=</span> <span class="n">remote_url</span> <span class="ow">or</span> <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="390">        <span class="n">run</span><span class="p">,</span>
+</span><span data-line="391">        <span class="p">[</span><span class="s2">"gh"</span><span class="p">,</span> <span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"view"</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="s2">"--json"</span><span class="p">,</span> <span class="s2">"sshUrl"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">".sshUrl"</span><span class="p">],</span>
+</span><span data-line="392">        <span class="n">what</span><span class="o">=</span><span class="s2">"reading the SSH URL"</span><span class="p">,</span>
+</span><span data-line="393">    <span class="p">)</span>
+</span><span data-line="394">    <span class="k">if</span> <span class="ow">not</span> <span class="n">_same_repo</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
+</span><span data-line="395">        <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"gh reported </span><span class="si">{</span><span class="n">url</span><span class="si">!r}</span><span class="s2"> as the URL of </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">; refusing"</span><span class="p">)</span>
+</span><span data-line="396">
+</span><span data-line="397">    <span class="n">root</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="398">    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s2">".git"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+</span><span data-line="399">        <span class="n">_ok</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"init"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"git init"</span><span class="p">)</span>
+</span><span data-line="400">        <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="401">            <span class="n">run</span><span class="p">,</span>
+</span><span data-line="402">            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"symbolic-ref"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"refs/heads/</span><span class="si">{</span><span class="n">BRANCH</span><span class="si">}</span><span class="s2">"</span><span class="p">],</span>
+</span><span data-line="403">            <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+</span><span data-line="404">            <span class="n">what</span><span class="o">=</span><span class="s2">"setting the branch"</span><span class="p">,</span>
+</span><span data-line="405">        <span class="p">)</span>
+</span><span data-line="406">    <span class="k">if</span> <span class="n">_lines</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"--get-all"</span><span class="p">,</span> <span class="s2">"remote.origin.url"</span><span class="p">):</span>
+</span><span data-line="407">        <span class="n">run</span><span class="p">([</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"--unset-all"</span><span class="p">,</span> <span class="s2">"remote.origin.url"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+</span><span data-line="408">        <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="409">            <span class="n">run</span><span class="p">,</span>
+</span><span data-line="410">            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"remote.origin.url"</span><span class="p">,</span> <span class="n">url</span><span class="p">],</span>
+</span><span data-line="411">            <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+</span><span data-line="412">            <span class="n">what</span><span class="o">=</span><span class="s2">"setting origin"</span><span class="p">,</span>
+</span><span data-line="413">        <span class="p">)</span>
+</span><span data-line="414">    <span class="k">else</span><span class="p">:</span>
+</span><span data-line="415">        <span class="n">_ok</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"remote"</span><span class="p">,</span> <span class="s2">"add"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="n">url</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"adding origin"</span><span class="p">)</span>
+</span><span data-line="416">    <span class="n">run</span><span class="p">([</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"--unset-all"</span><span class="p">,</span> <span class="s2">"remote.origin.pushurl"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+</span><span data-line="417">    <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="418">        <span class="n">run</span><span class="p">,</span>
+</span><span data-line="419">        <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"acquaint.repo"</span><span class="p">,</span> <span class="n">repo</span><span class="p">],</span>
+</span><span data-line="420">        <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+</span><span data-line="421">        <span class="n">what</span><span class="o">=</span><span class="s2">"recording the repository"</span><span class="p">,</span>
+</span><span data-line="422">    <span class="p">)</span>
+</span><span data-line="423">    <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="424">        <span class="n">run</span><span class="p">,</span>
+</span><span data-line="425">        <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"acquaint.remote"</span><span class="p">,</span> <span class="n">url</span><span class="p">],</span>
+</span><span data-line="426">        <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+</span><span data-line="427">        <span class="n">what</span><span class="o">=</span><span class="s2">"recording the remote"</span><span class="p">,</span>
+</span><span data-line="428">    <span class="p">)</span>
+</span><span data-line="429">    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">".gitignore"</span><span class="p">,</span> <span class="n">_GITIGNORE</span><span class="p">),</span> <span class="p">(</span><span class="s2">".gitattributes"</span><span class="p">,</span> <span class="n">_GITATTRIBUTES</span><span class="p">)):</span>
+</span><span data-line="430">        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+</span><span data-line="431">            <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="432">    <span class="n">hook</span> <span class="o">=</span> <span class="n">_install_hook</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
+</span><span data-line="433">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="434">        <span class="n">pushed</span> <span class="o">=</span> <span class="n">push</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s2">"acquaint: initialise store"</span><span class="p">,</span> <span class="n">run</span><span class="o">=</span><span class="n">run</span><span class="p">)</span>
+</span><span data-line="435">    <span class="k">except</span> <span class="n">AcquaintError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+</span><span data-line="436">        <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
+</span><span data-line="437">            <span class="sa">f</span><span class="s2">"the store is set up for </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">, but the first push failed: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">. Fix that, then run `acquaint sync push`"</span>
+</span><span data-line="438">        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+</span><span data-line="439">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="440">        <span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
+</span><span data-line="441">        <span class="s2">"root"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="p">),</span>
+</span><span data-line="442">        <span class="s2">"remote"</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
+</span><span data-line="443">        <span class="s2">"visibility"</span><span class="p">:</span> <span class="n">seen</span><span class="p">,</span>
+</span><span data-line="444">        <span class="s2">"hook"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">hook</span><span class="p">),</span>
+</span><span data-line="445">        <span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">pushed</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"committed"</span><span class="p">,</span> <span class="s2">"pushed"</span><span class="p">)},</span>
+</span><span data-line="446">    <span class="p">}</span></div>
 
-</span><span data-line="430">
-</span><span data-line="431">
+</span><span data-line="447">
+</span><span data-line="448">
 <div class="viewcode-block" id="push">
 <a class="viewcode-back" href="../../_autosummary/acquaint.sync.html#acquaint.sync.push">[docs]</a>
-</span><span data-line="432"><span class="k">def</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span>
-</span><span data-line="433">    <span class="n">root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span>
-</span><span data-line="434">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="435">    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="436">    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="437">    <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">,</span>
-</span><span data-line="438"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span data-line="439"><span class="w">    </span><span class="sd">"""Commit everything, rebase onto the remote, and push, after re-checking the remote, the guard and the visibility."""</span>
-</span><span data-line="440">    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
-</span><span data-line="441">    <span class="n">repo</span><span class="p">,</span> <span class="n">remote</span> <span class="o">=</span> <span class="n">_configured</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
-</span><span data-line="442">    <span class="n">changed</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="443">        <span class="n">line</span>
-</span><span data-line="444">        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="445">            <span class="n">run</span><span class="p">,</span> <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">,</span> <span class="s2">"--porcelain"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"git status"</span>
-</span><span data-line="446">        <span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-</span><span data-line="447">        <span class="k">if</span> <span class="n">line</span>
-</span><span data-line="448">    <span class="p">]</span>
-</span><span data-line="449">    <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
-</span><span data-line="450">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="451">            <span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
-</span><span data-line="452">            <span class="s2">"dry_run"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="453">            <span class="s2">"would_commit"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">changed</span><span class="p">),</span>
-</span><span data-line="454">            <span class="s2">"conflicted"</span><span class="p">:</span> <span class="n">_conflicted</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">),</span>
-</span><span data-line="455">        <span class="p">}</span>
-</span><span data-line="456">    <span class="k">if</span> <span class="ow">not</span> <span class="n">_hook_active</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">):</span>
-</span><span data-line="457">        <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
-</span><span data-line="458">            <span class="sa">f</span><span class="s2">"the pre-push guard is not active in </span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2"> (moved data root, a changed core.hooksPath, or a hook that is not executable); "</span>
-</span><span data-line="459">            <span class="sa">f</span><span class="s2">"run `acquaint sync init --repo </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> --existing-only` first"</span>
-</span><span data-line="460">        <span class="p">)</span>
-</span><span data-line="461">    <span class="n">_require_private</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
-</span><span data-line="462">    <span class="n">_refuse_conflicts</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">doing</span><span class="o">=</span><span class="s2">"commit and push"</span><span class="p">)</span>
-</span><span data-line="463">    <span class="n">committed</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span data-line="464">    <span class="k">if</span> <span class="n">changed</span><span class="p">:</span>
-</span><span data-line="465">        <span class="n">_ok</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"add"</span><span class="p">,</span> <span class="s2">"-A"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"git add"</span><span class="p">)</span>
-</span><span data-line="466">        <span class="n">stamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%MZ"</span><span class="p">)</span>
-</span><span data-line="467">        <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="468">            <span class="n">run</span><span class="p">,</span>
-</span><span data-line="469">            <span class="p">[</span>
-</span><span data-line="470">                <span class="s2">"git"</span><span class="p">,</span>
-</span><span data-line="471">                <span class="s2">"commit"</span><span class="p">,</span>
-</span><span data-line="472">                <span class="s2">"-q"</span><span class="p">,</span>
-</span><span data-line="473">                <span class="s2">"-m"</span><span class="p">,</span>
-</span><span data-line="474">                <span class="n">message</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"acquaint: sync </span><span class="si">{</span><span class="n">stamp</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">changed</span><span class="p">)</span><span class="si">}</span><span class="s2"> files)"</span><span class="p">,</span>
-</span><span data-line="475">            <span class="p">],</span>
-</span><span data-line="476">            <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
-</span><span data-line="477">            <span class="n">what</span><span class="o">=</span><span class="s2">"git commit"</span><span class="p">,</span>
-</span><span data-line="478">        <span class="p">)</span>
-</span><span data-line="479">        <span class="n">committed</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span data-line="480">    <span class="k">if</span> <span class="n">run</span><span class="p">([</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--verify"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="481">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="482">            <span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
-</span><span data-line="483">            <span class="s2">"committed"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="484">            <span class="s2">"pushed"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="485">            <span class="s2">"note"</span><span class="p">:</span> <span class="s2">"nothing to push yet"</span><span class="p">,</span>
-</span><span data-line="486">        <span class="p">}</span>
-</span><span data-line="487">    <span class="k">if</span> <span class="n">run</span><span class="p">([</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"fetch"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="n">BRANCH</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="488">        <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="489">            <span class="n">run</span><span class="p">,</span>
-</span><span data-line="490">            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"rebase"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"origin/</span><span class="si">{</span><span class="n">BRANCH</span><span class="si">}</span><span class="s2">"</span><span class="p">],</span>
-</span><span data-line="491">            <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
-</span><span data-line="492">            <span class="n">what</span><span class="o">=</span><span class="s2">"rebasing onto the remote"</span><span class="p">,</span>
-</span><span data-line="493">        <span class="p">)</span>
-</span><span data-line="494">    <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="495">        <span class="n">run</span><span class="p">,</span>
-</span><span data-line="496">        <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"push"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"-u"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"HEAD:</span><span class="si">{</span><span class="n">BRANCH</span><span class="si">}</span><span class="s2">"</span><span class="p">],</span>
-</span><span data-line="497">        <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
-</span><span data-line="498">        <span class="n">what</span><span class="o">=</span><span class="s2">"git push (the pre-push guard may have refused)"</span><span class="p">,</span>
-</span><span data-line="499">    <span class="p">)</span>
-</span><span data-line="500">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="501">        <span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
-</span><span data-line="502">        <span class="s2">"remote"</span><span class="p">:</span> <span class="n">remote</span><span class="p">,</span>
-</span><span data-line="503">        <span class="s2">"committed"</span><span class="p">:</span> <span class="n">committed</span><span class="p">,</span>
-</span><span data-line="504">        <span class="s2">"changed_files"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">changed</span><span class="p">),</span>
-</span><span data-line="505">        <span class="s2">"pushed"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="506">    <span class="p">}</span></div>
+</span><span data-line="449"><span class="k">def</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span>
+</span><span data-line="450">    <span class="n">root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span>
+</span><span data-line="451">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="452">    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="453">    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="454">    <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">,</span>
+</span><span data-line="455"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span data-line="456"><span class="w">    </span><span class="sd">"""Commit everything, rebase onto the remote, and push, after re-checking the remote, the guard and the visibility."""</span>
+</span><span data-line="457">    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+</span><span data-line="458">    <span class="n">repo</span><span class="p">,</span> <span class="n">remote</span> <span class="o">=</span> <span class="n">_configured</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
+</span><span data-line="459">    <span class="n">changed</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="460">        <span class="n">line</span>
+</span><span data-line="461">        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="462">            <span class="n">run</span><span class="p">,</span> <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">,</span> <span class="s2">"--porcelain"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"git status"</span>
+</span><span data-line="463">        <span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+</span><span data-line="464">        <span class="k">if</span> <span class="n">line</span>
+</span><span data-line="465">    <span class="p">]</span>
+</span><span data-line="466">    <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
+</span><span data-line="467">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="468">            <span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
+</span><span data-line="469">            <span class="s2">"dry_run"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="470">            <span class="s2">"would_commit"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">changed</span><span class="p">),</span>
+</span><span data-line="471">            <span class="s2">"conflicted"</span><span class="p">:</span> <span class="n">_conflicted</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">),</span>
+</span><span data-line="472">        <span class="p">}</span>
+</span><span data-line="473">    <span class="k">if</span> <span class="ow">not</span> <span class="n">_hook_active</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">):</span>
+</span><span data-line="474">        <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
+</span><span data-line="475">            <span class="sa">f</span><span class="s2">"the pre-push guard is not active in </span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2"> (moved data root, a changed core.hooksPath, or a hook that is not executable); "</span>
+</span><span data-line="476">            <span class="sa">f</span><span class="s2">"run `acquaint sync init --repo </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> --existing-only` first"</span>
+</span><span data-line="477">        <span class="p">)</span>
+</span><span data-line="478">    <span class="n">_require_private</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
+</span><span data-line="479">    <span class="n">_refuse_conflicts</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">doing</span><span class="o">=</span><span class="s2">"commit and push"</span><span class="p">)</span>
+</span><span data-line="480">    <span class="n">committed</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span data-line="481">    <span class="k">if</span> <span class="n">changed</span><span class="p">:</span>
+</span><span data-line="482">        <span class="n">_ok</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"add"</span><span class="p">,</span> <span class="s2">"-A"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"git add"</span><span class="p">)</span>
+</span><span data-line="483">        <span class="n">stamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%MZ"</span><span class="p">)</span>
+</span><span data-line="484">        <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="485">            <span class="n">run</span><span class="p">,</span>
+</span><span data-line="486">            <span class="p">[</span>
+</span><span data-line="487">                <span class="s2">"git"</span><span class="p">,</span>
+</span><span data-line="488">                <span class="s2">"commit"</span><span class="p">,</span>
+</span><span data-line="489">                <span class="s2">"-q"</span><span class="p">,</span>
+</span><span data-line="490">                <span class="s2">"-m"</span><span class="p">,</span>
+</span><span data-line="491">                <span class="n">message</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"acquaint: sync </span><span class="si">{</span><span class="n">stamp</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">changed</span><span class="p">)</span><span class="si">}</span><span class="s2"> files)"</span><span class="p">,</span>
+</span><span data-line="492">            <span class="p">],</span>
+</span><span data-line="493">            <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+</span><span data-line="494">            <span class="n">what</span><span class="o">=</span><span class="s2">"git commit"</span><span class="p">,</span>
+</span><span data-line="495">        <span class="p">)</span>
+</span><span data-line="496">        <span class="n">committed</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span data-line="497">    <span class="k">if</span> <span class="n">run</span><span class="p">([</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--verify"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="498">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="499">            <span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
+</span><span data-line="500">            <span class="s2">"committed"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="501">            <span class="s2">"pushed"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="502">            <span class="s2">"note"</span><span class="p">:</span> <span class="s2">"nothing to push yet"</span><span class="p">,</span>
+</span><span data-line="503">        <span class="p">}</span>
+</span><span data-line="504">    <span class="k">if</span> <span class="n">run</span><span class="p">([</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"fetch"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="n">BRANCH</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="505">        <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="506">            <span class="n">run</span><span class="p">,</span>
+</span><span data-line="507">            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"rebase"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"origin/</span><span class="si">{</span><span class="n">BRANCH</span><span class="si">}</span><span class="s2">"</span><span class="p">],</span>
+</span><span data-line="508">            <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+</span><span data-line="509">            <span class="n">what</span><span class="o">=</span><span class="s2">"rebasing onto the remote"</span><span class="p">,</span>
+</span><span data-line="510">        <span class="p">)</span>
+</span><span data-line="511">    <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="512">        <span class="n">run</span><span class="p">,</span>
+</span><span data-line="513">        <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"push"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"-u"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"HEAD:</span><span class="si">{</span><span class="n">BRANCH</span><span class="si">}</span><span class="s2">"</span><span class="p">],</span>
+</span><span data-line="514">        <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+</span><span data-line="515">        <span class="n">what</span><span class="o">=</span><span class="s2">"git push (the pre-push guard may have refused)"</span><span class="p">,</span>
+</span><span data-line="516">    <span class="p">)</span>
+</span><span data-line="517">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="518">        <span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
+</span><span data-line="519">        <span class="s2">"remote"</span><span class="p">:</span> <span class="n">remote</span><span class="p">,</span>
+</span><span data-line="520">        <span class="s2">"committed"</span><span class="p">:</span> <span class="n">committed</span><span class="p">,</span>
+</span><span data-line="521">        <span class="s2">"changed_files"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">changed</span><span class="p">),</span>
+</span><span data-line="522">        <span class="s2">"pushed"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="523">    <span class="p">}</span></div>
 
-</span><span data-line="507">
-</span><span data-line="508">
+</span><span data-line="524">
+</span><span data-line="525">
 <div class="viewcode-block" id="pull">
 <a class="viewcode-back" href="../../_autosummary/acquaint.sync.html#acquaint.sync.pull">[docs]</a>
-</span><span data-line="509"><span class="k">def</span><span class="w"> </span><span class="nf">pull</span><span class="p">(</span>
-</span><span data-line="510">    <span class="n">root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span> <span class="o">=</span> <span class="n">run_command</span>
-</span><span data-line="511"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span data-line="512"><span class="w">    </span><span class="sd">"""Re-check the remote and its visibility, then rebase local work onto it (uncommitted edits are stashed and restored)."""</span>
-</span><span data-line="513">    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
-</span><span data-line="514">    <span class="n">repo</span><span class="p">,</span> <span class="n">remote</span> <span class="o">=</span> <span class="n">_configured</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
-</span><span data-line="515">    <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
-</span><span data-line="516">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="517">            <span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
-</span><span data-line="518">            <span class="s2">"dry_run"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="519">            <span class="s2">"plan"</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"git pull --rebase --autostash origin </span><span class="si">{</span><span class="n">BRANCH</span><span class="si">}</span><span class="s2">"</span><span class="p">],</span>
-</span><span data-line="520">        <span class="p">}</span>
-</span><span data-line="521">    <span class="n">_require_private</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
-</span><span data-line="522">    <span class="n">_refuse_conflicts</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">doing</span><span class="o">=</span><span class="s2">"pull"</span><span class="p">)</span>
-</span><span data-line="523">    <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="524">        <span class="n">run</span><span class="p">,</span>
-</span><span data-line="525">        <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"pull"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"--rebase"</span><span class="p">,</span> <span class="s2">"--autostash"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="n">BRANCH</span><span class="p">],</span>
-</span><span data-line="526">        <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
-</span><span data-line="527">        <span class="n">what</span><span class="o">=</span><span class="s2">"git pull"</span><span class="p">,</span>
-</span><span data-line="528">    <span class="p">)</span>
-</span><span data-line="529">    <span class="c1"># `git pull --autostash` exits 0 when re-applying the stash conflicts, leaving markers.</span>
-</span><span data-line="530">    <span class="n">_refuse_conflicts</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">doing</span><span class="o">=</span><span class="s2">"finish the pull"</span><span class="p">)</span>
-</span><span data-line="531">    <span class="n">head</span> <span class="o">=</span> <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="532">        <span class="n">run</span><span class="p">,</span> <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--short"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"git rev-parse"</span>
-</span><span data-line="533">    <span class="p">)</span>
-</span><span data-line="534">    <span class="k">return</span> <span class="p">{</span><span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span> <span class="s2">"remote"</span><span class="p">:</span> <span class="n">remote</span><span class="p">,</span> <span class="s2">"pulled"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"head"</span><span class="p">:</span> <span class="n">head</span><span class="p">}</span></div>
+</span><span data-line="526"><span class="k">def</span><span class="w"> </span><span class="nf">pull</span><span class="p">(</span>
+</span><span data-line="527">    <span class="n">root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span> <span class="o">=</span> <span class="n">run_command</span>
+</span><span data-line="528"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span data-line="529"><span class="w">    </span><span class="sd">"""Re-check the remote and its visibility, then rebase local work onto it (uncommitted edits are stashed and restored)."""</span>
+</span><span data-line="530">    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+</span><span data-line="531">    <span class="n">repo</span><span class="p">,</span> <span class="n">remote</span> <span class="o">=</span> <span class="n">_configured</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
+</span><span data-line="532">    <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
+</span><span data-line="533">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="534">            <span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
+</span><span data-line="535">            <span class="s2">"dry_run"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="536">            <span class="s2">"plan"</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"git pull --rebase --autostash origin </span><span class="si">{</span><span class="n">BRANCH</span><span class="si">}</span><span class="s2">"</span><span class="p">],</span>
+</span><span data-line="537">        <span class="p">}</span>
+</span><span data-line="538">    <span class="n">_require_private</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
+</span><span data-line="539">    <span class="n">_refuse_conflicts</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">doing</span><span class="o">=</span><span class="s2">"pull"</span><span class="p">)</span>
+</span><span data-line="540">    <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="541">        <span class="n">run</span><span class="p">,</span>
+</span><span data-line="542">        <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"pull"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"--rebase"</span><span class="p">,</span> <span class="s2">"--autostash"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="n">BRANCH</span><span class="p">],</span>
+</span><span data-line="543">        <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+</span><span data-line="544">        <span class="n">what</span><span class="o">=</span><span class="s2">"git pull"</span><span class="p">,</span>
+</span><span data-line="545">    <span class="p">)</span>
+</span><span data-line="546">    <span class="c1"># `git pull --autostash` exits 0 when re-applying the stash conflicts, leaving markers.</span>
+</span><span data-line="547">    <span class="n">_refuse_conflicts</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">doing</span><span class="o">=</span><span class="s2">"finish the pull"</span><span class="p">)</span>
+</span><span data-line="548">    <span class="n">head</span> <span class="o">=</span> <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="549">        <span class="n">run</span><span class="p">,</span> <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--short"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"git rev-parse"</span>
+</span><span data-line="550">    <span class="p">)</span>
+</span><span data-line="551">    <span class="k">return</span> <span class="p">{</span><span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span> <span class="s2">"remote"</span><span class="p">:</span> <span class="n">remote</span><span class="p">,</span> <span class="s2">"pulled"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"head"</span><span class="p">:</span> <span class="n">head</span><span class="p">}</span></div>
 
-</span><span data-line="535">
-</span><span data-line="536">
+</span><span data-line="552">
+</span><span data-line="553">
 <div class="viewcode-block" id="status">
 <a class="viewcode-back" href="../../_autosummary/acquaint.sync.html#acquaint.sync.status">[docs]</a>
-</span><span data-line="537"><span class="k">def</span><span class="w"> </span><span class="nf">status</span><span class="p">(</span>
-</span><span data-line="538">    <span class="n">root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">check_visibility</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span> <span class="o">=</span> <span class="n">run_command</span>
-</span><span data-line="539"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span data-line="540"><span class="w">    </span><span class="sd">"""Whether the store is synced, where to, uncommitted changes, ahead/behind, the guard, and live visibility.</span>
-</span><span data-line="541">
-</span><span data-line="542"><span class="sd">    With ``check_visibility``, ``auto_commit`` says whether edits may be committed and pushed</span>
-</span><span data-line="543"><span class="sd">    without the operator reviewing them first (:func:`sole_access`), and</span>
-</span><span data-line="544"><span class="sd">    ``auto_commit_reason`` says why or why not.</span>
-</span><span data-line="545"><span class="sd">    """</span>
-</span><span data-line="546">    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
-</span><span data-line="547">    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s2">".git"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-</span><span data-line="548">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="549">            <span class="s2">"synced"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="550">            <span class="s2">"root"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="p">),</span>
-</span><span data-line="551">            <span class="s2">"note"</span><span class="p">:</span> <span class="s2">"not set up: acquaint sync init --repo &lt;owner&gt;/&lt;name&gt;"</span><span class="p">,</span>
-</span><span data-line="552">        <span class="p">}</span>
-</span><span data-line="553">    <span class="n">repo</span><span class="p">,</span> <span class="n">remote</span> <span class="o">=</span> <span class="n">_configured</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
-</span><span data-line="554">    <span class="n">dirty</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="555">        <span class="n">line</span>
-</span><span data-line="556">        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="557">            <span class="n">run</span><span class="p">,</span> <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">,</span> <span class="s2">"--porcelain"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"git status"</span>
-</span><span data-line="558">        <span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-</span><span data-line="559">        <span class="k">if</span> <span class="n">line</span>
-</span><span data-line="560">    <span class="p">]</span>
-</span><span data-line="561">    <span class="n">result</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="562">        <span class="s2">"synced"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="563">        <span class="s2">"root"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="p">),</span>
-</span><span data-line="564">        <span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
-</span><span data-line="565">        <span class="s2">"remote"</span><span class="p">:</span> <span class="n">remote</span><span class="p">,</span>
-</span><span data-line="566">        <span class="s2">"uncommitted"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">dirty</span><span class="p">),</span>
-</span><span data-line="567">        <span class="s2">"hook_installed"</span><span class="p">:</span> <span class="n">_hook_active</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">),</span>
-</span><span data-line="568">    <span class="p">}</span>
-</span><span data-line="569">    <span class="k">if</span> <span class="n">check_visibility</span><span class="p">:</span>
-</span><span data-line="570">        <span class="n">result</span><span class="p">[</span><span class="s2">"visibility"</span><span class="p">]</span> <span class="o">=</span> <span class="n">visibility</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">run</span><span class="o">=</span><span class="n">run</span><span class="p">)</span>
-</span><span data-line="571">        <span class="n">sole</span><span class="p">,</span> <span class="n">why</span> <span class="o">=</span> <span class="n">sole_access</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">run</span><span class="o">=</span><span class="n">run</span><span class="p">)</span>
-</span><span data-line="572">        <span class="n">result</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">auto_commit</span><span class="o">=</span><span class="n">sole</span><span class="p">,</span> <span class="n">auto_commit_reason</span><span class="o">=</span><span class="n">why</span><span class="p">)</span>
-</span><span data-line="573">        <span class="k">if</span> <span class="n">run</span><span class="p">([</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"fetch"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="n">BRANCH</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="574">            <span class="n">counts</span> <span class="o">=</span> <span class="n">_ok</span><span class="p">(</span>
-</span><span data-line="575">                <span class="n">run</span><span class="p">,</span>
-</span><span data-line="576">                <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"rev-list"</span><span class="p">,</span> <span class="s2">"--left-right"</span><span class="p">,</span> <span class="s2">"--count"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"HEAD...origin/</span><span class="si">{</span><span class="n">BRANCH</span><span class="si">}</span><span class="s2">"</span><span class="p">],</span>
-</span><span data-line="577">                <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
-</span><span data-line="578">                <span class="n">what</span><span class="o">=</span><span class="s2">"comparing with the remote"</span><span class="p">,</span>
-</span><span data-line="579">            <span class="p">)</span>
-</span><span data-line="580">            <span class="n">ahead</span><span class="p">,</span> <span class="n">behind</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
-</span><span data-line="581">            <span class="n">result</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ahead</span><span class="o">=</span><span class="n">ahead</span><span class="p">,</span> <span class="n">behind</span><span class="o">=</span><span class="n">behind</span><span class="p">)</span>
-</span><span data-line="582">    <span class="k">return</span> <span class="n">result</span></div>
+</span><span data-line="554"><span class="k">def</span><span class="w"> </span><span class="nf">status</span><span class="p">(</span>
+</span><span data-line="555">    <span class="n">root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">check_visibility</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Runner</span> <span class="o">=</span> <span class="n">run_command</span>
+</span><span data-line="556"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span data-line="557"><span class="w">    </span><span class="sd">"""Whether the store is synced, where to, uncommitted changes, ahead/behind, the guard, and live visibility.</span>
+</span><span data-line="558">
+</span><span data-line="559"><span class="sd">    With ``check_visibility``, ``auto_commit`` says whether edits may be committed and pushed</span>
+</span><span data-line="560"><span class="sd">    without the operator reviewing them first (:func:`sole_access`), and</span>
+</span><span data-line="561"><span class="sd">    ``auto_commit_reason`` says why or why not.</span>
+</span><span data-line="562"><span class="sd">    """</span>
+</span><span data-line="563">    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+</span><span data-line="564">    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s2">".git"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+</span><span data-line="565">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="566">            <span class="s2">"synced"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="567">            <span class="s2">"root"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="p">),</span>
+</span><span data-line="568">            <span class="s2">"note"</span><span class="p">:</span> <span class="s2">"not set up: acquaint sync init --repo &lt;owner&gt;/&lt;name&gt;"</span><span class="p">,</span>
+</span><span data-line="569">        <span class="p">}</span>
+</span><span data-line="570">    <span class="n">repo</span><span class="p">,</span> <span class="n">remote</span> <span class="o">=</span> <span class="n">_configured</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
+</span><span data-line="571">    <span class="n">dirty</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="572">        <span class="n">line</span>
+</span><span data-line="573">        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="574">            <span class="n">run</span><span class="p">,</span> <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">,</span> <span class="s2">"--porcelain"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"git status"</span>
+</span><span data-line="575">        <span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+</span><span data-line="576">        <span class="k">if</span> <span class="n">line</span>
+</span><span data-line="577">    <span class="p">]</span>
+</span><span data-line="578">    <span class="n">result</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="579">        <span class="s2">"synced"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="580">        <span class="s2">"root"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="p">),</span>
+</span><span data-line="581">        <span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
+</span><span data-line="582">        <span class="s2">"remote"</span><span class="p">:</span> <span class="n">remote</span><span class="p">,</span>
+</span><span data-line="583">        <span class="s2">"uncommitted"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">dirty</span><span class="p">),</span>
+</span><span data-line="584">        <span class="s2">"hook_installed"</span><span class="p">:</span> <span class="n">_hook_active</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">run</span><span class="p">),</span>
+</span><span data-line="585">    <span class="p">}</span>
+</span><span data-line="586">    <span class="k">if</span> <span class="n">check_visibility</span><span class="p">:</span>
+</span><span data-line="587">        <span class="n">result</span><span class="p">[</span><span class="s2">"visibility"</span><span class="p">]</span> <span class="o">=</span> <span class="n">visibility</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">run</span><span class="o">=</span><span class="n">run</span><span class="p">)</span>
+</span><span data-line="588">        <span class="n">sole</span><span class="p">,</span> <span class="n">why</span> <span class="o">=</span> <span class="n">sole_access</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">run</span><span class="o">=</span><span class="n">run</span><span class="p">)</span>
+</span><span data-line="589">        <span class="n">result</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">auto_commit</span><span class="o">=</span><span class="n">sole</span><span class="p">,</span> <span class="n">auto_commit_reason</span><span class="o">=</span><span class="n">why</span><span class="p">)</span>
+</span><span data-line="590">        <span class="k">if</span> <span class="n">run</span><span class="p">([</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"fetch"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="n">BRANCH</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="591">            <span class="n">counts</span> <span class="o">=</span> <span class="n">_ok</span><span class="p">(</span>
+</span><span data-line="592">                <span class="n">run</span><span class="p">,</span>
+</span><span data-line="593">                <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"rev-list"</span><span class="p">,</span> <span class="s2">"--left-right"</span><span class="p">,</span> <span class="s2">"--count"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"HEAD...origin/</span><span class="si">{</span><span class="n">BRANCH</span><span class="si">}</span><span class="s2">"</span><span class="p">],</span>
+</span><span data-line="594">                <span class="n">cwd</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+</span><span data-line="595">                <span class="n">what</span><span class="o">=</span><span class="s2">"comparing with the remote"</span><span class="p">,</span>
+</span><span data-line="596">            <span class="p">)</span>
+</span><span data-line="597">            <span class="n">ahead</span><span class="p">,</span> <span class="n">behind</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</span><span data-line="598">            <span class="n">result</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ahead</span><span class="o">=</span><span class="n">ahead</span><span class="p">,</span> <span class="n">behind</span><span class="o">=</span><span class="n">behind</span><span class="p">)</span>
+</span><span data-line="599">    <span class="k">return</span> <span class="n">result</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -759,7 +776,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=8bafd125"></script>
+      <script src="../../_static/documentation_options.js?v=2fd7553c"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

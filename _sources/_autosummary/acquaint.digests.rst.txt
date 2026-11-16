@@ -15,10 +15,12 @@ acquaint.digests
 
    .. autosummary::
    
+      append_batch
       digest_name
       digest_problems
       digests
       find_digest
       mark_digest
       new_digest
+      parse_rows
    

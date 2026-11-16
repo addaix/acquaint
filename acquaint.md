@@ -1,4 +1,4 @@
-> built 2026-11-16 04:11 UTC from bba1cc3 (main) · acquaint 0.0.18. Details: build_info.json
+> built 2026-11-16 04:22 UTC from 5869a04 (main) · acquaint 0.0.19. Details: build_info.json
 
 # index.html.md
 
@@ -53,24 +53,24 @@ Only `PROFILE.md` is required. A malformed file is reported and skipped; it neve
 
 The same twenty-one functions are the Python API (`acquaint.tools`), the CLI, and the MCP tools. Each returns a JSON-ready dict.
 
-| Verb                                                                                                                      | Does                                                                                                                                                                                                                                                                                                                                                         |
-|---------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `who NAME [-f FIELD] [-b]`                                                                                                | one field (`email`, `aka`, `label`, `tier`, any frontmatter key), the identity block, or the whole entry file; lists candidates instead of guessing                                                                                                                                                                                                          |
-| `resolve HANDLE`                                                                                                          | `github:octocat`, `email:…` → the person, with the evidence; a handle without its platform, a match by name only, or an inactive identity is reported, never acted on                                                                                                                                                                                        |
-| `check TEXT`                                                                                                              | before publishing: one person written as two (“Ada or Lovelace”), shared names, unknown names                                                                                                                                                                                                                                                                |
-| `reach PERSON [--purpose --urgency --project --message-type --topic]`                                                     | ordered channels: the person’s own rules > the operator’s rules > project norms > observed habits > defaults                                                                                                                                                                                                                                                 |
-| `brief PERSON [--purpose --project --ref CONVERSATION | --audience-json - | FILE]`                                        | card, writing style, views, reach, project norms, recent observations, reminders, and what is **not** known; with `--ref` (correspond is asked who can read it; unknown is public) or an audience record, it opens with the ceiling, the records and terms not to identify, how many lines were withheld (never their text), and what they were already told |
-| `remember ENTITY TEXT [--source --kind --disclosed --reactivate]`                                                         | append a dated, sourced observation (or identity, preference, view, rule); an `interaction` may list the records a message identified (`--disclosed project:heron`); an identity equal to an inactive one is refused, naming that entry, unless `--reactivate`                                                                                               |
-| `disclosure ID... [--project SLUG] [--audience-json - | FILE]`                                                            | who may be told what: the tier and clearance in force for each reader, the least clearance, the seals, the terms a gate must scan for, what each was already told, and the gaps                                                                                                                                                                              |
-| `review PERSON`                                                                                                           | everything that names someone’s disclosure standing, with sources and dates: tier entries, links, default tiers and clearances reached through links, seals, rules; exits 1 when an affiliation ended while a permissive tier is still in force. Run it when a collaboration ends, when someone changes role, or before changing a tier                      |
-| `todo-preflight PROJECT PEOPLE`                                                                                           | before filing a meeting’s todos as issues: the project is unambiguous, every participant (comma-separated) is registered and linked to it, and its meta repository (`meta_repo: owner/name`, or `github_org: <org>` meaning `<org>/meta`, in the record’s frontmatter) is private now; returns each person’s GitHub login and a fix for every problem        |
-| `digest ENTITY [REF]` · `digest-new ENTITY REF` · `digest-mark ENTITY REF --through TIME [--scope content|style --force]` | notes on what a conversation said (`digests/<conversation>.md`: orientation, takeaways, themes, a dated index, open threads, every item anchored to a message time) and its watermark per scope; `digest ENTITY REF` gives `since`, the time to hand to `correspond read REF --since` for what is new. The messages stay in correspond’s local archive       |
-| `lint [ENTITY]`                                                                                                           | sources on every preference; tiers, labels and seals set by the operator, with known values and review dates; parseable files; entry-file budget; policy tripwires                                                                                                                                                                                           |
-| `style-lint TEXT [--recipient --tolerance]`                                                                               | machine-writing tells, enforced by the reader’s tolerance of AI-sounding text                                                                                                                                                                                                                                                                                |
-| `new KIND NAME [--qualifier --description]`                                                                               | scaffold from a template; readable slug ids (`ada-lovelace`, `john-smith--example-org`)                                                                                                                                                                                                                                                                      |
-| `rename ID TO`                                                                                                            | new id or name; links elsewhere rewritten (never inside URLs or logs); old forms kept as aliases                                                                                                                                                                                                                                                             |
-| `forget ID [--confirm]`                                                                                                   | remove the whole folder, leaving a salted tombstone so the person is not silently re-created                                                                                                                                                                                                                                                                 |
-| `sync init --repo OWNER/NAME` · `sync push` · `sync pull` · `sync status`                                                 | private-repository sync, below                                                                                                                                                                                                                                                                                                                               |
+| Verb                                                                                                                                                                                                                | Does                                                                                                                                                                                                                                                                                                                                                         |
+|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `who NAME [-f FIELD] [-b]`                                                                                                                                                                                          | one field (`email`, `aka`, `label`, `tier`, any frontmatter key), the identity block, or the whole entry file; lists candidates instead of guessing                                                                                                                                                                                                          |
+| `resolve HANDLE`                                                                                                                                                                                                    | `github:octocat`, `email:…` → the person, with the evidence; a handle without its platform, a match by name only, or an inactive identity is reported, never acted on                                                                                                                                                                                        |
+| `check TEXT`                                                                                                                                                                                                        | before publishing: one person written as two (“Ada or Lovelace”), shared names, unknown names                                                                                                                                                                                                                                                                |
+| `reach PERSON [--purpose --urgency --project --message-type --topic]`                                                                                                                                               | ordered channels: the person’s own rules > the operator’s rules > project norms > observed habits > defaults                                                                                                                                                                                                                                                 |
+| `brief PERSON [--purpose --project --ref CONVERSATION | --audience-json - | FILE]`                                                                                                                                  | card, writing style, views, reach, project norms, recent observations, reminders, and what is **not** known; with `--ref` (correspond is asked who can read it; unknown is public) or an audience record, it opens with the ceiling, the records and terms not to identify, how many lines were withheld (never their text), and what they were already told |
+| `remember ENTITY TEXT [--source --kind --disclosed --reactivate]`                                                                                                                                                   | append a dated, sourced observation (or identity, preference, view, rule); an `interaction` may list the records a message identified (`--disclosed project:heron`); an identity equal to an inactive one is refused, naming that entry, unless `--reactivate`                                                                                               |
+| `disclosure ID... [--project SLUG] [--audience-json - | FILE]`                                                                                                                                                      | who may be told what: the tier and clearance in force for each reader, the least clearance, the seals, the terms a gate must scan for, what each was already told, and the gaps                                                                                                                                                                              |
+| `review PERSON`                                                                                                                                                                                                     | everything that names someone’s disclosure standing, with sources and dates: tier entries, links, default tiers and clearances reached through links, seals, rules; exits 1 when an affiliation ended while a permissive tier is still in force. Run it when a collaboration ends, when someone changes role, or before changing a tier                      |
+| `todo-preflight PROJECT PEOPLE`                                                                                                                                                                                     | before filing a meeting’s todos as issues: the project is unambiguous, every participant (comma-separated) is registered and linked to it, and its meta repository (`meta_repo: owner/name`, or `github_org: <org>` meaning `<org>/meta`, in the record’s frontmatter) is private now; returns each person’s GitHub login and a fix for every problem        |
+| `digest ENTITY [REF]` · `digest-new ENTITY REF` · `digest-append ENTITY REF --heading RANGE --rows ROWS [--through TIME]` (a dated batch under every section in one call, anchors enforced; ROWS is JSON, \`section | line                                                                                                                                                                                                                                                                                                                                                         |
+| `lint [ENTITY]`                                                                                                                                                                                                     | sources on every preference; tiers, labels and seals set by the operator, with known values and review dates; parseable files; entry-file budget; policy tripwires                                                                                                                                                                                           |
+| `style-lint TEXT [--recipient --tolerance]`                                                                                                                                                                         | machine-writing tells, enforced by the reader’s tolerance of AI-sounding text                                                                                                                                                                                                                                                                                |
+| `new KIND NAME [--qualifier --description]`                                                                                                                                                                         | scaffold from a template; readable slug ids (`ada-lovelace`, `john-smith--example-org`)                                                                                                                                                                                                                                                                      |
+| `rename ID TO`                                                                                                                                                                                                      | new id or name; links elsewhere rewritten (never inside URLs or logs); old forms kept as aliases                                                                                                                                                                                                                                                             |
+| `forget ID [--confirm]`                                                                                                                                                                                             | remove the whole folder, leaving a salted tombstone so the person is not silently re-created                                                                                                                                                                                                                                                                 |
+| `sync init --repo OWNER/NAME` · `sync push` · `sync pull` · `sync status`                                                                                                                                           | private-repository sync, below                                                                                                                                                                                                                                                                                                                               |
 
 `--json` prints the result dict; `-` as the text of `check` or `style-lint` reads stdin.
 
@@ -315,13 +315,15 @@ bodies).
 
 ### Functions
 
-| [`digest_name`](_autosummary/acquaint.digests.html.md#acquaint.digests.digest_name)(ref)                              | The digest's file name inside the entity's folder, derived from the reference.                           |
-|------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
-| [`digest_problems`](_autosummary/acquaint.digests.html.md#acquaint.digests.digest_problems)(text)                         | `(severity, line, rule, message)` for one digest file: frontmatter shape, unanchored items, long quotes. |
-| [`digests`](_autosummary/acquaint.digests.html.md#acquaint.digests.digests)(entity)                               | Every digest of the entity: its reference, file and watermarks.                                          |
-| [`find_digest`](_autosummary/acquaint.digests.html.md#acquaint.digests.find_digest)(entity, ref)                      | The digest of one conversation, found by the `ref` in its frontmatter (else by file name).               |
-| [`mark_digest`](_autosummary/acquaint.digests.html.md#acquaint.digests.mark_digest)(entity, ref, through, \*[, ...])  | Move the watermark of `scope` to `through`.                                                              |
-| [`new_digest`](_autosummary/acquaint.digests.html.md#acquaint.digests.new_digest)(entity, ref, \*[, archive, today]) | Create the digest of `ref` from its template, with no watermark yet.                                     |
+| [`append_batch`](_autosummary/acquaint.digests.html.md#acquaint.digests.append_batch)(entity, ref, \*, heading, rows)   | Add a dated batch (`### heading`) at the end of each named section of a digest, in one write.                                 |
+|-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| [`digest_name`](_autosummary/acquaint.digests.html.md#acquaint.digests.digest_name)(ref)                               | The digest's file name inside the entity's folder, derived from the reference.                                                |
+| [`digest_problems`](_autosummary/acquaint.digests.html.md#acquaint.digests.digest_problems)(text)                          | `(severity, line, rule, message)` for one digest file: frontmatter shape, unanchored items, long quotes.                      |
+| [`digests`](_autosummary/acquaint.digests.html.md#acquaint.digests.digests)(entity)                                | Every digest of the entity: its reference, file and watermarks.                                                               |
+| [`find_digest`](_autosummary/acquaint.digests.html.md#acquaint.digests.find_digest)(entity, ref)                       | The digest of one conversation, found by the `ref` in its frontmatter (else by file name).                                    |
+| [`mark_digest`](_autosummary/acquaint.digests.html.md#acquaint.digests.mark_digest)(entity, ref, through, \*[, ...])   | Move the watermark of `scope` to `through`.                                                                                   |
+| [`new_digest`](_autosummary/acquaint.digests.html.md#acquaint.digests.new_digest)(entity, ref, \*[, archive, today])  | Create the digest of `ref` from its template, with no watermark yet.                                                          |
+| [`parse_rows`](_autosummary/acquaint.digests.html.md#acquaint.digests.parse_rows)(rows)                               | `{section: [line, ...]}` from a mapping, JSON text, or `section | line | anchor` rows (one per line; the anchor is optional). |
 
 ### acquaint.digests.ANCHORED_SECTIONS *= ('Takeaways', 'Themes', 'Index', 'Open threads')*
 
@@ -333,6 +335,19 @@ what the conversation said, and how its author writes.
 
 * **Type:**
   What a watermark can cover
+
+### acquaint.digests.append_batch(entity, ref, , heading, rows, through=None, scope='content', force=False, today=None)
+
+Add a dated batch (`### heading`) at the end of each named section of a digest, in one write.
+
+`rows` is `{section: [line, ...]}`, JSON text of that, or `section | line | anchor`
+rows. Each line becomes one bullet and must be one line. Anything that would add an item
+[`digest_problems()`](_autosummary/acquaint.digests.html.md#acquaint.digests.digest_problems) flags as unanchored under Takeaways, Themes, Index or Open threads
+is refused, and then nothing is written. With `through` the watermark of `scope` moves
+in the same write (`scope` and `force` mean nothing without it).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### acquaint.digests.digest_name(ref)
 
@@ -375,6 +390,22 @@ Create the digest of `ref` from its template, with no watermark yet. Refuses whe
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### acquaint.digests.parse_rows(rows)
+
+`{section: [line, ...]}` from a mapping, JSON text, or `section | line | anchor` rows (one per line; the anchor is optional).
+
+```pycon
+>>> parse_rows("takeaways | Agreed to ship | [at: 2026-11-03T10:00:00Z]")
+{'Takeaways': ['Agreed to ship [at: 2026-11-03T10:00:00Z]']}
+>>> parse_rows("Index | Kickoff | 2026-11-03T10:00:00Z")
+{'Index': ['Kickoff [at: 2026-11-03T10:00:00Z]']}
+>>> parse_rows('{"Themes": ["Pricing [source: thread-1]"]}')
+{'Themes': ['Pricing [source: thread-1]']}
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
 
 # _autosummary/acquaint.edit.html.md
@@ -2056,6 +2087,7 @@ with a [`Store`](_autosummary/acquaint.store.html.md#acquaint.store.Store).
 |-----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`check`](_autosummary/acquaint.tools.html.md#acquaint.tools.check)(text, \*[, data_dir])                        | Scan prose that names people before publishing it: conflations (one person written as two), ambiguous names, unknown names.                                                                                                                                                                                                              |
 | [`digest`](_autosummary/acquaint.tools.html.md#acquaint.tools.digest)(entity[, ref, data_dir])                    | The digests of an entity's conversations (notes on what each said, kept in `digests/`) and their watermarks: how far each was processed, per scope (`content`, `style`).                                                                                                                                                                 |
+| [`digest_append`](_autosummary/acquaint.tools.html.md#acquaint.tools.digest_append)(entity, ref, \*, heading, rows)      | Add a dated batch to a digest: a `### <heading>` block (e.g. the date range) at the end of each section named in `rows`.                                                                                                                                                                                                                 |
 | [`digest_mark`](_autosummary/acquaint.tools.html.md#acquaint.tools.digest_mark)(entity, ref, \*, through[, ...])       | Record that a conversation has been processed through `through` (the ISO time of the last message processed), for `scope` (`content` or `style`).                                                                                                                                                                                        |
 | [`digest_new`](_autosummary/acquaint.tools.html.md#acquaint.tools.digest_new)(entity, ref, \*[, archive, data_dir])   | Create the digest of one conversation (`ref`, a correspond reference) for an entity, from the template: Orientation, Takeaways, Themes, Index, Open threads, and an empty watermark.                                                                                                                                                     |
 | [`disclosure`](_autosummary/acquaint.tools.html.md#acquaint.tools.disclosure)(people, \*[, projects, audience, ...])  | Who may be told what, before writing to a set of readers (ids or channel identities, plus an optional correspond `audience` record as JSON): the tier and clearance in force for each, the least clearance, which records each is cleared for, the seals, the vocabulary a gate must scan for, what each was already told, and the gaps. |
@@ -2086,14 +2118,14 @@ Bases: [`Exception`](https://docs.python.org/3/builtins/exceptions.html#Exceptio
 
 An expected failure with a message meant for the person or agent that asked.
 
-### acquaint.tools.SIDE_EFFECTS *= {'brief': 'read', 'check': 'read', 'digest': 'read', 'digest_mark': 'rewrite', 'digest_new': 'create', 'disclosure': 'read', 'forget': 'destructive', 'lint': 'read', 'new': 'create', 'reach': 'read', 'remember': 'append', 'rename': 'rewrite', 'resolve': 'read', 'review': 'read', 'style_lint': 'read', 'sync_init': 'external', 'sync_pull': 'rewrite', 'sync_push': 'external', 'sync_status': 'external-read', 'todo_preflight': 'external-read', 'who': 'read'}*
+### acquaint.tools.SIDE_EFFECTS *= {'brief': 'read', 'check': 'read', 'digest': 'read', 'digest_append': 'rewrite', 'digest_mark': 'rewrite', 'digest_new': 'create', 'disclosure': 'read', 'forget': 'destructive', 'lint': 'read', 'new': 'create', 'reach': 'read', 'remember': 'append', 'rename': 'rewrite', 'resolve': 'read', 'review': 'read', 'style_lint': 'read', 'sync_init': 'external', 'sync_pull': 'rewrite', 'sync_push': 'external', 'sync_status': 'external-read', 'todo_preflight': 'external-read', 'who': 'read'}*
 
 What each tool changes, for surfaces that must decide what to expose or confirm.
 `read` changes nothing and stays local; `append` adds to a log; `create` adds a
 record; `rewrite` changes existing records; `destructive` removes data;
 `external-read` queries a remote service; `external` acts on one.
 
-### acquaint.tools.TOOLS *= [<function who>, <function resolve>, <function check>, <function reach>, <function brief>, <function remember>, <function lint>, <function new>, <function rename>, <function forget>, <function sync_init>, <function sync_push>, <function sync_pull>, <function sync_status>, <function style_lint>, <function disclosure>, <function review>, <function todo_preflight>, <function digest>, <function digest_new>, <function digest_mark>]*
+### acquaint.tools.TOOLS *= [<function who>, <function resolve>, <function check>, <function reach>, <function brief>, <function remember>, <function lint>, <function new>, <function rename>, <function forget>, <function sync_init>, <function sync_push>, <function sync_pull>, <function sync_status>, <function style_lint>, <function disclosure>, <function review>, <function todo_preflight>, <function digest>, <function digest_new>, <function digest_append>, <function digest_mark>]*
 
 Every tool, in the order surfaces list them.
 
@@ -2114,6 +2146,13 @@ Scan prose that names people before publishing it: conflations (one person writt
 ### acquaint.tools.digest(entity, ref=None, , data_dir=None)
 
 The digests of an entity’s conversations (notes on what each said, kept in `digests/`) and their watermarks: how far each was processed, per scope (`content`, `style`). With `ref` (a correspond reference, e.g. `whatsapp:ada-lovelace`), that one digest and `since`, the time to hand to `correspond read <ref> --since` for what is new. Reads only.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### acquaint.tools.digest_append(entity, ref, , heading, rows, through=None, scope='content', force=False, data_dir=None)
+
+Add a dated batch to a digest: a `### <heading>` block (e.g. the date range) at the end of each section named in `rows`. `rows` is JSON `{"Takeaways": ["line [at: <ISO time>]"]}`, or `section | line | anchor` rows (one per line), or `@<path>` to read either from a file. Lines under Takeaways, Themes, Index and Open threads need an `[at: …]` or `[source: …]` anchor, else nothing is written. With `through` (ISO time of the last message processed), the watermark moves in the same call.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -2450,18 +2489,16 @@ True
 
 # About this build
 
-This documentation was built on **2026-11-16 04:11 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/bba1cc39cd936f4a254fe5e1f69197a823004a78"><code>bba1cc3</code></a> on branch <code>main</code>, for **acquaint 0.0.18** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 04:22 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/5869a04ea3ce7d4a64fb017527a1d85e8e90d5ed"><code>5869a04</code></a> on branch <code>main</code>, for **acquaint 0.0.19** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.18) is behind the latest release on PyPI (0.0.19): `pip install acquaint` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                            |
 |---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/bba1cc39cd936f4a254fe5e1f69197a823004a78"><code>bba1cc39cd936f4a254fe5e1f69197a823004a78</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/5869a04ea3ce7d4a64fb017527a1d85e8e90d5ed"><code>5869a04ea3ce7d4a64fb017527a1d85e8e90d5ed</code></a> |
 | Branch              | <code>main</code>                                                                                                                                          |
 | Tags at this commit | none                                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                      |
@@ -2472,9 +2509,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/acquaint</code>                                                           |
-| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43802442321">43802442321</a>  |
+| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43803474137">43803474137</a>  |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>bba1cc39cd936f4a254fe5e1f69197a823004a78</code> (in the history of the built commit) |
+| Event commit | <code>5869a04ea3ce7d4a64fb017527a1d85e8e90d5ed</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2499,13 +2536,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/acquaint/0.0.19/">0.0.19</a>, newer than the documented version (0.0.18).
+Latest release: <a href="https://pypi.org/project/acquaint/0.0.19/">0.0.19</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/acquaint && cd acquaint
-git checkout bba1cc39cd936f4a254fe5e1f69197a823004a78
+git checkout 5869a04ea3ce7d4a64fb017527a1d85e8e90d5ed
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

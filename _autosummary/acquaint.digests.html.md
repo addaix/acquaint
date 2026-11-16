@@ -44,13 +44,15 @@ bodies).
 
 ### Functions
 
-| [`digest_name`](#acquaint.digests.digest_name)(ref)                              | The digest's file name inside the entity's folder, derived from the reference.                           |
-|------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
-| [`digest_problems`](#acquaint.digests.digest_problems)(text)                         | `(severity, line, rule, message)` for one digest file: frontmatter shape, unanchored items, long quotes. |
-| [`digests`](#acquaint.digests.digests)(entity)                               | Every digest of the entity: its reference, file and watermarks.                                          |
-| [`find_digest`](#acquaint.digests.find_digest)(entity, ref)                      | The digest of one conversation, found by the `ref` in its frontmatter (else by file name).               |
-| [`mark_digest`](#acquaint.digests.mark_digest)(entity, ref, through, \*[, ...])  | Move the watermark of `scope` to `through`.                                                              |
-| [`new_digest`](#acquaint.digests.new_digest)(entity, ref, \*[, archive, today]) | Create the digest of `ref` from its template, with no watermark yet.                                     |
+| [`append_batch`](#acquaint.digests.append_batch)(entity, ref, \*, heading, rows)   | Add a dated batch (`### heading`) at the end of each named section of a digest, in one write.                                 |
+|-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| [`digest_name`](#acquaint.digests.digest_name)(ref)                               | The digest's file name inside the entity's folder, derived from the reference.                                                |
+| [`digest_problems`](#acquaint.digests.digest_problems)(text)                          | `(severity, line, rule, message)` for one digest file: frontmatter shape, unanchored items, long quotes.                      |
+| [`digests`](#acquaint.digests.digests)(entity)                                | Every digest of the entity: its reference, file and watermarks.                                                               |
+| [`find_digest`](#acquaint.digests.find_digest)(entity, ref)                       | The digest of one conversation, found by the `ref` in its frontmatter (else by file name).                                    |
+| [`mark_digest`](#acquaint.digests.mark_digest)(entity, ref, through, \*[, ...])   | Move the watermark of `scope` to `through`.                                                                                   |
+| [`new_digest`](#acquaint.digests.new_digest)(entity, ref, \*[, archive, today])  | Create the digest of `ref` from its template, with no watermark yet.                                                          |
+| [`parse_rows`](#acquaint.digests.parse_rows)(rows)                               | `{section: [line, ...]}` from a mapping, JSON text, or `section | line | anchor` rows (one per line; the anchor is optional). |
 
 ### acquaint.digests.ANCHORED_SECTIONS *= ('Takeaways', 'Themes', 'Index', 'Open threads')*
 
@@ -62,6 +64,19 @@ what the conversation said, and how its author writes.
 
 * **Type:**
   What a watermark can cover
+
+### acquaint.digests.append_batch(entity, ref, , heading, rows, through=None, scope='content', force=False, today=None)
+
+Add a dated batch (`### heading`) at the end of each named section of a digest, in one write.
+
+`rows` is `{section: [line, ...]}`, JSON text of that, or `section | line | anchor`
+rows. Each line becomes one bullet and must be one line. Anything that would add an item
+[`digest_problems()`](#acquaint.digests.digest_problems) flags as unanchored under Takeaways, Themes, Index or Open threads
+is refused, and then nothing is written. With `through` the watermark of `scope` moves
+in the same write (`scope` and `force` mean nothing without it).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### acquaint.digests.digest_name(ref)
 
@@ -104,3 +119,19 @@ Create the digest of `ref` from its template, with no watermark yet. Refuses whe
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### acquaint.digests.parse_rows(rows)
+
+`{section: [line, ...]}` from a mapping, JSON text, or `section | line | anchor` rows (one per line; the anchor is optional).
+
+```pycon
+>>> parse_rows("takeaways | Agreed to ship | [at: 2026-11-03T10:00:00Z]")
+{'Takeaways': ['Agreed to ship [at: 2026-11-03T10:00:00Z]']}
+>>> parse_rows("Index | Kickoff | 2026-11-03T10:00:00Z")
+{'Index': ['Kickoff [at: 2026-11-03T10:00:00Z]']}
+>>> parse_rows('{"Themes": ["Pricing [source: thread-1]"]}')
+{'Themes': ['Pricing [source: thread-1]']}
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]

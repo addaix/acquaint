@@ -2,18 +2,16 @@
 
 # About this build
 
-This documentation was built on **2026-11-16 04:11 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/bba1cc39cd936f4a254fe5e1f69197a823004a78"><code>bba1cc3</code></a> on branch <code>main</code>, for **acquaint 0.0.18** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 04:22 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/5869a04ea3ce7d4a64fb017527a1d85e8e90d5ed"><code>5869a04</code></a> on branch <code>main</code>, for **acquaint 0.0.19** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.18) is behind the latest release on PyPI (0.0.19): `pip install acquaint` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                            |
 |---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/bba1cc39cd936f4a254fe5e1f69197a823004a78"><code>bba1cc39cd936f4a254fe5e1f69197a823004a78</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/5869a04ea3ce7d4a64fb017527a1d85e8e90d5ed"><code>5869a04ea3ce7d4a64fb017527a1d85e8e90d5ed</code></a> |
 | Branch              | <code>main</code>                                                                                                                                          |
 | Tags at this commit | none                                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                      |
@@ -24,9 +22,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/acquaint</code>                                                           |
-| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43802442321">43802442321</a>  |
+| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43803474137">43803474137</a>  |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>bba1cc39cd936f4a254fe5e1f69197a823004a78</code> (in the history of the built commit) |
+| Event commit | <code>5869a04ea3ce7d4a64fb017527a1d85e8e90d5ed</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -51,13 +49,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/acquaint/0.0.19/">0.0.19</a>, newer than the documented version (0.0.18).
+Latest release: <a href="https://pypi.org/project/acquaint/0.0.19/">0.0.19</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/acquaint && cd acquaint
-git checkout bba1cc39cd936f4a254fe5e1f69197a823004a78
+git checkout 5869a04ea3ce7d4a64fb017527a1d85e8e90d5ed
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
