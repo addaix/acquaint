@@ -32,6 +32,7 @@ Errors fail ``acquaint lint``; warnings ask a person to look. The rules:
   conversation ``ref`` or a ``through`` watermark that is not an ISO time per known scope,
   or an item under Takeaways, Themes, Index or Open threads without an ``[at: …]`` or
   ``[source: …]`` anchor (**error**); a quote longer than 25 words in one (**warning**);
+- ``operator:`` anywhere but as ``true`` on a person, or on more than one record (**error**); ``acquaint.lookup.SELF`` then names that one record;
 - a ``facts.yaml`` (:mod:`acquaint.facts`) whose facts lack a value, a known label, a usable source or a ``YYYY-MM-DD`` ``recorded`` date (**error**), or whose ``review_by`` has passed (**warning**);
 - a file that does not parse, or is not valid UTF-8, an entry file the store cannot
   address (a capitalised or linked folder, ``profile.md``), and a broken
@@ -51,6 +52,7 @@ from collections import Counter
 from datetime import date
 from typing import Any
 
+from acquaint.lookup import operator_keys
 from acquaint.records import (
     blank_frontmatter,
     disclosed_refs,
@@ -437,6 +439,14 @@ def _lint_entity(
             add(severity, FACTS_FILE, None, rule, message)
 
     meta = entity.meta
+    if "operator" in meta and (meta["operator"] is not True or entity.kind != "person"):
+        add(
+            "error",
+            ENTRY_FILE,
+            None,
+            "operator-marker",
+            "`operator:` is `true` on the one person record that is the operator's own, and is not written elsewhere",
+        )
     if meta and meta.get("id") not in (None, entity.slug):
         add(
             "warning",
@@ -737,6 +747,18 @@ def lint_store(
                     None,
                     "misnamed",
                     "the store cannot address this entry file: use a lowercase kind/id folder and PROFILE.md, not a link",
+                )
+            )
+        operators = [k.split("/", 1)[1] for k in operator_keys(store)]
+        if len(operators) > 1:
+            findings.append(
+                _finding(
+                    "error",
+                    "",
+                    "",
+                    None,
+                    "operator-marker",
+                    f"{len(operators)} records are marked `operator: true` ({', '.join(operators)}); exactly one is the operator's own",
                 )
             )
         if problem := _tombstone_problem(store):
