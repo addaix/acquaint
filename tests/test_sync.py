@@ -422,11 +422,11 @@ def _pushed_files(bare):
 def test_a_scoped_push_commits_only_the_named_records(store_root, github, scripted_gh):
     gh = FakeGh()
     people = _two_dirty_records(store_root, gh)
-    (store_root / "_tombstones.yaml").write_text("tombstones: []\n")
+    (store_root / "_tombstones.yaml").write_text("tombstones: []\n")  # someone else's tombstone: not carried
     result = sync.push(store_root, entities=["people/ada-lovelace"], message="ada only", run=gh)
     assert result["pushed"] and result["entities"] == ["people/ada-lovelace"]
     files = _pushed_files(github[URL])
-    assert "people/ada-lovelace/PROFILE.md" in files and "_tombstones.yaml" in files
+    assert "people/ada-lovelace/PROFILE.md" in files and "_tombstones.yaml" not in files
     assert "people/grace-example/PROFILE.md" not in files
     status = _git("status", "--porcelain", cwd=store_root).stdout
     assert "people/grace-example" in status and "people/ada-lovelace" not in status
@@ -584,3 +584,30 @@ def test_the_default_namespace_renders_the_hook_every_existing_store_has_install
 def test_a_namespace_cannot_carry_what_the_shell_or_git_would_misread(fields):
     with pytest.raises(AcquaintError):
         sync.SyncNamespace(**fields)
+
+
+@posix_only
+def test_the_tombstone_travels_with_a_deleted_record_only(store_root, github, scripted_gh):
+    gh = FakeGh()
+    _two_dirty_records(store_root, gh)
+    sync.push(store_root, everything=True, run=gh)
+    shutil.rmtree(store_root / "people" / "ada-lovelace")
+    (store_root / "_tombstones.yaml").write_text("tombstones: [salted]\n")
+    (store_root / "people" / "grace-example" / "PROFILE.md").write_text("---\nname: grace-example\nnote: again\n---\n")
+    assert sync.push(store_root, entities=["people/grace-example"], run=gh)["entities"] == ["people/grace-example"]
+    assert "_tombstones.yaml" not in _pushed_files(github[URL])
+    done = sync.push(store_root, entities=["people/ada-lovelace"], run=gh)
+    assert done["pushed"] and "_tombstones.yaml" in _pushed_files(github[URL])
+    assert "people/ada-lovelace/PROFILE.md" not in _pushed_files(github[URL])
+    assert sync.status(store_root, run=gh, check_visibility=False)["uncommitted"] == 0
+
+
+@posix_only
+def test_status_counts_the_files_of_a_new_record_folder(store_root, github, scripted_gh):
+    gh = FakeGh()
+    sync.init(store_root, REPO, run=gh)
+    folder = store_root / "people" / "new-person"
+    folder.mkdir()
+    (folder / "PROFILE.md").write_text("---\nname: n\n---\n")
+    (folder / "notes.md").write_text("x\n")
+    assert sync.status(store_root, run=gh, check_visibility=False)["uncommitted"] == 2

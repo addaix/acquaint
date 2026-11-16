@@ -526,7 +526,7 @@ def init(
     }
 
 
-#: Files at the top of the store that belong to no record; a scoped push carries them when they changed.
+#: Files at the top of the store that belong to no record; a scoped push carries them only together with a deleted record.
 STORE_FILES = (TOMBSTONES,)
 
 
@@ -593,7 +593,8 @@ def _plan(
     changed = _changed_paths(root, run)
     if entities:
         inside = tuple(f"{e}/" for e in entities)
-        changed = [p for p in changed if p.startswith(inside) or p in STORE_FILES]
+        carries_store_files = any(not (root / e).exists() for e in entities)  # a deleted record: its tombstone goes with it
+        changed = [p for p in changed if p.startswith(inside) or (carries_store_files and p in STORE_FILES)]
     touched = sorted({e for e in map(_entity_of, changed) if e})
     unnamed = [e for e in touched if message and not _is_named(e, message)]
     return {
@@ -647,13 +648,12 @@ def push(
     """Commit, rebase onto the remote, and push, after re-checking the remote, the guard and the visibility.
 
     ``entities`` are record folders (``people/ada-lovelace``): only those, plus
-    :data:`STORE_FILES` when they changed, are committed; everything else stays
+    :data:`STORE_FILES` when one of them is a deleted record, are committed; everything else stays
     uncommitted, so one session does not sweep up another's unfinished records. Without
     ``entities`` every change is committed, but when a ``message`` is given it must name
     each record being committed (its id appears in the text as a word) unless
     ``everything`` is set; a message naming only some of them is refused, listing the
-    rest. With no ``message`` the default one lists the records. Other sessions' tombstones
-    travel with a scoped push, and a renamed record needs both its old and new folder named.
+    rest. With no ``message`` the default one lists the records. A renamed record needs both its old and new folder named.
     """
     root = Path(root)
     repo, remote = _configured(root, run, namespace)
@@ -775,13 +775,7 @@ def status(
             "note": f"not set up: {namespace.command} init --repo <owner>/<name>",
         }
     repo, remote = _configured(root, run, namespace)
-    dirty = [
-        line
-        for line in _ok(
-            run, ["git", "status", "--porcelain"], cwd=root, what="git status"
-        ).splitlines()
-        if line
-    ]
+    dirty = _changed_paths(root, run)
     result: dict[str, Any] = {
         "synced": True,
         "root": str(root),
