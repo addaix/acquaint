@@ -59,6 +59,7 @@ The same messages are evidence of how the person writes. That is **acquaint-prof
 
 ```bash
 acquaint digest-mark <id> <ref> --through <time of the last message processed>   # or digest-append --through, in the same call
+acquaint digest-sweep <id> <channel> --checked <time> [--refs <ref> ...]   # after reading a whole workspace: stamp every digest of the channel as checked, quiet ones included; `acquaint digest <id>` then shows `swept` (the oldest checked per channel)
 acquaint lint <id>                      # unanchored items and long quotes fail here
 acquaint sync status --json             # then commit or show the diff, as acquaint-profile § Step 5 says
 ```

@@ -12,7 +12,13 @@ frontmatter is the state of the processing, and its body is the notes:
     through:                          # the watermark, per scope: processed up to this time
       content: '2026-11-03T19:37:47+01:00'
       style: '2026-06-21T19:27:45+02:00'
+    checked: '2026-11-09T08:00:00+01:00'   # when the conversation was last read, even if nothing new was in it
     updated: '2026-11-04'
+
+``checked`` is not ``through``: a channel read on a quiet day has no new message, so
+``through`` cannot move, yet the next sweep must know it was looked at (``checked``).
+:func:`swept` gives, per channel, the oldest ``checked`` of its digests: "when did we last
+read Slack for this entity?" without reading each file.
 
 ``through`` answers "from which date and time is this conversation new?": hand it to
 ``correspond read <ref> --since <through>`` to get what has not been processed. Two scopes
@@ -65,6 +71,8 @@ __all__ = [
     "digests",
     "find_digest",
     "mark_digest",
+    "sweep_digests",
+    "swept",
     "new_digest",
     "parse_rows",
 ]
@@ -114,6 +122,7 @@ def _summary(entity: Entity, name: str) -> dict:
         "path": f"{entity.key}/{name}",
         "archive": meta.get("archive"),
         "through": {k: str(v) for k, v in through.items()},
+        "checked": str(meta["checked"]) if meta.get("checked") else None,
         "updated": str(meta.get("updated") or ""),
         "errors": errors,
     }
@@ -192,18 +201,120 @@ def _moved_watermark(
 def mark_digest(
     entity: Entity,
     ref: str,
-    through: str,
+    through: str | None = None,
     *,
+    checked: str | None = None,
     scope: str = "content",
     force: bool = False,
     today: str | None = None,
 ) -> dict:
-    """Move the watermark of ``scope`` to ``through``. Moving it back needs ``force``."""
+    """Move the watermark of ``scope`` to ``through``, and/or record when the conversation was last read (``checked``). Moving either back needs ``force``."""
+    if through is None and checked is None:
+        raise AcquaintError("say what to record: through (the last message processed), checked (when it was last read), or both")
     found, meta, body = _load(entity, ref)
-    meta["through"], previous = _moved_watermark(meta, through, scope, force)
+    previous = None
+    if through is not None:
+        meta["through"], previous = _moved_watermark(meta, through, scope, force)
+    if checked is not None:
+        meta["checked"] = _moved_checked(meta, checked, force)
     meta["updated"] = today or date.today().isoformat()
     entity[found["file"]] = join_frontmatter(meta, body)
     return {**_summary(entity, found["file"]), "previous": previous}
+
+
+def _checked_time(value: Any, what: str = "checked") -> str:
+    """An ISO 8601 time with an offset (``checked`` orders digests across machines, so a naive time would be read in each machine's own zone)."""
+    text = _time(value, what)
+    if datetime.fromisoformat(text.replace("Z", "+00:00")).tzinfo is None:
+        raise AcquaintError(f"{what} needs a UTC offset, e.g. 2026-11-09T08:00:00+01:00 or ...Z, not {text!r}")
+    return text
+
+
+def _later_than(candidate: str, before: Any) -> bool:
+    """Whether ``candidate`` is later than ``before``; an unreadable ``before`` counts as earlier, so a hand-edited value can be repaired."""
+    try:
+        return _when(candidate) >= _when(before)
+    except (ValueError, TypeError):
+        return True
+
+
+def _moved_checked(meta: dict, checked: str, force: bool) -> str:
+    checked = _checked_time(checked)
+    before = meta.get("checked")
+    if before and not force and not _later_than(checked, before):
+        raise AcquaintError(f"the conversation was already checked at {before}; moving it back to {checked} needs force")
+    return checked
+
+
+_CHANNEL_RE = re.compile(r"[A-Za-z0-9_-]+")
+
+
+def sweep_digests(
+    entity: Entity,
+    channel: str,
+    checked: str,
+    *,
+    refs: Sequence[str] = (),
+    archive: str = "correspond",
+    force: bool = False,
+    today: str | None = None,
+) -> dict:
+    """Stamp ``checked`` on the digests of ``channel`` that a sweep read, creating those that do not exist yet.
+
+    With ``refs`` (conversation references ``<channel>:…``) exactly those are stamped, each
+    created first when missing; without, every digest of the channel is (the sweep read the
+    whole channel kind). A digest already checked later keeps that later time (unless
+    ``force``), so a sweep never fails halfway: every check is made before anything is written.
+    """
+    if not _CHANNEL_RE.fullmatch(channel):
+        raise AcquaintError(f"channel is a name like slack or whatsapp, not {channel!r}")
+    checked = _checked_time(checked)
+    refs = list(dict.fromkeys(r.strip() for r in refs if r.strip()))
+    wrong = [r for r in refs if not r.startswith(f"{channel}:") or len(r) == len(channel) + 1]
+    if wrong:
+        raise AcquaintError(f"refs {', '.join(wrong)} are not conversations of the channel {channel!r} (<{channel}>:<id>)")
+    existing = {str(d["ref"]): d for d in digests(entity) if str(d["ref"]).startswith(f"{channel}:")}
+    targets = refs or sorted(existing)
+    if not targets:
+        raise AcquaintError(f"{entity.key} has no digest of the channel {channel!r}; name its conversations with refs to create them")
+    created = [r for r in targets if r not in existing and find_digest(entity, r) is None]
+    for ref in created:
+        new_digest(entity, ref, archive=archive, today=today)
+    stamped, kept = [], []
+    for ref in targets:
+        before = (find_digest(entity, ref) or {}).get("checked")
+        if before and not force and not _later_than(checked, before):
+            kept.append(ref)  # read more recently by another sweep or by hand
+            continue
+        mark_digest(entity, ref, checked=checked, force=True, today=today)
+        stamped.append(ref)
+    return {"channel": channel, "checked": checked, "stamped": stamped, "created": created, "kept_later": kept}
+
+
+def swept(entity: Entity) -> dict[str, str | None]:
+    """``{channel: oldest checked time}`` over the entity's digests; ``None`` when one of the channel's digests was never (validly) checked.
+
+    The oldest, because a sweep is only as complete as its least-recently-read conversation.
+    Digests without a ``<channel>:<id>`` reference are not counted.
+    """
+    by_channel: dict[str, list[datetime | None]] = {}
+    texts: dict[tuple[str, datetime], str] = {}
+    for d in digests(entity):
+        ref = str(d["ref"] or "")
+        if ":" not in ref:
+            continue
+        channel = ref.split(":", 1)[0]
+        try:
+            moment = _when(d["checked"]) if d["checked"] else None
+        except (ValueError, TypeError):
+            moment = None
+        if moment is not None:
+            texts[(channel, moment)] = d["checked"]
+        by_channel.setdefault(channel, []).append(moment)
+    return {
+        channel: None if None in moments else texts[(channel, min(moments))]  # type: ignore[type-var]
+        for channel, moments in by_channel.items()
+    }
 
 
 #: The sections a dated batch can go under: every section of the template, in order.
@@ -407,6 +518,11 @@ def digest_problems(text: str) -> list[tuple[str, int | None, str, str]]:
             ("error", None, "digest-through", "through must map scopes to times")
         )
         through = {}
+    if meta.get("checked"):
+        try:
+            _checked_time(meta["checked"], "checked")
+        except AcquaintError as error:
+            found.append(("error", None, "digest-checked", str(error)))
     for scope, value in through.items():
         if scope not in SCOPES:
             found.append(

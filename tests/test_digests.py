@@ -259,3 +259,78 @@ def test_headings_and_section_spans_agree_with_sections():
     assert headings(body) == [(2, 2, "A"), (6, 3, "sub"), (7, 1, "Aside"), (8, 2, "B")]
     assert section_spans(body) == {"A": (2, 7), "B": (8, 12)}
     assert list(section_spans(body)) == list(sections(body))
+
+
+def test_checked_is_recorded_apart_from_through_and_moves_back_only_with_force(store, put):
+    from acquaint.digests import swept
+
+    ada = _ada(store, put)
+    assert find_digest(ada, REF)["checked"] is None and swept(ada) == {"whatsapp": None}
+    done = mark_digest(ada, REF, checked="2026-11-09T08:00:00+01:00", today="2026-11-09")
+    assert done["checked"] == "2026-11-09T08:00:00+01:00" and done["through"] == {}
+    with pytest.raises(AcquaintError, match="needs force"):
+        mark_digest(ada, REF, checked="2026-11-08T08:00:00+01:00")
+    with pytest.raises(AcquaintError, match="say what to record"):
+        mark_digest(ada, REF)
+    mark_digest(ada, REF, through="2026-11-03T19:00:00+01:00", checked="2026-11-10T08:00:00+01:00")
+    assert find_digest(ada, REF)["checked"] == "2026-11-10T08:00:00+01:00"
+    assert find_digest(ada, REF)["through"]["content"] == "2026-11-03T19:00:00+01:00"
+    assert [p for p in digest_problems(ada[find_digest(ada, REF)["file"]]) if p[0] == "error"] == []
+
+
+def test_a_sweep_stamps_what_it_read_creates_the_named_missing_ones_and_never_fails_halfway(store, put):
+    from acquaint.digests import swept, sweep_digests
+
+    org = put(store, "orgs/example-org", meta={"name": "Example Org"})
+    new_digest(org, "slack:general")
+    new_digest(org, "slack:dm-other")
+    new_digest(org, "whatsapp:ops")
+    done = sweep_digests(org, "slack", "2026-11-09T08:00:00Z", refs=["slack:general", "slack:random", "slack:random"])
+    assert done["created"] == ["slack:random"] and done["stamped"] == ["slack:general", "slack:random"]
+    assert find_digest(org, "slack:dm-other")["checked"] is None, "a conversation the sweep did not name was not read"
+    assert find_digest(org, "slack:random")["through"] == {}, "a quiet channel is checked, not processed"
+    assert swept(org) == {"slack": None, "whatsapp": None}
+    sweep_digests(org, "slack", "2026-11-12T08:00:00Z")  # no refs: every digest of the channel
+    mark_digest(org, "slack:general", checked="2026-11-13T08:00:00Z")
+    assert swept(org)["slack"] == "2026-11-12T08:00:00Z", "the oldest checked, since a sweep is as complete as its stalest channel"
+    late = sweep_digests(org, "slack", "2026-11-11T00:00:00Z")  # older than what two digests already say
+    assert late["stamped"] == [] and sorted(late["kept_later"]) == ["slack:dm-other", "slack:general", "slack:random"]
+    for bad_refs, match in ((["github:x/y"], "not conversations"), (["slack:"], "not conversations")):
+        with pytest.raises(AcquaintError, match=match):
+            sweep_digests(org, "slack", "2026-11-14T00:00:00Z", refs=bad_refs)
+    with pytest.raises(AcquaintError, match="no digest of the channel"):
+        sweep_digests(org, "github", "2026-11-14T00:00:00Z")
+    for channel in ("", "slack:a"):
+        with pytest.raises(AcquaintError, match="channel is a name"):
+            sweep_digests(org, channel, "2026-11-14T00:00:00Z")
+    with pytest.raises(AcquaintError, match="UTC offset"):
+        sweep_digests(org, "slack", "2026-11-14T00:00:00")
+
+
+def test_swept_orders_mixed_zones_and_survives_a_hand_edited_checked(store, put):
+    from acquaint.digests import swept
+
+    org = put(store, "orgs/example-org", meta={"name": "Example Org"})
+    new_digest(org, "slack:a")
+    new_digest(org, "slack:b")
+    mark_digest(org, "slack:a", checked="2026-11-09T09:30:00+01:00")
+    mark_digest(org, "slack:b", checked="2026-11-09T09:00:00Z")
+    assert swept(org)["slack"] == "2026-11-09T09:30:00+01:00"  # 08:30Z is older than 09:00Z
+    name = find_digest(org, "slack:b")["file"]
+    org[name] = org[name].replace("checked: '2026-11-09T09:00:00Z'", "checked: yesterday").replace("checked: 2026-11-09T09:00:00Z", "checked: yesterday")
+    assert "checked: yesterday" in org[name]
+    assert swept(org) == {"slack": None}, "an unreadable value reads as never checked, it does not break the listing"
+    assert any(p[2] == "digest-checked" for p in digest_problems(org[name]))
+    mark_digest(org, "slack:b", checked="2026-11-10T00:00:00Z")  # repairable without force
+    assert swept(org)["slack"] == "2026-11-09T09:30:00+01:00"
+
+
+def test_the_sweep_tools(tmp_path, monkeypatch):
+    monkeypatch.setenv("ACQUAINT_DATA_DIR", str(tmp_path / "data"))
+    tools.new("org", "Example Org")
+    done = tools.digest_sweep("example-org", "slack", checked="2026-11-09T08:00:00Z", refs=["slack:general", "slack:random"])
+    assert done["ok"] and done["created"] == ["slack:general", "slack:random"]
+    listed = tools.digest("example-org")
+    assert listed["swept"] == {"slack": "2026-11-09T08:00:00Z"} and "checked 2026-11-09T08:00:00Z" in listed["text"]
+    assert tools.digest_sweep("example-org", "slack", checked="2026-11-09T09:00:00Z", refs=["slack:general,slack:more"])["created"] == ["slack:more"]
+    assert tools.digest_mark("example-org", "slack:general", checked="2026-11-10T00:00:00Z")["summary"].endswith("checked 2026-11-10T00:00:00Z")
