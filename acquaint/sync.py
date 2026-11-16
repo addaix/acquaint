@@ -227,14 +227,31 @@ _MARKER_PATTERNS = (r"^<{7}( |$)", r"^={7}$", r"^>{7}( |$)")
 
 def _conflicted(root: Path, run: Runner) -> list[str]:
     """Paths left unresolved in the working tree: unmerged index entries, or text files that still hold conflict markers."""
-    unmerged = _lines(root, run, "-c", "core.quotePath=false", "diff", "--name-only", "--diff-filter=U")
+    unmerged = _lines(
+        root, run, "-c", "core.quotePath=false", "diff", "--name-only", "--diff-filter=U"
+    )
     grep = [e for pattern in _MARKER_PATTERNS for e in ("-e", pattern)]
     found = run(
-        ["git", "-c", "core.quotePath=false", "grep", "--untracked", "-I", "-l", "--all-match", "-E", *grep],
+        [
+            "git",
+            "-c",
+            "core.quotePath=false",
+            "grep",
+            "--untracked",
+            "-I",
+            "-l",
+            "--all-match",
+            "-E",
+            *grep,
+        ],
         cwd=root,
     )
-    if found.returncode > 1:  # 1 is "no match"; anything else means the check itself failed
-        raise AcquaintError(f"could not scan {root} for conflict markers: {(found.stderr or '').strip()}")
+    if (
+        found.returncode > 1
+    ):  # 1 is "no match"; anything else means the check itself failed
+        raise AcquaintError(
+            f"could not scan {root} for conflict markers: {(found.stderr or '').strip()}"
+        )
     marked = [line for line in (found.stdout or "").splitlines() if line.strip()]
     return sorted({*unmerged, *marked})
 
