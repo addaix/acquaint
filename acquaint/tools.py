@@ -25,6 +25,7 @@ from acquaint import meta as _meta
 from acquaint import sync as _sync
 from acquaint.brief import compose_brief
 from acquaint.deslop import lint_text, recipient_card
+from acquaint.facts import fact_value
 from acquaint.digests import digests as _digests
 from acquaint.digests import (
     append_batch,
@@ -84,7 +85,7 @@ def _store(data_dir: str | None) -> Store:
 
 
 def _field(store: Store, entity: Entity, field: str) -> Any:
-    field = field.strip().lower()
+    named, field = field.strip(), field.strip().lower()  # fact names keep their case (speakToAs.pronouns)
 
     def by_platform(platform: str) -> list:
         return [
@@ -102,6 +103,12 @@ def _field(store: Store, entity: Entity, field: str) -> Any:
         return effective_tier(entity.trust, today=date.today().isoformat())[0]
     if field in entity.meta:
         return entity.meta[field]
+    if "." in field:
+        value, refusal = fact_value(entity, named)
+        if refusal:
+            raise AcquaintError(refusal)
+        if value is not None:
+            return value
     if field in {"email", "emails"}:
         return by_platform("email")
     if field in {"identities", "rules", "links", "trust"}:
@@ -133,7 +140,7 @@ def who(
     """Look up one person, project, org or group by exact id, name, alias, handle or email.
 
     Costs scale with what you ask: ``field`` returns one value (``aka``, ``email``,
-    ``github``, ``label``, ``tier``, any frontmatter key), ``brief`` the identity block, and the default the
+    ``github``, ``label``, ``tier``, any frontmatter key, or a dotted fact name such as ``name.full``: only a current ``clear`` fact is readable here, a stricter one is refused), ``brief`` the identity block, and the default the
     whole entry file. It never guesses: no exact match, or several, returns the
     candidates and ``ok: false``.
     """
@@ -164,7 +171,10 @@ def who(
     if entity.errors:
         base["warnings"] = [f"{entity.key}: {e}" for e in entity.errors]
     if field:
-        value = _field(store, entity, field)
+        try:
+            value = _field(store, entity, field)
+        except AcquaintError as refusal:  # a fact that needs to know its reader
+            return {**base, "ok": False, "refused": True, "field": field, "summary": str(refusal)}
         if (
             field.strip().lower() == "tier"
             and effective_tier(entity.trust, today=date.today().isoformat())[1]

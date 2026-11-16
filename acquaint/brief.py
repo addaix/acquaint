@@ -33,9 +33,10 @@ from collections.abc import Callable, Mapping
 from datetime import date
 from typing import Any
 
-from acquaint.digests import digests
 from acquaint.deslop import recipient_card
+from acquaint.digests import digests
 from acquaint.disclosure import disclose, may_see, parse_audience, person_key
+from acquaint.facts import brief_lines as _fact_lines
 from acquaint.lint import lint_store
 from acquaint.lookup import NO_CHANNEL_NAMED, reach_channels
 from acquaint.records import fact_tags, item_blocks, parse_log, split_frontmatter
@@ -56,6 +57,7 @@ BRIEF_SECTIONS = (
     "Already told",
     "How to reach them",
     *CARD_SECTIONS,
+    "Facts",
     "Affiliations",
     "Writing card",
     "Positions and standing objections",
@@ -442,6 +444,7 @@ def compose_brief(
         "style": style_text,
         "views": views_text,
         "project_norms": norms,
+        "facts": _fact_lines(entity, max_chars=budgets["brief_facts_chars"], today=today),
         "affiliations": affiliations,
         "observations": observations,
         "reminders": reminders,
@@ -523,6 +526,8 @@ def _sections(entity, brief: dict[str, Any]) -> list[tuple[str, str | None, list
         for heading in CARD_SECTIONS
         if brief["card"][heading]
     ]
+    if brief["facts"]:
+        out.append(("Facts", "Facts (exact values: use these, do not guess)", brief["facts"]))
     if brief["affiliations"]:
         out.append(
             ("Affiliations", "Affiliations", [f"- {a}" for a in brief["affiliations"]])
