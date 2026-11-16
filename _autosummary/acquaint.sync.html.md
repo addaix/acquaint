@@ -109,7 +109,7 @@ Re-check the remote and its visibility, then rebase local work onto it (uncommit
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
 
-### acquaint.sync.push(root, \*, message=None, entities=(), everything=False, dry_run=False, namespace=SyncNamespace(name='acquaint', command='acquaint sync', subject='profile data', store='profile', description='acquaint profile store (private)', gitignore='# generated, never synced\\n_index/\\n.DS_Store\\n'), run=<function run_command>)
+### acquaint.sync.push(root, \*, message=None, entities=(), everything=False, allow_markers=(), dry_run=False, namespace=SyncNamespace(name='acquaint', command='acquaint sync', subject='profile data', store='profile', description='acquaint profile store (private)', gitignore='# generated, never synced\\n_index/\\n.DS_Store\\n'), run=<function run_command>)
 
 Commit, rebase onto the remote, and push, after re-checking the remote, the guard and the visibility.
 
@@ -119,7 +119,8 @@ uncommitted, so one session does not sweep up another’s unfinished records. Wi
 `entities` every change is committed, but when a `message` is given it must name
 each record being committed (its id appears in the text as a word) unless
 `everything` is set; a message naming only some of them is refused, listing the
-rest. With no `message` the default one lists the records. A renamed record needs both its old and new folder named.
+rest. A file holding conflict markers is refused, unless its store-relative path is in
+`allow_markers` (a record that quotes a conflict block on purpose). With no `message` the default one lists the records. A renamed record needs both its old and new folder named.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]

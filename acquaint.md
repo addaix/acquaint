@@ -1,4 +1,4 @@
-> built 2026-11-16 05:46 UTC from 961277d (main) · acquaint 0.0.24. Details: build_info.json
+> built 2026-11-16 05:58 UTC from 6abba8a (main) · acquaint 0.0.25. Details: build_info.json
 
 # index.html.md
 
@@ -70,7 +70,7 @@ The same twenty-one functions are the Python API (`acquaint.tools`), the CLI, an
 | `new KIND NAME [--qualifier --description]`                                                                                                                                                                         | scaffold from a template; readable slug ids (`ada-lovelace`, `john-smith--example-org`)                                                                                                                                                                                                                                                                      |
 | `rename ID TO`                                                                                                                                                                                                      | new id or name; links elsewhere rewritten (never inside URLs or logs); old forms kept as aliases                                                                                                                                                                                                                                                             |
 | `forget ID [--confirm]`                                                                                                                                                                                             | remove the whole folder, leaving a salted tombstone so the person is not silently re-created                                                                                                                                                                                                                                                                 |
-| `sync init --repo OWNER/NAME` · `sync push [ID ...] [-m MESSAGE] [--all]` · `sync pull` · `sync status`                                                                                                             | private-repository sync, below                                                                                                                                                                                                                                                                                                                               |
+| `sync init --repo OWNER/NAME` · `sync push [ID ...] [-m MESSAGE] [--all] [--allow-markers PATH ...]` · `sync pull` · `sync status`                                                                                  | private-repository sync, below                                                                                                                                                                                                                                                                                                                               |
 
 `--json` prints the result dict; `-` as the text of `check` or `style-lint` reads stdin.
 
@@ -539,7 +539,7 @@ files (a `dol` files store by default).
 | [`style_lint`](_autosummary/acquaint.html.md#acquaint.style_lint)(text, \*[, recipient, tolerance, ...])  | The deterministic half of deslop: machine-writing tells in a draft, at the recipient's tolerance and against their blocklist.                                                                                                                                                                                                            |
 | [`sync_init`](_autosummary/acquaint.html.md#acquaint.sync_init)(\*, repo[, remote_url, ...])             | Make the data root a checkout of a PRIVATE GitHub repository (created private through `gh` unless `existing_only`), with a pre-push guard.                                                                                                                                                                                               |
 | [`sync_pull`](_autosummary/acquaint.html.md#acquaint.sync_pull)(\*[, dry_run, data_dir])                 | Pull the store from its private remote, rebasing local work on top.                                                                                                                                                                                                                                                                      |
-| [`sync_push`](_autosummary/acquaint.html.md#acquaint.sync_push)([ids, message, all, dry_run, data_dir])  | Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility.                                                                                                                                                                                                                           |
+| [`sync_push`](_autosummary/acquaint.html.md#acquaint.sync_push)([ids, message, all, ...])                | Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility.                                                                                                                                                                                                                           |
 | [`sync_status`](_autosummary/acquaint.html.md#acquaint.sync_status)(\*[, check_visibility, data_dir])      | Whether the store is synced, to which repository, uncommitted changes, ahead/behind, the guard, and live visibility.                                                                                                                                                                                                                     |
 | [`who`](_autosummary/acquaint.html.md#acquaint.who)(name, \*[, field, brief, data_dir])            | Look up one person, project, org or group by exact id, name, alias, handle or email.                                                                                                                                                                                                                                                     |
 
@@ -852,9 +852,9 @@ Pull the store from its private remote, rebasing local work on top.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### acquaint.sync_push(ids=None, , message=None, all=False, dry_run=False, data_dir=None)
+### acquaint.sync_push(ids=None, , message=None, all=False, allow_markers=None, dry_run=False, data_dir=None)
 
-Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility. With `ids` (records, e.g. `person:ada-lovelace`), commit only those records and leave other uncommitted records alone; without, commit everything, but a `message` must then name every record it commits unless `all`.
+Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility. With `ids` (records, e.g. `person:ada-lovelace`), commit only those records and leave other uncommitted records alone; without, commit everything, but a `message` must then name every record it commits unless `all`. A file holding conflict markers is refused unless its path (relative to the store, e.g. `people/ada-lovelace/PROFILE.md`) is in `allow_markers` (list every path after one flag, and put record ids before it): for a record that quotes a conflict block on purpose.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -2083,7 +2083,7 @@ Re-check the remote and its visibility, then rebase local work onto it (uncommit
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
 
-### acquaint.sync.push(root, \*, message=None, entities=(), everything=False, dry_run=False, namespace=SyncNamespace(name='acquaint', command='acquaint sync', subject='profile data', store='profile', description='acquaint profile store (private)', gitignore='# generated, never synced\\n_index/\\n.DS_Store\\n'), run=<function run_command>)
+### acquaint.sync.push(root, \*, message=None, entities=(), everything=False, allow_markers=(), dry_run=False, namespace=SyncNamespace(name='acquaint', command='acquaint sync', subject='profile data', store='profile', description='acquaint profile store (private)', gitignore='# generated, never synced\\n_index/\\n.DS_Store\\n'), run=<function run_command>)
 
 Commit, rebase onto the remote, and push, after re-checking the remote, the guard and the visibility.
 
@@ -2093,7 +2093,8 @@ uncommitted, so one session does not sweep up another’s unfinished records. Wi
 `entities` every change is committed, but when a `message` is given it must name
 each record being committed (its id appears in the text as a word) unless
 `everything` is set; a message naming only some of them is refused, listing the
-rest. With no `message` the default one lists the records. A renamed record needs both its old and new folder named.
+rest. A file holding conflict markers is refused, unless its store-relative path is in
+`allow_markers` (a record that quotes a conflict block on purpose). With no `message` the default one lists the records. A renamed record needs both its old and new folder named.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
@@ -2181,7 +2182,7 @@ with a [`Store`](_autosummary/acquaint.store.html.md#acquaint.store.Store).
 | [`style_lint`](_autosummary/acquaint.tools.html.md#acquaint.tools.style_lint)(text, \*[, recipient, tolerance, ...])  | The deterministic half of deslop: machine-writing tells in a draft, at the recipient's tolerance and against their blocklist.                                                                                                                                                                                                            |
 | [`sync_init`](_autosummary/acquaint.tools.html.md#acquaint.tools.sync_init)(\*, repo[, remote_url, ...])             | Make the data root a checkout of a PRIVATE GitHub repository (created private through `gh` unless `existing_only`), with a pre-push guard.                                                                                                                                                                                               |
 | [`sync_pull`](_autosummary/acquaint.tools.html.md#acquaint.tools.sync_pull)(\*[, dry_run, data_dir])                 | Pull the store from its private remote, rebasing local work on top.                                                                                                                                                                                                                                                                      |
-| [`sync_push`](_autosummary/acquaint.tools.html.md#acquaint.tools.sync_push)([ids, message, all, dry_run, data_dir])  | Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility.                                                                                                                                                                                                                           |
+| [`sync_push`](_autosummary/acquaint.tools.html.md#acquaint.tools.sync_push)([ids, message, all, ...])                | Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility.                                                                                                                                                                                                                           |
 | [`sync_status`](_autosummary/acquaint.tools.html.md#acquaint.tools.sync_status)(\*[, check_visibility, data_dir])      | Whether the store is synced, to which repository, uncommitted changes, ahead/behind, the guard, and live visibility.                                                                                                                                                                                                                     |
 | [`todo_preflight`](_autosummary/acquaint.tools.html.md#acquaint.tools.todo_preflight)(project, people, \*[, data_dir])    | Before filing a meeting's todos as GitHub issues: is the project unambiguous, is every participant (comma-separated) registered and linked to it, and does it declare a meta repository that is private now? Returns the repository, each person's GitHub login, and a fix for every problem.                                            |
 | [`who`](_autosummary/acquaint.tools.html.md#acquaint.tools.who)(name, \*[, field, brief, data_dir])            | Look up one person, project, org or group by exact id, name, alias, handle or email.                                                                                                                                                                                                                                                     |
@@ -2338,9 +2339,9 @@ Pull the store from its private remote, rebasing local work on top.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### acquaint.tools.sync_push(ids=None, , message=None, all=False, dry_run=False, data_dir=None)
+### acquaint.tools.sync_push(ids=None, , message=None, all=False, allow_markers=None, dry_run=False, data_dir=None)
 
-Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility. With `ids` (records, e.g. `person:ada-lovelace`), commit only those records and leave other uncommitted records alone; without, commit everything, but a `message` must then name every record it commits unless `all`.
+Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility. With `ids` (records, e.g. `person:ada-lovelace`), commit only those records and leave other uncommitted records alone; without, commit everything, but a `message` must then name every record it commits unless `all`. A file holding conflict markers is refused unless its path (relative to the store, e.g. `people/ada-lovelace/PROFILE.md`) is in `allow_markers` (list every path after one flag, and put record ids before it): for a record that quotes a conflict block on purpose.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -2568,7 +2569,7 @@ True
 
 # About this build
 
-This documentation was built on **2026-11-16 05:46 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/961277de707cca041fbe1d1ad32aae16b49e141d"><code>961277d</code></a> on branch <code>main</code>, for **acquaint 0.0.24** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 05:58 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/6abba8a6ca2c233cbae0492c445da26e1faaef0e"><code>6abba8a</code></a> on branch <code>main</code>, for **acquaint 0.0.25** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -2577,7 +2578,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                            |
 |---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/961277de707cca041fbe1d1ad32aae16b49e141d"><code>961277de707cca041fbe1d1ad32aae16b49e141d</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/6abba8a6ca2c233cbae0492c445da26e1faaef0e"><code>6abba8a6ca2c233cbae0492c445da26e1faaef0e</code></a> |
 | Branch              | <code>main</code>                                                                                                                                          |
 | Tags at this commit | none                                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                      |
@@ -2588,9 +2589,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/acquaint</code>                                                           |
-| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43812166367">43812166367</a>  |
+| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43813453471">43813453471</a>  |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>961277de707cca041fbe1d1ad32aae16b49e141d</code> (in the history of the built commit) |
+| Event commit | <code>6abba8a6ca2c233cbae0492c445da26e1faaef0e</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2615,13 +2616,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/acquaint/0.0.24/">0.0.24</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/acquaint/0.0.25/">0.0.25</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/acquaint && cd acquaint
-git checkout 961277de707cca041fbe1d1ad32aae16b49e141d
+git checkout 6abba8a6ca2c233cbae0492c445da26e1faaef0e
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
