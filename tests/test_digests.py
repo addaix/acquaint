@@ -3,7 +3,7 @@
 import pytest
 
 from acquaint import tools
-from acquaint.digests import digest_problems, digests, find_digest, mark_digest, new_digest
+from acquaint.digests import append_batch, parse_rows, digest_problems, digests, find_digest, mark_digest, new_digest
 from acquaint.lint import lint_store
 from acquaint.store import AcquaintError
 
@@ -74,3 +74,57 @@ def test_the_tools_and_the_brief(tmp_path, monkeypatch):
     assert tools.digest("ada-lovelace")["digests"][0]["ref"] == REF
     text = tools.brief("ada-lovelace")["text"]
     assert "## Conversations on record" in text and "content through 2026-11-03T19:37:47+01:00" in text
+
+
+BATCH = {
+    "Takeaways": ["Agreed to meet again [at: 2026-11-05T10:00:00+01:00]"],
+    "Open threads": ["Ada owes the draft [source: thread-4]"],
+    "Orientation": ["Now spans two weeks"],
+}
+
+
+def test_append_batch_adds_a_dated_block_under_each_section_and_moves_the_watermark(store, put):
+    ada = put(store, "people/ada-lovelace", meta={"name": "Ada Lovelace"})
+    new_digest(ada, REF)
+    result = append_batch(ada, REF, "2026-11-05 to 2026-11-12", BATCH, through="2026-11-12T09:00:00+01:00", today="2026-11-13")
+    assert result["through"]["content"] == "2026-11-12T09:00:00+01:00" and result["lines"] == 3
+    text = ada[find_digest(ada, REF)["file"]]
+    for section in ("Orientation", "Takeaways", "Open threads"):
+        part = text.split(f"## {section}")[1].split("\n## ")[0]
+        assert "### 2026-11-05 to 2026-11-12" in part
+    assert "- Agreed to meet again [at: 2026-11-05T10:00:00+01:00]" in text
+    assert text.index("## Themes") < text.index("## Index") < text.index("## Open threads")
+    assert not [p for p in digest_problems(text) if p[0] == "error"]
+    with pytest.raises(AcquaintError, match="already has"):
+        append_batch(ada, REF, "2026-11-05 to 2026-11-12", BATCH)
+
+
+def test_append_batch_refuses_unanchored_lines_and_writes_nothing(store, put):
+    ada = put(store, "people/ada-lovelace", meta={"name": "Ada Lovelace"})
+    new_digest(ada, REF)
+    before = ada[find_digest(ada, REF)["file"]]
+    with pytest.raises(AcquaintError, match="needs \\[at"):
+        append_batch(ada, REF, "w1", {"Orientation": ["fine"], "Index": ["no anchor"]}, through="2026-11-12T09:00:00Z")
+    assert ada[find_digest(ada, REF)["file"]] == before
+    with pytest.raises(AcquaintError, match="unknown section"):
+        append_batch(ada, REF, "w1", {"Mood": ["x"]})
+    with pytest.raises(AcquaintError, match="no digest"):
+        append_batch(ada, "slack:nobody", "w1", BATCH)
+
+
+def test_parse_rows_reads_json_pipes_and_files(tmp_path):
+    piped = "Takeaways | Agreed | [at: 2026-11-05T10:00:00Z]\n\nIndex | Kickoff [source: x]"
+    assert parse_rows(piped) == {"Takeaways": ["Agreed [at: 2026-11-05T10:00:00Z]"], "Index": ["Kickoff [source: x]"]}
+    with pytest.raises(AcquaintError, match="expected"):
+        parse_rows("just a line")
+
+
+def test_the_tool_takes_a_rows_file(tmp_path, monkeypatch):
+    monkeypatch.setenv("ACQUAINT_DATA_DIR", str(tmp_path / "data"))
+    tools.new("person", "Ada Lovelace")
+    tools.digest_new("ada-lovelace", REF)
+    rows = tmp_path / "rows.txt"
+    rows.write_text("Takeaways | Agreed | [at: 2026-11-05T10:00:00Z]\n")
+    done = tools.digest_append("ada-lovelace", REF, heading="w1", rows=str(rows), through="2026-11-05T10:00:00Z")
+    assert done["ok"] and tools.digest("ada-lovelace", REF)["since"] == "2026-11-05T10:00:00Z"
+    assert tools.digest_append("ada-lovelace", REF, heading="w2", rows='{"Themes": ["x [at: 2026-11-06T00:00:00Z]"]}')["ok"]

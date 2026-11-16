@@ -25,7 +25,7 @@ from acquaint import sync as _sync
 from acquaint.brief import compose_brief
 from acquaint.deslop import lint_text, recipient_card
 from acquaint.digests import digests as _digests
-from acquaint.digests import find_digest, mark_digest, new_digest
+from acquaint.digests import append_batch, find_digest, mark_digest, new_digest
 from acquaint.disclosure import disclose as _disclose
 from acquaint.edit import append_observation, forget_entity, new_entity, rename_entity
 from acquaint.lint import lint_store
@@ -48,6 +48,7 @@ __all__ = [
     "brief",
     "check",
     "digest",
+    "digest_append",
     "digest_mark",
     "digest_new",
     "disclosure",
@@ -901,6 +902,36 @@ def digest_mark(
     }
 
 
+def digest_append(
+    entity: str,
+    ref: str,
+    *,
+    heading: str,
+    rows: str,
+    through: str | None = None,
+    scope: str = "content",
+    force: bool = False,
+    data_dir: str | None = None,
+) -> dict:
+    """Add a dated batch to a digest: a ``### <heading>`` block (e.g. the date range) at the end of each section named in ``rows``. ``rows`` is JSON ``{"Takeaways": ["line [at: <ISO time>]"]}``, or ``section | line | anchor`` rows, or the path of a file holding either. Lines under Takeaways, Themes, Index and Open threads need an ``[at: …]`` or ``[source: …]`` anchor, else nothing is written. With ``through`` (ISO time of the last message processed), the watermark moves in the same call."""
+    store = _store(data_dir)
+    found = append_batch(
+        Entity(store, find_entity(store, entity)),
+        ref,
+        heading,
+        rows,
+        through=through,
+        scope=scope,
+        force=force,
+    )
+    moved = f"; {scope} watermark now {through}" if through else ""
+    return {
+        "ok": True,
+        **found,
+        "summary": f"{found['path']}: {found['lines']} line(s) under {', '.join(found['sections'])} as `{heading}`{moved}",
+    }
+
+
 #: Every tool, in the order surfaces list them.
 TOOLS = [
     who,
@@ -923,6 +954,7 @@ TOOLS = [
     todo_preflight,
     digest,
     digest_new,
+    digest_append,
     digest_mark,
 ]
 
@@ -951,5 +983,6 @@ SIDE_EFFECTS = {
     "todo_preflight": "external-read",
     "digest": "read",
     "digest_new": "create",
+    "digest_append": "rewrite",
     "digest_mark": "rewrite",
 }

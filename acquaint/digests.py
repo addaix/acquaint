@@ -35,7 +35,10 @@ bodies).
 
 from __future__ import annotations
 
+import json
 import re
+from collections.abc import Mapping, Sequence
+from pathlib import Path
 from string import Template
 from datetime import date, datetime
 from typing import Any
@@ -49,12 +52,14 @@ __all__ = [
     "DIGEST_DIR",
     "SCHEMA",
     "SCOPES",
+    "append_batch",
     "digest_name",
     "digest_problems",
     "digests",
     "find_digest",
     "mark_digest",
     "new_digest",
+    "parse_rows",
 ]
 
 DIGEST_DIR = "digests"
@@ -179,6 +184,119 @@ def mark_digest(
     meta["updated"] = today or date.today().isoformat()
     entity[found["file"]] = join_frontmatter(meta, body)
     return {**_summary(entity, found["file"]), "previous": previous}
+
+
+#: The sections a dated batch can go under: every section of the template, in order.
+BATCH_SECTIONS = ("Orientation", *ANCHORED_SECTIONS)
+
+
+def parse_rows(rows: str | Mapping[str, Sequence[str]]) -> dict[str, list[str]]:
+    """``{section: [line, ...]}`` from a mapping, JSON text, or ``section | line | anchor`` rows (one per line; the anchor is optional).
+
+    >>> parse_rows("Takeaways | Agreed to ship | [at: 2026-11-03T10:00:00Z]")
+    {'Takeaways': ['Agreed to ship [at: 2026-11-03T10:00:00Z]']}
+    >>> parse_rows('{"Themes": ["Pricing [source: thread-1]"]}')
+    {'Themes': ['Pricing [source: thread-1]']}
+    """
+    if isinstance(rows, Mapping):
+        return {k: [str(x) for x in v] for k, v in rows.items()}
+    text = rows.strip()
+    if text.startswith("{"):
+        try:
+            loaded = json.loads(text)
+        except json.JSONDecodeError as error:
+            raise AcquaintError(f"rows is not valid JSON: {error}") from error
+        if not isinstance(loaded, dict):
+            raise AcquaintError("rows JSON must be an object {section: [line, ...]}")
+        return parse_rows(loaded)
+    found: dict[str, list[str]] = {}
+    for number, row in enumerate(text.splitlines(), 1):
+        if not row.strip():
+            continue
+        section, _, rest = (part.strip() for part in row.partition("|"))
+        line, _, anchor = (part.strip() for part in rest.partition("|"))
+        if not (section and line):
+            raise AcquaintError(f"rows line {number}: expected `section | line | anchor`, got {row!r}")
+        found.setdefault(section, []).append(f"{line} {anchor}".strip() if anchor and anchor not in line else line)
+    return found
+
+
+def _read_rows(rows: str) -> str:
+    """The text of ``rows``: the contents of the file it names, else itself."""
+    try:
+        path = Path(rows)
+        if "\n" not in rows and len(rows) < 1024 and path.is_file():
+            return path.read_text(encoding="utf-8")
+    except OSError:
+        pass
+    return rows
+
+
+def _append_under(body: str, section: str, heading: str, lines: Sequence[str]) -> str:
+    start = re.search(rf"^## {re.escape(section)}[ \t]*$", body, re.M)
+    if start is None:
+        raise AcquaintError(f"the digest has no `## {section}` section")
+    following = re.search(r"^## ", body[start.end() :], re.M)
+    end = start.end() + following.start() if following else len(body)
+    if re.search(rf"^### {re.escape(heading)}[ \t]*$", body[start.end() : end], re.M):
+        raise AcquaintError(f"`## {section}` already has a `### {heading}` batch")
+    items = "\n".join(line if line.lstrip().startswith(("-", "*")) else f"- {line}" for line in lines)
+    block = f"### {heading}\n\n{items}\n"
+    kept = body[start.end() : end].rstrip("\n")
+    tail = "\n" if following else ""
+    return f"{body[: start.end()]}{kept}\n\n{block}{tail}{body[end:]}"
+
+
+def append_batch(
+    entity: Entity,
+    ref: str,
+    heading: str,
+    rows: str | Mapping[str, Sequence[str]],
+    *,
+    through: str | None = None,
+    scope: str = "content",
+    force: bool = False,
+    today: str | None = None,
+) -> dict:
+    """Add a dated batch (``### heading``) at the end of each named section of a digest, in one write.
+
+    ``rows`` is ``{section: [line, ...]}``, JSON text of that, ``section | line | anchor``
+    rows, or the path of a file holding either. A line under Takeaways, Themes, Index or
+    Open threads without an ``[at: …]`` or ``[source: …]`` anchor is refused, and nothing
+    is written when any line is refused. With ``through``, the watermark moves in the same call.
+    """
+    batch = parse_rows(_read_rows(rows) if isinstance(rows, str) else rows)
+    batch = {section: lines for section, lines in batch.items() if lines}
+    if not heading.strip():
+        raise AcquaintError("a batch needs a heading, e.g. the date range it covers")
+    if not batch:
+        raise AcquaintError("rows has no lines to add")
+    for section, lines in batch.items():
+        if section not in BATCH_SECTIONS:
+            raise AcquaintError(f"unknown section {section!r}; use {', '.join(BATCH_SECTIONS)}")
+        if section in ANCHORED_SECTIONS:
+            bare = [line for line in lines if not _ANCHOR_RE.search(line)]
+            if bare:
+                raise AcquaintError(
+                    f"an item under {section} needs [at: <ISO time>] or [source: …]: {bare[0]!r}"
+                )
+    found = find_digest(entity, ref)
+    if found is None:
+        raise AcquaintError(
+            f"{entity.key} has no digest of {ref}; create it first (acquaint digest-new {entity.slug} {ref})"
+        )
+    meta, body, errors = split_frontmatter(entity[found["file"]])
+    if errors:
+        raise AcquaintError(f"{found['path']}: {errors[0]}; fix the frontmatter by hand")
+    for section in BATCH_SECTIONS:  # in template order, so the result does not depend on row order
+        if section in batch:
+            body = _append_under(body, section, heading.strip(), batch[section])
+    meta["updated"] = today or date.today().isoformat()
+    entity[found["file"]] = join_frontmatter(meta, body)
+    if through is not None:
+        marked = mark_digest(entity, ref, through, scope=scope, force=force, today=today)
+        return {**marked, "sections": sorted(batch), "lines": sum(map(len, batch.values()))}
+    return {**_summary(entity, found["file"]), "sections": sorted(batch), "lines": sum(map(len, batch.values()))}
 
 
 def digest_problems(text: str) -> list[tuple[str, int | None, str, str]]:
