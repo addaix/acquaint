@@ -611,3 +611,21 @@ def test_status_counts_the_files_of_a_new_record_folder(store_root, github, scri
     (folder / "PROFILE.md").write_text("---\nname: n\n---\n")
     (folder / "notes.md").write_text("x\n")
     assert sync.status(store_root, run=gh, check_visibility=False)["uncommitted"] == 2
+
+
+@posix_only
+def test_a_record_that_quotes_a_conflict_block_can_be_allowed_by_path(store_root, github, scripted_gh):
+    gh = FakeGh()
+    sync.init(store_root, REPO, run=gh)
+    quote = "people/ada-lovelace/quote.md"
+    (store_root / quote).write_text("```\n<<<<<<< HEAD\nx\n=======\ny\n>>>>>>> topic\n```\n")
+    (store_root / "people" / "ada-lovelace" / "other.md").write_text("<<<<<<< a\n=======\n>>>>>>> b\n")
+    with pytest.raises(AcquaintError, match="quote.md"):
+        sync.push(store_root, run=gh)
+    with pytest.raises(AcquaintError, match="other.md") as refused:
+        sync.push(store_root, allow_markers=[quote], run=gh)
+    assert "quote.md" not in str(refused.value), "only the allowed path is let through"
+    assert sync.push(store_root, dry_run=True, allow_markers=[quote], run=gh)["conflicted"] == ["people/ada-lovelace/other.md"]
+    assert sync.push(store_root, allow_markers=[quote, "people/ada-lovelace/other.md"], run=gh)["pushed"]
+    assert quote in _pushed_files(github[URL])
+    assert sync.pull(store_root, run=gh)["pulled"], "a committed quote does not block a pull"

@@ -761,16 +761,18 @@ def sync_push(
     *,
     message: str | None = None,
     all: bool = False,
+    allow_markers: list[str] | None = None,
     dry_run: bool = False,
     data_dir: str | None = None,
 ) -> dict:
-    """Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility. With ``ids`` (records, e.g. ``person:ada-lovelace``), commit only those records and leave other uncommitted records alone; without, commit everything, but a ``message`` must then name every record it commits unless ``all``."""
+    """Commit, rebase onto the remote and push the store, after re-checking the remote, the guard and the visibility. With ``ids`` (records, e.g. ``person:ada-lovelace``), commit only those records and leave other uncommitted records alone; without, commit everything, but a ``message`` must then name every record it commits unless ``all``. A file holding conflict markers is refused unless its path (relative to the store, e.g. ``people/ada-lovelace/PROFILE.md``) is in ``allow_markers``: for a record that quotes a conflict block on purpose."""
     root = _data_dir(data_dir)
     result = _sync.push(
         root,
         message=message,
         entities=_record_refs(root, ids or []),
         everything=all,
+        allow_markers=allow_markers or (),
         dry_run=dry_run,
     )
     summary = (

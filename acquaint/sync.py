@@ -291,8 +291,8 @@ def _configured(root: Path, run: Runner, ns: SyncNamespace) -> tuple[str, str]:
 _MARKER_PATTERNS = (r"^<{7}( |$)", r"^={7}$", r"^>{7}( |$)")
 
 
-def _conflicted(root: Path, run: Runner, *, markers: bool = True) -> list[str]:
-    """Paths left unresolved in the working tree: unmerged index entries, and (with ``markers``) text files that still hold conflict markers."""
+def _conflicted(root: Path, run: Runner, *, markers: bool = True, allow: Sequence[str] = ()) -> list[str]:
+    """Paths left unresolved in the working tree: unmerged index entries, and (with ``markers``) text files that still hold conflict markers, except the ``allow``ed paths (an unmerged entry is never allowed)."""
     unmerged = _lines(
         root, run, "-c", "core.quotePath=false", "diff", "--name-only", "--diff-filter=U"
     )
@@ -320,14 +320,19 @@ def _conflicted(root: Path, run: Runner, *, markers: bool = True) -> list[str]:
         raise AcquaintError(
             f"could not scan {root} for conflict markers: {(found.stderr or '').strip()}"
         )
-    marked = [line for line in (found.stdout or "").splitlines() if line.strip()]
+    marked = [line for line in (found.stdout or "").splitlines() if line.strip() and line not in allow]
     return sorted({*unmerged, *marked})
 
 
 def _refuse_conflicts(
-    root: Path, run: Runner, *, doing: str, markers: bool = True
+    root: Path,
+    run: Runner,
+    *,
+    doing: str,
+    markers: bool = True,
+    allow: Sequence[str] = (),
 ) -> None:
-    paths = _conflicted(root, run, markers=markers)
+    paths = _conflicted(root, run, markers=markers, allow=allow)
     if paths:
         raise AcquaintError(
             f"refusing to {doing}: unresolved conflicts in {', '.join(paths)}. "
@@ -641,6 +646,7 @@ def push(
     message: str | None = None,
     entities: Sequence[str] = (),
     everything: bool = False,
+    allow_markers: Sequence[str] = (),
     dry_run: bool = False,
     namespace: SyncNamespace = ACQUAINT,
     run: Runner = run_command,
@@ -653,7 +659,8 @@ def push(
     ``entities`` every change is committed, but when a ``message`` is given it must name
     each record being committed (its id appears in the text as a word) unless
     ``everything`` is set; a message naming only some of them is refused, listing the
-    rest. With no ``message`` the default one lists the records. A renamed record needs both its old and new folder named.
+    rest. A file holding conflict markers is refused, unless its store-relative path is in
+    ``allow_markers`` (a record that quotes a conflict block on purpose). With no ``message`` the default one lists the records. A renamed record needs both its old and new folder named.
     """
     root = Path(root)
     repo, remote = _configured(root, run, namespace)
@@ -667,7 +674,7 @@ def push(
             "would_commit": len(plan["changed"]),
             "entities": plan["entities"],
             "unnamed_in_message": unnamed,
-            "conflicted": _conflicted(root, run),
+            "conflicted": _conflicted(root, run, allow=allow_markers),
         }
     if unnamed:
         raise AcquaintError(
@@ -681,7 +688,7 @@ def push(
         )
     _require_private(repo, run, namespace)
     _refuse_conflicts(
-        root, run, doing="commit and push"
+        root, run, doing="commit and push", allow=allow_markers
     )  # nothing is unresolved from here on, so anything after is new
     if plan["changed"]:
         _commit(root, run, plan, message=message, scoped=scoped, ns=namespace)
@@ -739,7 +746,7 @@ def pull(
             "plan": [f"git pull --rebase --autostash origin {BRANCH}"],
         }
     _require_private(repo, run, namespace)
-    _refuse_conflicts(root, run, doing="pull")
+    _refuse_conflicts(root, run, doing="pull", markers=False)  # unmerged entries only: marker text in a committed record is push's business
     _ok(
         run,
         ["git", "pull", "-q", "--rebase", "--autostash", "origin", BRANCH],
@@ -747,7 +754,7 @@ def pull(
         what="git pull",
     )
     # `git pull --autostash` exits 0 when re-applying the stash conflicts, leaving markers.
-    _refuse_conflicts(root, run, doing="finish the pull")
+    _refuse_conflicts(root, run, doing="finish the pull", markers=False)
     head = _ok(
         run, ["git", "rev-parse", "--short", "HEAD"], cwd=root, what="git rev-parse"
     )
