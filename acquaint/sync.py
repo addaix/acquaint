@@ -226,11 +226,13 @@ def _configured(root: Path, run: Runner) -> tuple[str, str]:
 _MARKER_PATTERNS = (r"^<{7}( |$)", r"^={7}$", r"^>{7}( |$)")
 
 
-def _conflicted(root: Path, run: Runner) -> list[str]:
-    """Paths left unresolved in the working tree: unmerged index entries, or text files that still hold conflict markers."""
+def _conflicted(root: Path, run: Runner, *, markers: bool = True) -> list[str]:
+    """Paths left unresolved in the working tree: unmerged index entries, and (with ``markers``) text files that still hold conflict markers."""
     unmerged = _lines(
         root, run, "-c", "core.quotePath=false", "diff", "--name-only", "--diff-filter=U"
     )
+    if not markers:
+        return sorted(unmerged)
     grep = [e for pattern in _MARKER_PATTERNS for e in ("-e", pattern)]
     found = run(
         [
@@ -257,8 +259,8 @@ def _conflicted(root: Path, run: Runner) -> list[str]:
     return sorted({*unmerged, *marked})
 
 
-def _refuse_conflicts(root: Path, run: Runner, *, doing: str) -> None:
-    paths = _conflicted(root, run)
+def _refuse_conflicts(root: Path, run: Runner, *, doing: str, markers: bool = True) -> None:
+    paths = _conflicted(root, run, markers=markers)
     if paths:
         raise AcquaintError(
             f"refusing to {doing}: unresolved conflicts in {', '.join(paths)}. "
@@ -484,10 +486,11 @@ def _record_folders(root: Path, run: Runner, folders: Sequence[str]) -> list[str
     checked = []
     for folder in folders:
         parts = folder.strip("/").split("/")
-        if len(parts) != 2 or ".." in parts or not all(parts):
+        if len(parts) != 2 or not all(parts) or {".", ".."} & set(parts):
             raise AcquaintError(f"{folder!r} is not a record folder like people/ada-lovelace")
         name = "/".join(parts)
-        if not (root / name).exists() and not _lines(root, run, "ls-files", "--", name):
+        known = (root / name).exists() or _lines(root, run, "ls-files", "--", name) or _lines(root, run, "log", "-1", "--format=%H", "--", name)
+        if not known:  # a deleted record is known from history, so a push of its deletion can be retried
             raise AcquaintError(f"no record folder {name} in {root} (a typo in the id?)")
         checked.append(name)
     return checked
@@ -572,7 +575,7 @@ def push(
             f"run `acquaint sync init --repo {repo} --existing-only` first"
         )
     _require_private(repo, run)
-    _refuse_conflicts(root, run, doing="commit and push")
+    _refuse_conflicts(root, run, doing="commit and push")  # nothing is unresolved from here on, so anything after is new
     if plan["changed"]:
         _commit(root, run, plan, message=message, scoped=scoped)
     if run(["git", "rev-parse", "--verify", "HEAD"], cwd=root).returncode != 0:
@@ -586,7 +589,7 @@ def push(
         what="git push (the pre-push guard may have refused)",
     )
     # `rebase --autostash` exits 0 when re-applying another session's uncommitted edits conflicts.
-    _refuse_conflicts(root, run, doing="leave the store as it is: your commits were pushed, but uncommitted edits now conflict with the remote")
+    _refuse_conflicts(root, run, doing="finish: your commits were pushed, but uncommitted edits now conflict with the remote", markers=False)
     return {
         "repo": repo,
         "remote": remote,

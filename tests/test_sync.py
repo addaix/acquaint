@@ -461,7 +461,7 @@ def test_the_default_message_lists_the_records_and_needs_no_naming(store_root, g
 def test_a_scoped_push_rejects_anything_but_an_existing_record_folder(store_root, github, scripted_gh):
     gh = FakeGh()
     sync.init(store_root, REPO, run=gh)
-    for bad in ("people", "people/ada/../../x", "../people/a", "people/a/b"):
+    for bad in ("people", "people/ada/../../x", "../people/a", "people/a/b", "people/..", "./people", "people/."):
         with pytest.raises(AcquaintError, match="record folder"):
             sync.push(store_root, entities=[bad], run=gh)
     with pytest.raises(AcquaintError, match="no record folder people/typo"):
@@ -510,3 +510,25 @@ def test_the_tool_scopes_by_id_and_a_dry_run_says_when_it_would_refuse(tmp_path,
     done = tools.sync_push(["person:ada-lovelace"], message="ada-lovelace: tea")
     assert done["pushed"] and done["entities"] == ["people/ada-lovelace"]
     assert "people/grace-example" in _git("status", "--porcelain", "-uall", cwd=tmp_path / "data").stdout
+
+
+@posix_only
+def test_a_scoped_push_of_a_deleted_record_can_be_retried_and_a_clean_push_is_not_failed_by_old_markers(tmp_path, store_root, github, scripted_gh):
+    gh = FakeGh()
+    sync.init(store_root, REPO, run=gh)
+    shutil.rmtree(store_root / "people" / "ada-lovelace")
+    _git("config", "core.hooksPath", str(tmp_path / "x"), cwd=store_root)  # the first attempt fails at the guard
+    with pytest.raises(AcquaintError, match="guard is not active"):
+        sync.push(store_root, entities=["people/ada-lovelace"], run=gh)
+    sync.init(store_root, REPO, create=False, run=gh)  # re-installs the guard; commits the deletion
+    assert sync.push(store_root, entities=["people/ada-lovelace"], run=gh)["pushed"]  # known from history
+    # a committed file that merely holds markers (pushed with raw git elsewhere) does not fail a clean push
+    other = tmp_path / "other-clone"
+    assert _git("clone", "-q", "--branch", "main", URL, str(other)).returncode == 0
+    (other / "old.md").write_text("<<<<<<< a\nx\n=======\ny\n>>>>>>> b\n")
+    _git("add", "-A", cwd=other)
+    _git("commit", "-qm", "markers", cwd=other)
+    assert _git("push", "-q", "origin", "main", cwd=other).returncode == 0
+    (store_root / "people" / "grace-example").mkdir(parents=True)
+    (store_root / "people" / "grace-example" / "PROFILE.md").write_text("---\nname: g\n---\n")
+    assert sync.push(store_root, entities=["people/grace-example"], run=gh)["pushed"]
