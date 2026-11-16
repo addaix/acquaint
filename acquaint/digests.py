@@ -210,7 +210,9 @@ def mark_digest(
 ) -> dict:
     """Move the watermark of ``scope`` to ``through``, and/or record when the conversation was last read (``checked``). Moving either back needs ``force``."""
     if through is None and checked is None:
-        raise AcquaintError("say what to record: through (the last message processed), checked (when it was last read), or both")
+        raise AcquaintError(
+            "say what to record: through (the last message processed), checked (when it was last read), or both"
+        )
     found, meta, body = _load(entity, ref)
     previous = None
     if through is not None:
@@ -226,7 +228,9 @@ def _checked_time(value: Any, what: str = "checked") -> str:
     """An ISO 8601 time with an offset (``checked`` orders digests across machines, so a naive time would be read in each machine's own zone)."""
     text = _time(value, what)
     if datetime.fromisoformat(text.replace("Z", "+00:00")).tzinfo is None:
-        raise AcquaintError(f"{what} needs a UTC offset, e.g. 2026-11-09T08:00:00+01:00 or ...Z, not {text!r}")
+        raise AcquaintError(
+            f"{what} needs a UTC offset, e.g. 2026-11-09T08:00:00+01:00 or ...Z, not {text!r}"
+        )
     return text
 
 
@@ -242,7 +246,9 @@ def _moved_checked(meta: dict, checked: str, force: bool) -> str:
     checked = _checked_time(checked)
     before = meta.get("checked")
     if before and not force and not _later_than(checked, before):
-        raise AcquaintError(f"the conversation was already checked at {before}; moving it back to {checked} needs force")
+        raise AcquaintError(
+            f"the conversation was already checked at {before}; moving it back to {checked} needs force"
+        )
     return checked
 
 
@@ -270,13 +276,23 @@ def sweep_digests(
         raise AcquaintError(f"channel is a name like slack or whatsapp, not {channel!r}")
     checked = _checked_time(checked)
     refs = list(dict.fromkeys(r.strip() for r in refs if r.strip()))
-    wrong = [r for r in refs if not r.startswith(f"{channel}:") or len(r) == len(channel) + 1]
+    wrong = [
+        r for r in refs if not r.startswith(f"{channel}:") or len(r) == len(channel) + 1
+    ]
     if wrong:
-        raise AcquaintError(f"refs {', '.join(wrong)} are not conversations of the channel {channel!r} (<{channel}>:<id>)")
-    existing = {str(d["ref"]): d for d in digests(entity) if str(d["ref"]).startswith(f"{channel}:")}
+        raise AcquaintError(
+            f"refs {', '.join(wrong)} are not conversations of the channel {channel!r} (<{channel}>:<id>)"
+        )
+    existing = {
+        str(d["ref"]): d
+        for d in digests(entity)
+        if str(d["ref"]).startswith(f"{channel}:")
+    }
     targets = refs or sorted(existing)
     if not targets:
-        raise AcquaintError(f"{entity.key} has no digest of the channel {channel!r}; name its conversations with refs to create them")
+        raise AcquaintError(
+            f"{entity.key} has no digest of the channel {channel!r}; name its conversations with refs to create them"
+        )
     created = [r for r in targets if r not in existing and find_digest(entity, r) is None]
     for ref in created:
         new_digest(entity, ref, archive=archive, today=today)
@@ -288,7 +304,13 @@ def sweep_digests(
             continue
         mark_digest(entity, ref, checked=checked, force=True, today=today)
         stamped.append(ref)
-    return {"channel": channel, "checked": checked, "stamped": stamped, "created": created, "kept_later": kept}
+    return {
+        "channel": channel,
+        "checked": checked,
+        "stamped": stamped,
+        "created": created,
+        "kept_later": kept,
+    }
 
 
 def swept(entity: Entity) -> dict[str, str | None]:

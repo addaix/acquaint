@@ -26,7 +26,14 @@ from acquaint import sync as _sync
 from acquaint.brief import compose_brief
 from acquaint.deslop import lint_text, recipient_card
 from acquaint.digests import digests as _digests
-from acquaint.digests import append_batch, find_digest, mark_digest, new_digest, sweep_digests, swept
+from acquaint.digests import (
+    append_batch,
+    find_digest,
+    mark_digest,
+    new_digest,
+    sweep_digests,
+    swept,
+)
 from acquaint.disclosure import disclose as _disclose
 from acquaint.edit import append_observation, forget_entity, new_entity, rename_entity
 from acquaint.lint import lint_store
@@ -931,9 +938,19 @@ def digest_mark(
     """Record that a conversation has been processed through ``through`` (the ISO time of the last message processed), for ``scope`` (``content`` or ``style``), and/or that it was last read at ``checked`` (ISO time; a quiet channel has no new message, so ``through`` cannot say it was looked at). Moving either back needs ``force``."""
     store = _store(data_dir)
     found = mark_digest(
-        Entity(store, find_entity(store, entity)), ref, through, checked=checked, scope=scope, force=force
+        Entity(store, find_entity(store, entity)),
+        ref,
+        through,
+        checked=checked,
+        scope=scope,
+        force=force,
     )
-    said = [f"{scope} processed through {through} (was {found['previous'] or 'nothing'})" if through else "", f"checked {checked}" if checked else ""]
+    said = [
+        f"{scope} processed through {through} (was {found['previous'] or 'nothing'})"
+        if through
+        else "",
+        f"checked {checked}" if checked else "",
+    ]
     return {"ok": True, **found, "summary": f"{ref}: {'; '.join(x for x in said if x)}"}
 
 
@@ -949,9 +966,16 @@ def digest_sweep(
 ) -> dict:
     """Record a sweep of a channel (``slack``, ``whatsapp``, ...): stamp ``checked`` (ISO time with an offset, when the sweep read them) on the digests it read, quiet ones included. With ``refs`` (conversation references ``<channel>:...``, one per item or comma-separated) exactly those are stamped, each created first if it has none; without, every digest of the channel is. A digest checked later keeps that later time (see ``kept_later``). ``digest`` then reports ``swept``: the oldest ``checked`` per channel."""
     store = _store(data_dir)
-    wanted = [part for ref in refs or [] for part in ref.split(",")]  # a comma-separated list is a likely slip
+    wanted = [
+        part for ref in refs or [] for part in ref.split(",")
+    ]  # a comma-separated list is a likely slip
     found = sweep_digests(
-        Entity(store, find_entity(store, entity)), channel, checked, refs=wanted, archive=archive, force=force
+        Entity(store, find_entity(store, entity)),
+        channel,
+        checked,
+        refs=wanted,
+        archive=archive,
+        force=force,
     )
     return {
         "ok": True,
