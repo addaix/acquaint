@@ -25,6 +25,7 @@ from acquaint import meta as _meta
 from acquaint import sync as _sync
 from acquaint.brief import compose_brief
 from acquaint.deslop import lint_text, recipient_card
+from acquaint.facts import fact_value
 from acquaint.digests import digests as _digests
 from acquaint.digests import append_batch, find_digest, mark_digest, new_digest, sweep_digests, swept
 from acquaint.disclosure import disclose as _disclose
@@ -77,7 +78,7 @@ def _store(data_dir: str | None) -> Store:
 
 
 def _field(store: Store, entity: Entity, field: str) -> Any:
-    field = field.strip().lower()
+    named, field = field.strip(), field.strip().lower()  # fact names keep their case (speakToAs.pronouns)
 
     def by_platform(platform: str) -> list:
         return [
@@ -95,6 +96,12 @@ def _field(store: Store, entity: Entity, field: str) -> Any:
         return effective_tier(entity.trust, today=date.today().isoformat())[0]
     if field in entity.meta:
         return entity.meta[field]
+    if "." in field:
+        value, refusal = fact_value(entity, named)
+        if refusal:
+            raise AcquaintError(refusal)
+        if value is not None:
+            return value
     if field in {"email", "emails"}:
         return by_platform("email")
     if field in {"identities", "rules", "links", "trust"}:

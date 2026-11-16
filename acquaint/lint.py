@@ -32,6 +32,7 @@ Errors fail ``acquaint lint``; warnings ask a person to look. The rules:
   conversation ``ref`` or a ``through`` watermark that is not an ISO time per known scope,
   or an item under Takeaways, Themes, Index or Open threads without an ``[at: …]`` or
   ``[source: …]`` anchor (**error**); a quote longer than 25 words in one (**warning**);
+- a ``facts.yaml`` (:mod:`acquaint.facts`) whose facts lack a value, a known label, a usable source or a ``YYYY-MM-DD`` ``recorded`` date (**error**), or whose ``review_by`` has passed (**warning**);
 - a file that does not parse, or is not valid UTF-8, an entry file the store cannot
   address (a capitalised or linked folder, ``profile.md``), and a broken
   ``_tombstones.yaml`` are **errors**, reported and skipped, never a crash;
@@ -63,6 +64,7 @@ from acquaint.records import (
     split_frontmatter,
 )
 from acquaint.digests import digest_problems
+from acquaint.facts import FACTS_FILE, facts_problems
 from acquaint.resources import data_yaml
 from acquaint.store import ENTRY_FILE, UNREADABLE, AcquaintError, Entity, Store, kind_dir
 from acquaint.trust import (
@@ -429,6 +431,10 @@ def _lint_entity(
                 "unparseable",
                 f"not valid UTF-8 (undecodable bytes shown as {UNREADABLE})",
             )
+
+    if FACTS_FILE in entity:
+        for severity, rule, message in facts_problems(entity[FACTS_FILE], today=today):
+            add(severity, FACTS_FILE, None, rule, message)
 
     meta = entity.meta
     if meta and meta.get("id") not in (None, entity.slug):

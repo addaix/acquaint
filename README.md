@@ -33,6 +33,7 @@ people/ada-lovelace/
   rules.yaml                    channel rules: when → do (channel, and the address
                                 when the channel is addressed by conversation), who set it, source
   links.yaml                    affiliations: project, org, group; role; period
+  facts.yaml                    typed facts (name.full, titles.current, ...), each with a label, source and date; `clear` ones appear in the brief, `who -f name.full` reads one
   style.md                      the writing card: AI tolerance, register, do, don't, blocklist, exemplars
   views.md                      positions and standing objections, sourced
   sources.md                    where their writing lives, how authorship was verified
@@ -49,7 +50,7 @@ The same twenty-one functions are the Python API (`acquaint.tools`), the CLI, an
 
 | Verb | Does |
 |---|---|
-| `who NAME [-f FIELD] [-b]` | one field (`email`, `aka`, `label`, `tier`, any frontmatter key), the identity block, or the whole entry file; lists candidates instead of guessing |
+| `who NAME [-f FIELD] [-b]` | one field (`email`, `aka`, `label`, `tier`, any frontmatter key, a dotted `clear` fact such as `name.full`), the identity block, or the whole entry file; lists candidates instead of guessing |
 | `resolve HANDLE` | `github:octocat`, `email:…` → the person, with the evidence; a handle without its platform, a match by name only, or an inactive identity is reported, never acted on |
 | `check TEXT` | before publishing: one person written as two ("Ada or Lovelace"), shared names, unknown names |
 | `reach PERSON [--purpose --urgency --project --message-type --topic]` | ordered channels: the person's own rules > the operator's rules > project norms > observed habits > defaults |

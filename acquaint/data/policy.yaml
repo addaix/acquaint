@@ -53,3 +53,4 @@ budgets:
   profile_lines_error: 200
   review_due_days: 180
   brief_observations: 5
+  brief_facts_chars: 1000
