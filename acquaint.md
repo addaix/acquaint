@@ -1,4 +1,4 @@
-> built 2026-11-16 05:58 UTC from 6abba8a (main) · acquaint 0.0.25. Details: build_info.json
+> built 2026-11-16 06:08 UTC from c8c49da (main) · acquaint 0.0.26. Details: build_info.json
 
 # index.html.md
 
@@ -284,8 +284,14 @@ archive: correspond               # where the raw messages live (never this stor
 through:                          # the watermark, per scope: processed up to this time
   content: '2026-11-03T19:37:47+01:00'
   style: '2026-06-21T19:27:45+02:00'
+checked: '2026-11-09T08:00:00+01:00'   # when the conversation was last read, even if nothing new was in it
 updated: '2026-11-04'
 ```
+
+`checked` is not `through`: a channel read on a quiet day has no new message, so
+`through` cannot move, yet the next sweep must know it was looked at (`checked`).
+[`swept()`](_autosummary/acquaint.digests.html.md#acquaint.digests.swept) gives, per channel, the oldest `checked` of its digests: “when did we last
+read Slack for this entity?” without reading each file.
 
 `through` answers “from which date and time is this conversation new?”: hand it to
 `correspond read <ref> --since <through>` to get what has not been processed. Two scopes
@@ -315,15 +321,17 @@ bodies).
 
 ### Functions
 
-| [`append_batch`](_autosummary/acquaint.digests.html.md#acquaint.digests.append_batch)(entity, ref, \*, heading, rows)   | Add a dated batch (`### heading`) at the end of each named section of a digest, in one write.                                 |
-|-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| [`digest_name`](_autosummary/acquaint.digests.html.md#acquaint.digests.digest_name)(ref)                               | The digest's file name inside the entity's folder, derived from the reference.                                                |
-| [`digest_problems`](_autosummary/acquaint.digests.html.md#acquaint.digests.digest_problems)(text)                          | `(severity, line, rule, message)` for one digest file: frontmatter shape, unanchored items, long quotes.                      |
-| [`digests`](_autosummary/acquaint.digests.html.md#acquaint.digests.digests)(entity)                                | Every digest of the entity: its reference, file and watermarks.                                                               |
-| [`find_digest`](_autosummary/acquaint.digests.html.md#acquaint.digests.find_digest)(entity, ref)                       | The digest of one conversation, found by the `ref` in its frontmatter (else by file name).                                    |
-| [`mark_digest`](_autosummary/acquaint.digests.html.md#acquaint.digests.mark_digest)(entity, ref, through, \*[, ...])   | Move the watermark of `scope` to `through`.                                                                                   |
-| [`new_digest`](_autosummary/acquaint.digests.html.md#acquaint.digests.new_digest)(entity, ref, \*[, archive, today])  | Create the digest of `ref` from its template, with no watermark yet.                                                          |
-| [`parse_rows`](_autosummary/acquaint.digests.html.md#acquaint.digests.parse_rows)(rows)                               | `{section: [line, ...]}` from a mapping, JSON text, or `section | line | anchor` rows (one per line; the anchor is optional). |
+| [`append_batch`](_autosummary/acquaint.digests.html.md#acquaint.digests.append_batch)(entity, ref, \*, heading, rows)       | Add a dated batch (`### heading`) at the end of each named section of a digest, in one write.                                     |
+|-----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| [`digest_name`](_autosummary/acquaint.digests.html.md#acquaint.digests.digest_name)(ref)                                   | The digest's file name inside the entity's folder, derived from the reference.                                                    |
+| [`digest_problems`](_autosummary/acquaint.digests.html.md#acquaint.digests.digest_problems)(text)                              | `(severity, line, rule, message)` for one digest file: frontmatter shape, unanchored items, long quotes.                          |
+| [`digests`](_autosummary/acquaint.digests.html.md#acquaint.digests.digests)(entity)                                    | Every digest of the entity: its reference, file and watermarks.                                                                   |
+| [`find_digest`](_autosummary/acquaint.digests.html.md#acquaint.digests.find_digest)(entity, ref)                           | The digest of one conversation, found by the `ref` in its frontmatter (else by file name).                                        |
+| [`mark_digest`](_autosummary/acquaint.digests.html.md#acquaint.digests.mark_digest)(entity, ref[, through, checked, ...])  | Move the watermark of `scope` to `through`, and/or record when the conversation was last read (`checked`).                        |
+| [`sweep_digests`](_autosummary/acquaint.digests.html.md#acquaint.digests.sweep_digests)(entity, channel, checked, \*[, ...]) | Stamp `checked` on the digests of `channel` that a sweep read, creating those that do not exist yet.                              |
+| [`swept`](_autosummary/acquaint.digests.html.md#acquaint.digests.swept)(entity)                                      | `{channel: oldest checked time}` over the entity's digests; `None` when one of the channel's digests was never (validly) checked. |
+| [`new_digest`](_autosummary/acquaint.digests.html.md#acquaint.digests.new_digest)(entity, ref, \*[, archive, today])      | Create the digest of `ref` from its template, with no watermark yet.                                                              |
+| [`parse_rows`](_autosummary/acquaint.digests.html.md#acquaint.digests.parse_rows)(rows)                                   | `{section: [line, ...]}` from a mapping, JSON text, or `section | line | anchor` rows (one per line; the anchor is optional).     |
 
 ### acquaint.digests.ANCHORED_SECTIONS *= ('Takeaways', 'Themes', 'Index', 'Open threads')*
 
@@ -377,9 +385,9 @@ The digest of one conversation, found by the `ref` in its frontmatter (else by f
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### acquaint.digests.mark_digest(entity, ref, through, , scope='content', force=False, today=None)
+### acquaint.digests.mark_digest(entity, ref, through=None, , checked=None, scope='content', force=False, today=None)
 
-Move the watermark of `scope` to `through`. Moving it back needs `force`.
+Move the watermark of `scope` to `through`, and/or record when the conversation was last read (`checked`). Moving either back needs `force`.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -406,6 +414,28 @@ Create the digest of `ref` from its template, with no watermark yet. Refuses whe
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
+
+### acquaint.digests.sweep_digests(entity, channel, checked, , refs=(), archive='correspond', force=False, today=None)
+
+Stamp `checked` on the digests of `channel` that a sweep read, creating those that do not exist yet.
+
+With `refs` (conversation references `<channel>:…`) exactly those are stamped, each
+created first when missing; without, every digest of the channel is (the sweep read the
+whole channel kind). A digest already checked later keeps that later time (unless
+`force`), so a sweep never fails halfway: every check is made before anything is written.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### acquaint.digests.swept(entity)
+
+`{channel: oldest checked time}` over the entity’s digests; `None` when one of the channel’s digests was never (validly) checked.
+
+The oldest, because a sweep is only as complete as its least-recently-read conversation.
+Digests without a `<channel>:<id>` reference are not counted.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)]
 
 
 # _autosummary/acquaint.edit.html.md
@@ -2168,8 +2198,9 @@ with a [`Store`](_autosummary/acquaint.store.html.md#acquaint.store.Store).
 | [`check`](_autosummary/acquaint.tools.html.md#acquaint.tools.check)(text, \*[, data_dir])                        | Scan prose that names people before publishing it: conflations (one person written as two), ambiguous names, unknown names.                                                                                                                                                                                                              |
 | [`digest`](_autosummary/acquaint.tools.html.md#acquaint.tools.digest)(entity[, ref, data_dir])                    | The digests of an entity's conversations (notes on what each said, kept in `digests/`) and their watermarks: how far each was processed, per scope (`content`, `style`).                                                                                                                                                                 |
 | [`digest_append`](_autosummary/acquaint.tools.html.md#acquaint.tools.digest_append)(entity, ref, \*, heading, rows)      | Add a dated batch to a digest: a `### <heading>` block (e.g. the date range) at the end of each section named in `rows`.                                                                                                                                                                                                                 |
-| [`digest_mark`](_autosummary/acquaint.tools.html.md#acquaint.tools.digest_mark)(entity, ref, \*, through[, ...])       | Record that a conversation has been processed through `through` (the ISO time of the last message processed), for `scope` (`content` or `style`).                                                                                                                                                                                        |
+| [`digest_mark`](_autosummary/acquaint.tools.html.md#acquaint.tools.digest_mark)(entity, ref, \*[, through, ...])       | Record that a conversation has been processed through `through` (the ISO time of the last message processed), for `scope` (`content` or `style`), and/or that it was last read at `checked` (ISO time; a quiet channel has no new message, so `through` cannot say it was looked at).                                                    |
 | [`digest_new`](_autosummary/acquaint.tools.html.md#acquaint.tools.digest_new)(entity, ref, \*[, archive, data_dir])   | Create the digest of one conversation (`ref`, a correspond reference) for an entity, from the template: Orientation, Takeaways, Themes, Index, Open threads, and an empty watermark.                                                                                                                                                     |
+| [`digest_sweep`](_autosummary/acquaint.tools.html.md#acquaint.tools.digest_sweep)(entity, channel, \*, checked[, ...])  | Record a sweep of a channel (`slack`, `whatsapp`, ...): stamp `checked` (ISO time with an offset, when the sweep read them) on the digests it read, quiet ones included.                                                                                                                                                                 |
 | [`disclosure`](_autosummary/acquaint.tools.html.md#acquaint.tools.disclosure)(people, \*[, projects, audience, ...])  | Who may be told what, before writing to a set of readers (ids or channel identities, plus an optional correspond `audience` record as JSON): the tier and clearance in force for each, the least clearance, which records each is cleared for, the seals, the vocabulary a gate must scan for, what each was already told, and the gaps. |
 | [`forget`](_autosummary/acquaint.tools.html.md#acquaint.tools.forget)(entity, \*[, confirm, data_dir])            | Remove an entity's folder and leave a salted tombstone.                                                                                                                                                                                                                                                                                  |
 | [`lint`](_autosummary/acquaint.tools.html.md#acquaint.tools.lint)([entity, data_dir])                           | Check records: every preference, view and rule sourced; tiers, labels and seals set by the operator; nothing POLICY.md forbids; files parse; entry files within budget.                                                                                                                                                                  |
@@ -2198,14 +2229,14 @@ Bases: [`Exception`](https://docs.python.org/3/builtins/exceptions.html#Exceptio
 
 An expected failure with a message meant for the person or agent that asked.
 
-### acquaint.tools.SIDE_EFFECTS *= {'brief': 'read', 'check': 'read', 'digest': 'read', 'digest_append': 'rewrite', 'digest_mark': 'rewrite', 'digest_new': 'create', 'disclosure': 'read', 'forget': 'destructive', 'lint': 'read', 'new': 'create', 'reach': 'read', 'remember': 'append', 'rename': 'rewrite', 'resolve': 'read', 'review': 'read', 'style_lint': 'read', 'sync_init': 'external', 'sync_pull': 'rewrite', 'sync_push': 'external', 'sync_status': 'external-read', 'todo_preflight': 'external-read', 'who': 'read'}*
+### acquaint.tools.SIDE_EFFECTS *= {'brief': 'read', 'check': 'read', 'digest': 'read', 'digest_append': 'rewrite', 'digest_mark': 'rewrite', 'digest_new': 'create', 'digest_sweep': 'rewrite', 'disclosure': 'read', 'forget': 'destructive', 'lint': 'read', 'new': 'create', 'reach': 'read', 'remember': 'append', 'rename': 'rewrite', 'resolve': 'read', 'review': 'read', 'style_lint': 'read', 'sync_init': 'external', 'sync_pull': 'rewrite', 'sync_push': 'external', 'sync_status': 'external-read', 'todo_preflight': 'external-read', 'who': 'read'}*
 
 What each tool changes, for surfaces that must decide what to expose or confirm.
 `read` changes nothing and stays local; `append` adds to a log; `create` adds a
 record; `rewrite` changes existing records; `destructive` removes data;
 `external-read` queries a remote service; `external` acts on one.
 
-### acquaint.tools.TOOLS *= [<function who>, <function resolve>, <function check>, <function reach>, <function brief>, <function remember>, <function lint>, <function new>, <function rename>, <function forget>, <function sync_init>, <function sync_push>, <function sync_pull>, <function sync_status>, <function style_lint>, <function disclosure>, <function review>, <function todo_preflight>, <function digest>, <function digest_new>, <function digest_append>, <function digest_mark>]*
+### acquaint.tools.TOOLS *= [<function who>, <function resolve>, <function check>, <function reach>, <function brief>, <function remember>, <function lint>, <function new>, <function rename>, <function forget>, <function sync_init>, <function sync_push>, <function sync_pull>, <function sync_status>, <function style_lint>, <function disclosure>, <function review>, <function todo_preflight>, <function digest>, <function digest_new>, <function digest_append>, <function digest_mark>, <function digest_sweep>]*
 
 Every tool, in the order surfaces list them.
 
@@ -2237,9 +2268,9 @@ Add a dated batch to a digest: a `### <heading>` block (e.g. the date range) at 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### acquaint.tools.digest_mark(entity, ref, , through, scope='content', force=False, data_dir=None)
+### acquaint.tools.digest_mark(entity, ref, , through=None, checked=None, scope='content', force=False, data_dir=None)
 
-Record that a conversation has been processed through `through` (the ISO time of the last message processed), for `scope` (`content` or `style`). Moving a watermark back needs `force`.
+Record that a conversation has been processed through `through` (the ISO time of the last message processed), for `scope` (`content` or `style`), and/or that it was last read at `checked` (ISO time; a quiet channel has no new message, so `through` cannot say it was looked at). Moving either back needs `force`.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -2247,6 +2278,13 @@ Record that a conversation has been processed through `through` (the ISO time of
 ### acquaint.tools.digest_new(entity, ref, , archive='correspond', data_dir=None)
 
 Create the digest of one conversation (`ref`, a correspond reference) for an entity, from the template: Orientation, Takeaways, Themes, Index, Open threads, and an empty watermark. `archive` names where the messages themselves live (never this store).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### acquaint.tools.digest_sweep(entity, channel, , checked, refs=None, archive='correspond', force=False, data_dir=None)
+
+Record a sweep of a channel (`slack`, `whatsapp`, …): stamp `checked` (ISO time with an offset, when the sweep read them) on the digests it read, quiet ones included. With `refs` (conversation references `<channel>:...`, one per item or comma-separated) exactly those are stamped, each created first if it has none; without, every digest of the channel is. A digest checked later keeps that later time (see `kept_later`). `digest` then reports `swept`: the oldest `checked` per channel.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -2569,7 +2607,7 @@ True
 
 # About this build
 
-This documentation was built on **2026-11-16 05:58 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/6abba8a6ca2c233cbae0492c445da26e1faaef0e"><code>6abba8a</code></a> on branch <code>main</code>, for **acquaint 0.0.25** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 06:08 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/c8c49dabcad4e91a8cca1845ed45b88a520595ff"><code>c8c49da</code></a> on branch <code>main</code>, for **acquaint 0.0.26** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -2578,7 +2616,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                            |
 |---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/6abba8a6ca2c233cbae0492c445da26e1faaef0e"><code>6abba8a6ca2c233cbae0492c445da26e1faaef0e</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/c8c49dabcad4e91a8cca1845ed45b88a520595ff"><code>c8c49dabcad4e91a8cca1845ed45b88a520595ff</code></a> |
 | Branch              | <code>main</code>                                                                                                                                          |
 | Tags at this commit | none                                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                      |
@@ -2589,9 +2627,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/acquaint</code>                                                           |
-| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43813453471">43813453471</a>  |
+| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43814570992">43814570992</a>  |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>6abba8a6ca2c233cbae0492c445da26e1faaef0e</code> (in the history of the built commit) |
+| Event commit | <code>c8c49dabcad4e91a8cca1845ed45b88a520595ff</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2616,13 +2654,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/acquaint/0.0.25/">0.0.25</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/acquaint/0.0.26/">0.0.26</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/acquaint && cd acquaint
-git checkout 6abba8a6ca2c233cbae0492c445da26e1faaef0e
+git checkout c8c49dabcad4e91a8cca1845ed45b88a520595ff
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

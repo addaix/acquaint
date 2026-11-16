@@ -21,6 +21,8 @@ acquaint.digests
       digests
       find_digest
       mark_digest
+      sweep_digests
+      swept
       new_digest
       parse_rows
    

@@ -106,6 +106,8 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#acquaint.digests.mark_digest"><code class="docutils literal notranslate"><span class="pre">mark_digest()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.digests.new_digest"><code class="docutils literal notranslate"><span class="pre">new_digest()</span></code></a></li>
 <li><a class="reference internal" href="#acquaint.digests.parse_rows"><code class="docutils literal notranslate"><span class="pre">parse_rows()</span></code></a></li>
+<li><a class="reference internal" href="#acquaint.digests.sweep_digests"><code class="docutils literal notranslate"><span class="pre">sweep_digests()</span></code></a></li>
+<li><a class="reference internal" href="#acquaint.digests.swept"><code class="docutils literal notranslate"><span class="pre">swept()</span></code></a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -156,9 +158,14 @@ frontmatter is the state of the processing, and its body is the notes:</p>
 </span><span data-line="4"><span class="nt">through</span><span class="p">:</span><span class="w">                          </span><span class="c1"># the watermark, per scope: processed up to this time</span>
 </span><span data-line="5"><span class="w">  </span><span class="nt">content</span><span class="p">:</span><span class="w"> </span><span class="s">'2026-11-03T19:37:47+01:00'</span>
 </span><span data-line="6"><span class="w">  </span><span class="nt">style</span><span class="p">:</span><span class="w"> </span><span class="s">'2026-06-21T19:27:45+02:00'</span>
-</span><span data-line="7"><span class="nt">updated</span><span class="p">:</span><span class="w"> </span><span class="s">'2026-11-04'</span>
+</span><span data-line="7"><span class="nt">checked</span><span class="p">:</span><span class="w"> </span><span class="s">'2026-11-09T08:00:00+01:00'</span><span class="w">   </span><span class="c1"># when the conversation was last read, even if nothing new was in it</span>
+</span><span data-line="8"><span class="nt">updated</span><span class="p">:</span><span class="w"> </span><span class="s">'2026-11-04'</span>
 </span></pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">checked</span></code> is not <code class="docutils literal notranslate"><span class="pre">through</span></code>: a channel read on a quiet day has no new message, so
+<code class="docutils literal notranslate"><span class="pre">through</span></code> cannot move, yet the next sweep must know it was looked at (<code class="docutils literal notranslate"><span class="pre">checked</span></code>).
+<a class="reference internal" href="#acquaint.digests.swept" title="acquaint.digests.swept"><code class="xref py py-func docutils literal notranslate"><span class="pre">swept()</span></code></a> gives, per channel, the oldest <code class="docutils literal notranslate"><span class="pre">checked</span></code> of its digests: “when did we last
+read Slack for this entity?” without reading each file.</p>
 <p><code class="docutils literal notranslate"><span class="pre">through</span></code> answers “from which date and time is this conversation new?”: hand it to
 <code class="docutils literal notranslate"><span class="pre">correspond</span> <span class="pre">read</span> <span class="pre">&lt;ref&gt;</span> <span class="pre">--since</span> <span class="pre">&lt;through&gt;</span></code> to get what has not been processed. Two scopes
 exist because a conversation can be mined for how someone writes (<code class="docutils literal notranslate"><span class="pre">style</span></code>, the
@@ -208,8 +215,14 @@ bodies).</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.digests.find_digest" title="acquaint.digests.find_digest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_digest</span></code></a>(entity, ref)</p></td>
 <td><p>The digest of one conversation, found by the <code class="docutils literal notranslate"><span class="pre">ref</span></code> in its frontmatter (else by file name).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#acquaint.digests.mark_digest" title="acquaint.digests.mark_digest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mark_digest</span></code></a>(entity, ref, through, *[, ...])</p></td>
-<td><p>Move the watermark of <code class="docutils literal notranslate"><span class="pre">scope</span></code> to <code class="docutils literal notranslate"><span class="pre">through</span></code>.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#acquaint.digests.mark_digest" title="acquaint.digests.mark_digest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mark_digest</span></code></a>(entity, ref[, through, checked, ...])</p></td>
+<td><p>Move the watermark of <code class="docutils literal notranslate"><span class="pre">scope</span></code> to <code class="docutils literal notranslate"><span class="pre">through</span></code>, and/or record when the conversation was last read (<code class="docutils literal notranslate"><span class="pre">checked</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.digests.sweep_digests" title="acquaint.digests.sweep_digests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sweep_digests</span></code></a>(entity, channel, checked, *[, ...])</p></td>
+<td><p>Stamp <code class="docutils literal notranslate"><span class="pre">checked</span></code> on the digests of <code class="docutils literal notranslate"><span class="pre">channel</span></code> that a sweep read, creating those that do not exist yet.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#acquaint.digests.swept" title="acquaint.digests.swept"><code class="xref py py-obj docutils literal notranslate"><span class="pre">swept</span></code></a>(entity)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{channel:</span> <span class="pre">oldest</span> <span class="pre">checked</span> <span class="pre">time}</span></code> over the entity's digests; <code class="docutils literal notranslate"><span class="pre">None</span></code> when one of the channel's digests was never (validly) checked.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.digests.new_digest" title="acquaint.digests.new_digest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">new_digest</span></code></a>(entity, ref, *[, archive, today])</p></td>
 <td><p>Create the digest of <code class="docutils literal notranslate"><span class="pre">ref</span></code> from its template, with no watermark yet.</p></td>
@@ -299,8 +312,8 @@ in the same write (<code class="docutils literal notranslate"><span class="pre">
 
 <dl class="py function">
 <dt class="sig sig-object py" id="acquaint.digests.mark_digest">
-<span class="sig-prename descclassname"><span class="pre">acquaint.digests.</span></span><span class="sig-name descname"><span class="pre">mark_digest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">through</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'content'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">today</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/digests.html#mark_digest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.digests.mark_digest" title="Link to this definition">#</a></dt>
-<dd><p>Move the watermark of <code class="docutils literal notranslate"><span class="pre">scope</span></code> to <code class="docutils literal notranslate"><span class="pre">through</span></code>. Moving it back needs <code class="docutils literal notranslate"><span class="pre">force</span></code>.</p>
+<span class="sig-prename descclassname"><span class="pre">acquaint.digests.</span></span><span class="sig-name descname"><span class="pre">mark_digest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">through</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">checked</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'content'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">today</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/digests.html#mark_digest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.digests.mark_digest" title="Link to this definition">#</a></dt>
+<dd><p>Move the watermark of <code class="docutils literal notranslate"><span class="pre">scope</span></code> to <code class="docutils literal notranslate"><span class="pre">through</span></code>, and/or record when the conversation was last read (<code class="docutils literal notranslate"><span class="pre">checked</span></code>). Moving either back needs <code class="docutils literal notranslate"><span class="pre">force</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
@@ -334,6 +347,34 @@ in the same write (<code class="docutils literal notranslate"><span class="pre">
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="acquaint.digests.sweep_digests">
+<span class="sig-prename descclassname"><span class="pre">acquaint.digests.</span></span><span class="sig-name descname"><span class="pre">sweep_digests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checked</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">refs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">archive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'correspond'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">today</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/digests.html#sweep_digests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.digests.sweep_digests" title="Link to this definition">#</a></dt>
+<dd><p>Stamp <code class="docutils literal notranslate"><span class="pre">checked</span></code> on the digests of <code class="docutils literal notranslate"><span class="pre">channel</span></code> that a sweep read, creating those that do not exist yet.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">refs</span></code> (conversation references <code class="docutils literal notranslate"><span class="pre">&lt;channel&gt;:…</span></code>) exactly those are stamped, each
+created first when missing; without, every digest of the channel is (the sweep read the
+whole channel kind). A digest already checked later keeps that later time (unless
+<code class="docutils literal notranslate"><span class="pre">force</span></code>), so a sweep never fails halfway: every check is made before anything is written.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="acquaint.digests.swept">
+<span class="sig-prename descclassname"><span class="pre">acquaint.digests.</span></span><span class="sig-name descname"><span class="pre">swept</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/digests.html#swept"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.digests.swept" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">{channel:</span> <span class="pre">oldest</span> <span class="pre">checked</span> <span class="pre">time}</span></code> over the entity’s digests; <code class="docutils literal notranslate"><span class="pre">None</span></code> when one of the channel’s digests was never (validly) checked.</p>
+<p>The oldest, because a sweep is only as complete as its least-recently-read conversation.
+Digests without a <code class="docutils literal notranslate"><span class="pre">&lt;channel&gt;:&lt;id&gt;</span></code> reference are not counted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -380,7 +421,7 @@ in the same write (<code class="docutils literal notranslate"><span class="pre">
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=5d650c58"></script>
+      <script src="../_static/documentation_options.js?v=6a9d8632"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

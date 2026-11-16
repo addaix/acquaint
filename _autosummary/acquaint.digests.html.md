@@ -13,8 +13,14 @@ archive: correspond               # where the raw messages live (never this stor
 through:                          # the watermark, per scope: processed up to this time
   content: '2026-11-03T19:37:47+01:00'
   style: '2026-06-21T19:27:45+02:00'
+checked: '2026-11-09T08:00:00+01:00'   # when the conversation was last read, even if nothing new was in it
 updated: '2026-11-04'
 ```
+
+`checked` is not `through`: a channel read on a quiet day has no new message, so
+`through` cannot move, yet the next sweep must know it was looked at (`checked`).
+[`swept()`](#acquaint.digests.swept) gives, per channel, the oldest `checked` of its digests: “when did we last
+read Slack for this entity?” without reading each file.
 
 `through` answers “from which date and time is this conversation new?”: hand it to
 `correspond read <ref> --since <through>` to get what has not been processed. Two scopes
@@ -44,15 +50,17 @@ bodies).
 
 ### Functions
 
-| [`append_batch`](#acquaint.digests.append_batch)(entity, ref, \*, heading, rows)   | Add a dated batch (`### heading`) at the end of each named section of a digest, in one write.                                 |
-|-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| [`digest_name`](#acquaint.digests.digest_name)(ref)                               | The digest's file name inside the entity's folder, derived from the reference.                                                |
-| [`digest_problems`](#acquaint.digests.digest_problems)(text)                          | `(severity, line, rule, message)` for one digest file: frontmatter shape, unanchored items, long quotes.                      |
-| [`digests`](#acquaint.digests.digests)(entity)                                | Every digest of the entity: its reference, file and watermarks.                                                               |
-| [`find_digest`](#acquaint.digests.find_digest)(entity, ref)                       | The digest of one conversation, found by the `ref` in its frontmatter (else by file name).                                    |
-| [`mark_digest`](#acquaint.digests.mark_digest)(entity, ref, through, \*[, ...])   | Move the watermark of `scope` to `through`.                                                                                   |
-| [`new_digest`](#acquaint.digests.new_digest)(entity, ref, \*[, archive, today])  | Create the digest of `ref` from its template, with no watermark yet.                                                          |
-| [`parse_rows`](#acquaint.digests.parse_rows)(rows)                               | `{section: [line, ...]}` from a mapping, JSON text, or `section | line | anchor` rows (one per line; the anchor is optional). |
+| [`append_batch`](#acquaint.digests.append_batch)(entity, ref, \*, heading, rows)       | Add a dated batch (`### heading`) at the end of each named section of a digest, in one write.                                     |
+|-----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| [`digest_name`](#acquaint.digests.digest_name)(ref)                                   | The digest's file name inside the entity's folder, derived from the reference.                                                    |
+| [`digest_problems`](#acquaint.digests.digest_problems)(text)                              | `(severity, line, rule, message)` for one digest file: frontmatter shape, unanchored items, long quotes.                          |
+| [`digests`](#acquaint.digests.digests)(entity)                                    | Every digest of the entity: its reference, file and watermarks.                                                                   |
+| [`find_digest`](#acquaint.digests.find_digest)(entity, ref)                           | The digest of one conversation, found by the `ref` in its frontmatter (else by file name).                                        |
+| [`mark_digest`](#acquaint.digests.mark_digest)(entity, ref[, through, checked, ...])  | Move the watermark of `scope` to `through`, and/or record when the conversation was last read (`checked`).                        |
+| [`sweep_digests`](#acquaint.digests.sweep_digests)(entity, channel, checked, \*[, ...]) | Stamp `checked` on the digests of `channel` that a sweep read, creating those that do not exist yet.                              |
+| [`swept`](#acquaint.digests.swept)(entity)                                      | `{channel: oldest checked time}` over the entity's digests; `None` when one of the channel's digests was never (validly) checked. |
+| [`new_digest`](#acquaint.digests.new_digest)(entity, ref, \*[, archive, today])      | Create the digest of `ref` from its template, with no watermark yet.                                                              |
+| [`parse_rows`](#acquaint.digests.parse_rows)(rows)                                   | `{section: [line, ...]}` from a mapping, JSON text, or `section | line | anchor` rows (one per line; the anchor is optional).     |
 
 ### acquaint.digests.ANCHORED_SECTIONS *= ('Takeaways', 'Themes', 'Index', 'Open threads')*
 
@@ -106,9 +114,9 @@ The digest of one conversation, found by the `ref` in its frontmatter (else by f
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### acquaint.digests.mark_digest(entity, ref, through, , scope='content', force=False, today=None)
+### acquaint.digests.mark_digest(entity, ref, through=None, , checked=None, scope='content', force=False, today=None)
 
-Move the watermark of `scope` to `through`. Moving it back needs `force`.
+Move the watermark of `scope` to `through`, and/or record when the conversation was last read (`checked`). Moving either back needs `force`.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -135,3 +143,25 @@ Create the digest of `ref` from its template, with no watermark yet. Refuses whe
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
+
+### acquaint.digests.sweep_digests(entity, channel, checked, , refs=(), archive='correspond', force=False, today=None)
+
+Stamp `checked` on the digests of `channel` that a sweep read, creating those that do not exist yet.
+
+With `refs` (conversation references `<channel>:…`) exactly those are stamped, each
+created first when missing; without, every digest of the channel is (the sweep read the
+whole channel kind). A digest already checked later keeps that later time (unless
+`force`), so a sweep never fails halfway: every check is made before anything is written.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### acquaint.digests.swept(entity)
+
+`{channel: oldest checked time}` over the entity’s digests; `None` when one of the channel’s digests was never (validly) checked.
+
+The oldest, because a sweep is only as complete as its least-recently-read conversation.
+Digests without a `<channel>:<id>` reference are not counted.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)]

@@ -21,6 +21,7 @@ acquaint.tools
       digest_append
       digest_mark
       digest_new
+      digest_sweep
       disclosure
       forget
       lint
