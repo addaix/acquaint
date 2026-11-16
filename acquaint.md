@@ -1,4 +1,4 @@
-> built 2026-11-16 04:41 UTC from 9fa6d88 (main) · acquaint 0.0.20. Details: build_info.json
+> built 2026-11-16 04:52 UTC from 882803f (main) · acquaint 0.0.21. Details: build_info.json
 
 # index.html.md
 
@@ -1974,17 +1974,52 @@ yet: the guard does not recognise its internal push, so `init` refuses `gcrypt::
 Every `git` and `gh` call goes through `run`, so tests can script `gh` while
 `git` runs for real.
 
+### Module Attributes
+
+| [`ACQUAINT`](_autosummary/acquaint.sync.html.md#acquaint.sync.ACQUAINT)   | acquaint's own store.   |
+|-------------------------------------------------------------|-------------------------|
+
 ### Functions
 
 | [`github_urls`](_autosummary/acquaint.sync.html.md#acquaint.sync.github_urls)(repo)                               | Every remote URL accepted for a GitHub repository.                                                                                                                        |
 |--------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`init`](_autosummary/acquaint.sync.html.md#acquaint.sync.init)(root, repo, \*[, remote_url, create, ...]) | Make `root` a checkout of the private GitHub repository `repo`, creating it (private) if needed.                                                                          |
-| [`pull`](_autosummary/acquaint.sync.html.md#acquaint.sync.pull)(root, \*[, dry_run, run])                  | Re-check the remote and its visibility, then rebase local work onto it (uncommitted edits are stashed and restored).                                                      |
+| [`pull`](_autosummary/acquaint.sync.html.md#acquaint.sync.pull)(root, \*[, dry_run, namespace, run])       | Re-check the remote and its visibility, then rebase local work onto it (uncommitted edits are stashed and restored).                                                      |
 | [`push`](_autosummary/acquaint.sync.html.md#acquaint.sync.push)(root, \*[, message, entities, ...])        | Commit, rebase onto the remote, and push, after re-checking the remote, the guard and the visibility.                                                                     |
 | [`run_command`](_autosummary/acquaint.sync.html.md#acquaint.sync.run_command)(args, \*[, cwd])                    | Run `git` or `gh` (`gh` pinned to github.com), capturing text output.                                                                                                     |
 | [`sole_access`](_autosummary/acquaint.sync.html.md#acquaint.sync.sole_access)(repo, \*[, run])                    | Whether only the repository's owner can read it, and why not: private, owned by a person (not an organisation), that person its only collaborator, no invitation pending. |
-| [`status`](_autosummary/acquaint.sync.html.md#acquaint.sync.status)(root, \*[, check_visibility, run])       | Whether the store is synced, where to, uncommitted changes, ahead/behind, the guard, and live visibility.                                                                 |
+| [`status`](_autosummary/acquaint.sync.html.md#acquaint.sync.status)(root, \*[, check_visibility, ...])       | Whether the store is synced, where to, uncommitted changes, ahead/behind, the guard, and live visibility.                                                                 |
 | [`visibility`](_autosummary/acquaint.sync.html.md#acquaint.sync.visibility)(repo, \*[, run])                     | `PRIVATE`, `PUBLIC` or `INTERNAL`, as `gh` reports it now for the repository on github.com.                                                                               |
+
+### Classes
+
+| [`SyncNamespace`](_autosummary/acquaint.sync.html.md#acquaint.sync.SyncNamespace)([name, command, subject, ...])   | Everything that names the application using this mechanism: one value, so another app can reuse it unchanged.   |
+|-------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+
+### acquaint.sync.ACQUAINT *= SyncNamespace(name='acquaint', command='acquaint sync', subject='profile data', store='profile', description='acquaint profile store (private)', gitignore='# generated, never synced\\n_index/\\n.DS_Store\\n')*
+
+acquaint’s own store.
+
+* **Type:**
+  The default
+
+### *class* acquaint.sync.SyncNamespace(name='acquaint', command='acquaint sync', subject='profile data', store='profile', description='acquaint profile store (private)', gitignore='# generated, never synced\\n_index/\\n.DS_Store\\n')
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+Everything that names the application using this mechanism: one value, so another app can reuse it unchanged.
+
+`name` prefixes the git config keys (`<name>.repo`, `<name>.remote`) and the
+default commit messages; `command` is what error messages tell the user to run
+(`<command> init`, `<command> push`); `subject` is what the guard refuses to push
+to a non-private repository (“profile data”).
+
+#### hook_text()
+
+The shipped pre-push guard with this namespace filled in.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### acquaint.sync.github_urls(repo)
 
@@ -1998,21 +2033,21 @@ Every remote URL accepted for a GitHub repository. The pre-push hook spells out 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
-### acquaint.sync.init(root, repo, \*, remote_url=None, create=True, dry_run=False, run=<function run_command>)
+### acquaint.sync.init(root, repo, \*, remote_url=None, create=True, dry_run=False, namespace=SyncNamespace(name='acquaint', command='acquaint sync', subject='profile data', store='profile', description='acquaint profile store (private)', gitignore='# generated, never synced\\n_index/\\n.DS_Store\\n'), run=<function run_command>)
 
 Make `root` a checkout of the private GitHub repository `repo`, creating it (private) if needed.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
 
-### acquaint.sync.pull(root, \*, dry_run=False, run=<function run_command>)
+### acquaint.sync.pull(root, \*, dry_run=False, namespace=SyncNamespace(name='acquaint', command='acquaint sync', subject='profile data', store='profile', description='acquaint profile store (private)', gitignore='# generated, never synced\\n_index/\\n.DS_Store\\n'), run=<function run_command>)
 
 Re-check the remote and its visibility, then rebase local work onto it (uncommitted edits are stashed and restored).
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
 
-### acquaint.sync.push(root, \*, message=None, entities=(), everything=False, dry_run=False, run=<function run_command>)
+### acquaint.sync.push(root, \*, message=None, entities=(), everything=False, dry_run=False, namespace=SyncNamespace(name='acquaint', command='acquaint sync', subject='profile data', store='profile', description='acquaint profile store (private)', gitignore='# generated, never synced\\n_index/\\n.DS_Store\\n'), run=<function run_command>)
 
 Commit, rebase onto the remote, and push, after re-checking the remote, the guard and the visibility.
 
@@ -2045,7 +2080,7 @@ reviewing the diff first: nobody else will see them.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
-### acquaint.sync.status(root, \*, check_visibility=True, run=<function run_command>)
+### acquaint.sync.status(root, \*, check_visibility=True, namespace=SyncNamespace(name='acquaint', command='acquaint sync', subject='profile data', store='profile', description='acquaint profile store (private)', gitignore='# generated, never synced\\n_index/\\n.DS_Store\\n'), run=<function run_command>)
 
 Whether the store is synced, where to, uncommitted changes, ahead/behind, the guard, and live visibility.
 
@@ -2498,16 +2533,18 @@ True
 
 # About this build
 
-This documentation was built on **2026-11-16 04:41 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/9fa6d88a2c5ef933023f93691a7725213243d6fc"><code>9fa6d88</code></a> on branch <code>main</code>, for **acquaint 0.0.20** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 04:52 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/882803fdcb4c3cc84f6112a65c0f9e27736cf91e"><code>882803f</code></a> on branch <code>main</code>, for **acquaint 0.0.21** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.21) is behind the latest release on PyPI (0.0.22): `pip install acquaint` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                            |
 |---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/9fa6d88a2c5ef933023f93691a7725213243d6fc"><code>9fa6d88a2c5ef933023f93691a7725213243d6fc</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/882803fdcb4c3cc84f6112a65c0f9e27736cf91e"><code>882803fdcb4c3cc84f6112a65c0f9e27736cf91e</code></a> |
 | Branch              | <code>main</code>                                                                                                                                          |
 | Tags at this commit | none                                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                      |
@@ -2518,9 +2555,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/acquaint</code>                                                           |
-| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43805369576">43805369576</a>  |
+| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43806561206">43806561206</a>  |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>9fa6d88a2c5ef933023f93691a7725213243d6fc</code> (in the history of the built commit) |
+| Event commit | <code>882803fdcb4c3cc84f6112a65c0f9e27736cf91e</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2545,13 +2582,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/acquaint/0.0.20/">0.0.20</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/acquaint/0.0.22/">0.0.22</a>, newer than the documented version (0.0.21).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/acquaint && cd acquaint
-git checkout 9fa6d88a2c5ef933023f93691a7725213243d6fc
+git checkout 882803fdcb4c3cc84f6112a65c0f9e27736cf91e
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

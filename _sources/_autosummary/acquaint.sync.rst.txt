@@ -4,6 +4,12 @@ acquaint.sync
 .. automodule:: acquaint.sync
 
    
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      ACQUAINT
+   
    .. rubric:: Functions
 
    .. autosummary::
@@ -16,4 +22,10 @@ acquaint.sync
       sole_access
       status
       visibility
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      SyncNamespace
    
