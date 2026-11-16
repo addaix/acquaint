@@ -25,7 +25,7 @@ acquaint sync init --repo <owner>/<name>
 ```bash
 acquaint sync status     # synced? uncommitted changes, ahead/behind, hook intact, live visibility
 acquaint sync push <id> ...   # commit only those records (and _tombstones.yaml, only when one of them is a deleted record), rebase, push; other sessions' uncommitted records stay put
-acquaint sync push -m "..."  # commit everything; refused when the message leaves a changed record unnamed (--all overrides)
+acquaint sync push -m "..."  # commit everything; refused when the message leaves a changed record unnamed (--all overrides); a file holding a full conflict block is refused unless `--allow-markers <path>` names it (a record that quotes one on purpose)
 acquaint sync pull       # rebase local work onto the remote
 ```
 

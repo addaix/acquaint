@@ -44,7 +44,7 @@ import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from acquaint.edit import TOMBSTONES
@@ -291,37 +291,50 @@ def _configured(root: Path, run: Runner, ns: SyncNamespace) -> tuple[str, str]:
 _MARKER_PATTERNS = (r"^<{7}( |$)", r"^={7}$", r"^>{7}( |$)")
 
 
-def _conflicted(root: Path, run: Runner, *, markers: bool = True, allow: Sequence[str] = ()) -> list[str]:
-    """Paths left unresolved in the working tree: unmerged index entries, and (with ``markers``) text files that still hold conflict markers, except the ``allow``ed paths (an unmerged entry is never allowed)."""
-    unmerged = _lines(
-        root, run, "-c", "core.quotePath=false", "diff", "--name-only", "--diff-filter=U"
-    )
-    if not markers:
+def _git_z(root: Path, run: Runner, *args: str, ok: tuple[int, ...] = (0,), what: str) -> list[str]:
+    """NUL-separated output of a git command, so any file name comes back exactly (git quotes odd names otherwise)."""
+    done = run(["git", *args], cwd=root)
+    if done.returncode not in ok:
+        raise AcquaintError(f"{what} failed: {(done.stderr or '').strip()}")
+    return [p for p in (done.stdout or "").split("\0") if p]
+
+
+def _conflicted(
+    root: Path,
+    run: Runner,
+    *,
+    markers: bool = True,
+    allow: Sequence[str] = (),
+    paths: Sequence[str] | None = None,
+) -> list[str]:
+    """Paths left unresolved in the working tree: unmerged index entries (never allowed), and with ``markers`` text files holding conflict markers.
+
+    The marker scan covers the whole tree, or only ``paths`` (what a push is about to
+    commit, so a record committed earlier with a quoted block is not re-judged on every
+    push); ``allow``ed paths are let through.
+    """
+    unmerged = _git_z(root, run, "diff", "--name-only", "-z", "--diff-filter=U", what="listing unmerged files")
+    if not markers or paths == []:
         return sorted(unmerged)
     grep = [e for pattern in _MARKER_PATTERNS for e in ("-e", pattern)]
-    found = run(
-        [
-            "git",
-            "-c",
-            "core.quotePath=false",
-            "grep",
-            "--untracked",
-            "-I",
-            "-l",
-            "--all-match",
-            "-E",
-            *grep,
-        ],
-        cwd=root,
+    scan = ["--", *paths] if paths else []
+    found = _git_z(
+        root,
+        run,
+        "--literal-pathspecs",
+        "grep",
+        "--untracked",
+        "-I",
+        "-l",
+        "-z",
+        "--all-match",
+        "-E",
+        *grep,
+        *scan,
+        ok=(0, 1),  # 1 is "no match"; anything else means the scan itself failed
+        what=f"scanning {root} for conflict markers",
     )
-    if (
-        found.returncode > 1
-    ):  # 1 is "no match"; anything else means the check itself failed
-        raise AcquaintError(
-            f"could not scan {root} for conflict markers: {(found.stderr or '').strip()}"
-        )
-    marked = [line for line in (found.stdout or "").splitlines() if line.strip() and line not in allow]
-    return sorted({*unmerged, *marked})
+    return sorted({*unmerged, *(p for p in found if p not in allow)})
 
 
 def _refuse_conflicts(
@@ -331,13 +344,28 @@ def _refuse_conflicts(
     doing: str,
     markers: bool = True,
     allow: Sequence[str] = (),
+    paths: Sequence[str] | None = None,
 ) -> None:
-    paths = _conflicted(root, run, markers=markers, allow=allow)
-    if paths:
+    found = _conflicted(root, run, markers=markers, allow=allow, paths=paths)
+    if found:
         raise AcquaintError(
-            f"refusing to {doing}: unresolved conflicts in {', '.join(paths)}. "
-            "Resolve them in the data root (a kept `git stash` may hold your edits), then try again"
+            f"refusing to {doing}: unresolved conflicts in {', '.join(found)}. "
+            "Resolve them in the data root (a kept `git stash` may hold your edits); "
+            "if a record quotes a conflict block on purpose, `sync push --allow-markers <path>` lets that file through"
         )
+
+
+def _allowed(root: Path, allow: Sequence[str]) -> frozenset[str]:
+    """``allow`` as store-relative POSIX paths of existing files; refuses anything else (it is a safety bypass, so a typo must not pass quietly)."""
+    if isinstance(allow, str):
+        raise AcquaintError("allow_markers is a list of paths, not one string")
+    paths = set()
+    for entry in allow:
+        name = PurePosixPath(entry.replace("\\", "/")).as_posix()
+        if not (root / name).is_file():
+            raise AcquaintError(f"--allow-markers {entry!r}: no such file in the store (a store-relative path like people/ada-lovelace/PROFILE.md, or a record id taken for a path?)")
+        paths.add(name)
+    return frozenset(paths)
 
 
 def _hook_path(root: Path, run: Runner) -> Path:
@@ -665,6 +693,7 @@ def push(
     root = Path(root)
     repo, remote = _configured(root, run, namespace)
     scoped = bool(entities)
+    allowed = _allowed(root, allow_markers)
     plan = _plan(root, run, _record_folders(root, run, entities), message)
     unnamed = [] if everything else plan["unnamed"]
     if dry_run:
@@ -674,7 +703,7 @@ def push(
             "would_commit": len(plan["changed"]),
             "entities": plan["entities"],
             "unnamed_in_message": unnamed,
-            "conflicted": _conflicted(root, run, allow=allow_markers),
+            "conflicted": _conflicted(root, run, allow=allowed, paths=plan["changed"]),
         }
     if unnamed:
         raise AcquaintError(
@@ -688,7 +717,7 @@ def push(
         )
     _require_private(repo, run, namespace)
     _refuse_conflicts(
-        root, run, doing="commit and push", allow=allow_markers
+        root, run, doing="commit and push", allow=allowed, paths=plan["changed"]
     )  # nothing is unresolved from here on, so anything after is new
     if plan["changed"]:
         _commit(root, run, plan, message=message, scoped=scoped, ns=namespace)

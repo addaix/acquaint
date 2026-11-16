@@ -629,3 +629,45 @@ def test_a_record_that_quotes_a_conflict_block_can_be_allowed_by_path(store_root
     assert sync.push(store_root, allow_markers=[quote, "people/ada-lovelace/other.md"], run=gh)["pushed"]
     assert quote in _pushed_files(github[URL])
     assert sync.pull(store_root, run=gh)["pulled"], "a committed quote does not block a pull"
+
+
+@posix_only
+def test_allow_markers_is_checked_and_a_quote_is_judged_once(store_root, github, scripted_gh):
+    gh = FakeGh()
+    sync.init(store_root, REPO, run=gh)
+    quote = "people/ada-lovelace/quote.md"
+    (store_root / quote).write_text("```\n<<<<<<< HEAD\nx\n=======\ny\n>>>>>>> topic\n```\n")
+    for bad in ("people/ada-lovelace/typo.md", "person:ada-lovelace", "people/ada-lovelace"):
+        with pytest.raises(AcquaintError, match="no such file in the store"):
+            sync.push(store_root, allow_markers=[bad], run=gh)
+    with pytest.raises(AcquaintError, match="list of paths"):
+        sync.push(store_root, allow_markers=quote, run=gh)
+    assert sync.push(store_root, allow_markers=["./" + quote], run=gh)["pushed"]
+    # committed, so the next push is not re-judged and needs no flag; neither does a scoped push beside a marked file
+    (store_root / "people" / "ada-lovelace" / "PROFILE.md").write_text("---\nname: Ada Lovelace\nnote: x\n---\n")
+    assert sync.push(store_root, run=gh)["pushed"]
+    # a marked file in another record does not block a scoped push of this one
+    (store_root / "people" / "grace-example").mkdir()
+    (store_root / "people" / "grace-example" / "PROFILE.md").write_text("<<<<<<< a\n=======\n>>>>>>> b\n")
+    (store_root / "people" / "ada-lovelace" / "PROFILE.md").write_text("---\nname: Ada Lovelace\nnote: y\n---\n")
+    assert sync.push(store_root, entities=["people/ada-lovelace"], run=gh)["entities"] == ["people/ada-lovelace"]
+    with pytest.raises(AcquaintError, match="grace-example/PROFILE.md"):
+        sync.push(store_root, run=gh)
+
+
+@posix_only
+def test_an_allowed_path_that_is_unmerged_still_refuses(tmp_path, store_root, github, scripted_gh):
+    gh = FakeGh()
+    sync.init(store_root, REPO, run=gh)
+    profile = store_root / "people" / "ada-lovelace" / "PROFILE.md"
+    other = tmp_path / "other-clone"
+    assert _git("clone", "-q", "--branch", "main", URL, str(other)).returncode == 0
+    (other / "people" / "ada-lovelace" / "PROFILE.md").write_text("---\nname: Ada Lovelace\naka: [Remote]\n---\n")
+    _git("commit", "-aqm", "remote", cwd=other)
+    assert _git("push", "-q", "origin", "main", cwd=other).returncode == 0
+    profile.write_text("---\nname: Ada Lovelace\naka: [Local]\n---\n")
+    with pytest.raises(AcquaintError):
+        sync.pull(store_root, run=gh)  # autostash conflict: unmerged
+    name = "people/ada-lovelace/PROFILE.md"
+    with pytest.raises(AcquaintError, match="unresolved conflicts"):
+        sync.push(store_root, allow_markers=[name], run=gh)
