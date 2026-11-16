@@ -1,4 +1,4 @@
-> built 2026-11-16 13:17 UTC from b79df89 (main) · acquaint 0.0.29. Details: build_info.json
+> built 2026-11-16 13:47 UTC from 4ac3d55 (main) · acquaint 0.0.30. Details: build_info.json
 
 # index.html.md
 
@@ -2710,18 +2710,16 @@ True
 
 # About this build
 
-This documentation was built on **2026-11-16 13:17 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/b79df894f12780b798946e632d37338072693cc8"><code>b79df89</code></a> on branch <code>main</code>, for **acquaint 0.0.29** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 13:47 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/4ac3d55c65742fb20a92f4509d1d88502142f98e"><code>4ac3d55</code></a> on branch <code>main</code>, for **acquaint 0.0.30** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.29) is behind the latest release on PyPI (0.0.30): `pip install acquaint` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                            |
 |---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/b79df894f12780b798946e632d37338072693cc8"><code>b79df894f12780b798946e632d37338072693cc8</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/4ac3d55c65742fb20a92f4509d1d88502142f98e"><code>4ac3d55c65742fb20a92f4509d1d88502142f98e</code></a> |
 | Branch              | <code>main</code>                                                                                                                                          |
 | Tags at this commit | none                                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                      |
@@ -2732,9 +2730,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/acquaint</code>                                                           |
-| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43874021042">43874021042</a>  |
+| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/43878920366">43878920366</a>  |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>b79df894f12780b798946e632d37338072693cc8</code> (in the history of the built commit) |
+| Event commit | <code>4ac3d55c65742fb20a92f4509d1d88502142f98e</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2759,13 +2757,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/acquaint/0.0.30/">0.0.30</a>, newer than the documented version (0.0.29).
+Latest release: <a href="https://pypi.org/project/acquaint/0.0.30/">0.0.30</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/acquaint && cd acquaint
-git checkout b79df894f12780b798946e632d37338072693cc8
+git checkout 4ac3d55c65742fb20a92f4509d1d88502142f98e
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
@@ -2849,7 +2847,7 @@ Source: [`acquaint/data/skills/acquaint-sync`](https://github.com/thorwhalen/acq
 
 ### `acquaint-write`
 
-Write, edit or review anything a specific person will read — an email, a reply, a chat message, an issue or PR comment, a pitch, a document — using that person’s acquaint record; spar with a simulated version of them to stress-test a draft or an idea; and rate how they are likely to receive a recommended decision. Use when asked to “write to X”, “reply to X”, “draft this for X”, “how should I put this to X”, “would X like this”, “red-team this against X”, “argue with me as X”, “would X approve this”, “would X disagree”, “rate this decision against X’s record”, or whenever the reader of a draft is a known person. Runs acquaint brief, check and style-lint, applies deslop, and keeps the operator’s voice and positions.
+Write, edit or review anything a specific person will read — an email, a reply, a chat message, an issue or PR comment, a pitch, a document — using that person’s acquaint record; spar with a simulated version of them to stress-test a draft or an idea; and rate how they are likely to receive a recommended decision. Use when asked to “write to X”, “reply to X”, “draft this for X”, “how should I put this to X”, “would X like this”, “red-team this against X”, “argue with me as X”, “would X approve this”, “would X disagree”, “rate this decision against X’s record”, “reply on Slack”, “post this in the thread”, “tell the team”, or whenever the reader of a draft is a known person. Runs acquaint brief, check and style-lint, applies deslop, and keeps the operator’s voice and positions.
 
 ```bash
 gh skill install thorwhalen/acquaint acquaint-write --agent claude-code

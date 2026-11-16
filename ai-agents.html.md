@@ -72,7 +72,7 @@ Source: [`acquaint/data/skills/acquaint-sync`](https://github.com/thorwhalen/acq
 
 ### `acquaint-write`
 
-Write, edit or review anything a specific person will read — an email, a reply, a chat message, an issue or PR comment, a pitch, a document — using that person’s acquaint record; spar with a simulated version of them to stress-test a draft or an idea; and rate how they are likely to receive a recommended decision. Use when asked to “write to X”, “reply to X”, “draft this for X”, “how should I put this to X”, “would X like this”, “red-team this against X”, “argue with me as X”, “would X approve this”, “would X disagree”, “rate this decision against X’s record”, or whenever the reader of a draft is a known person. Runs acquaint brief, check and style-lint, applies deslop, and keeps the operator’s voice and positions.
+Write, edit or review anything a specific person will read — an email, a reply, a chat message, an issue or PR comment, a pitch, a document — using that person’s acquaint record; spar with a simulated version of them to stress-test a draft or an idea; and rate how they are likely to receive a recommended decision. Use when asked to “write to X”, “reply to X”, “draft this for X”, “how should I put this to X”, “would X like this”, “red-team this against X”, “argue with me as X”, “would X approve this”, “would X disagree”, “rate this decision against X’s record”, “reply on Slack”, “post this in the thread”, “tell the team”, or whenever the reader of a draft is a known person. Runs acquaint brief, check and style-lint, applies deslop, and keeps the operator’s voice and positions.
 
 ```bash
 gh skill install thorwhalen/acquaint acquaint-write --agent claude-code
