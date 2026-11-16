@@ -195,3 +195,27 @@ def test_existing_unanchored_items_do_not_block_an_anchored_batch(store, put):
 
 def test_duplicate_section_keys_are_merged():
     assert parse_rows({"Index": ["a [source: x]"], "index:": ["b [source: y]"]}) == {"Index": ["a [source: x]", "b [source: y]"]}
+
+
+def test_the_splice_ignores_section_lines_inside_fences_and_comments(store, put):
+    ada = _ada(store, put)
+    name = find_digest(ada, REF)["file"]
+    ada[name] = ada[name].replace(
+        "## Takeaways",
+        "<!-- ## Takeaways -->\n```\n## Takeaways\n### w1\n## Index\n```\n## Takeaways",
+        1,
+    )
+    append_batch(ada, REF, heading="w1", rows={"Takeaways": ["x [source: y]"]})
+    text = ada[name]
+    assert text.rindex("- x [source: y]") > text.rindex("## Takeaways")
+    assert text.index("- x [source: y]") < text.index("## Themes")
+    assert text.index("```\n## Takeaways\n### w1\n## Index\n```") < text.index("- x [source: y]")
+    assert not [p for p in digest_problems(text) if p[0] == "error"]
+
+
+def test_the_file_ends_with_one_newline_and_sections_stay_separated(store, put):
+    ada = _ada(store, put)
+    append_batch(ada, REF, heading="w1", rows=BATCH)
+    text = ada[find_digest(ada, REF)["file"]]
+    assert text.endswith("\n") and not text.endswith("\n\n")
+    assert "\n\n## Themes" in text and "\n\n\n" not in text.split("---", 2)[2]
