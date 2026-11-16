@@ -88,8 +88,16 @@ class SyncNamespace:
     name: str = "acquaint"
     command: str = "acquaint sync"
     subject: str = "profile data"
+    store: str = "profile"
     description: str = "acquaint profile store (private)"
     gitignore: str = _GITIGNORE
+
+    def __post_init__(self) -> None:
+        if not re.fullmatch(r"[A-Za-z][A-Za-z0-9-]*", self.name):
+            raise AcquaintError(f"namespace name {self.name!r} must be letters, digits and '-' (it prefixes git config keys)")
+        for field in ("command", "subject", "store"):
+            if re.search(r"[\"`$\\\r\n]|__[A-Z]+__", getattr(self, field)):
+                raise AcquaintError(f"namespace {field} {getattr(self, field)!r} may not contain quotes, backticks, $, backslashes, line breaks or __TOKEN__s")
 
     @property
     def repo_key(self) -> str:
@@ -108,10 +116,8 @@ class SyncNamespace:
 
     def hook_text(self) -> str:
         """The shipped pre-push guard with this namespace filled in."""
-        text = data_text("hooks/pre-push")
-        for token, value in (("__NAME__", self.name), ("__COMMAND__", self.command), ("__SUBJECT__", self.subject)):
-            text = text.replace(token, value)
-        return text
+        values = {"NAME": self.name, "COMMAND": self.command, "SUBJECT": self.subject, "STORE": self.store}
+        return re.sub(r"__(NAME|COMMAND|SUBJECT|STORE)__", lambda m: values[m.group(1)], data_text("hooks/pre-push"))
 
 
 #: The default: acquaint's own store.
@@ -225,11 +231,11 @@ def sole_access(repo: str, *, run: Runner = run_command) -> tuple[bool, str]:
     return True, f"{repo} is private and {owner} is its only collaborator"
 
 
-def _require_private(repo: str, run: Runner) -> str:
+def _require_private(repo: str, run: Runner, ns: SyncNamespace = ACQUAINT) -> str:
     seen = visibility(repo, run=run)
     if seen != "PRIVATE":
         raise AcquaintError(
-            f"{repo} is {seen or 'of unknown visibility'}, not PRIVATE: refusing to put profile data in it"
+            f"{repo} is {seen or 'of unknown visibility'}, not PRIVATE: refusing to put {ns.subject} in it"
         )
     return seen
 
@@ -433,7 +439,7 @@ def init(
             ],
             what="creating the repository",
         )
-    seen = _require_private(repo, run)
+    seen = _require_private(repo, run, namespace)
     url = remote_url or _ok(
         run,
         ["gh", "repo", "view", repo, "--json", "sshUrl", "-q", ".sshUrl"],
@@ -613,14 +619,14 @@ def push(
     if unnamed:
         raise AcquaintError(
             f"the message does not name {', '.join(unnamed)}, which would be committed with it. "
-            "Name them, push only your own records (`sync push <id> ...`), or pass --all to commit everything"
+            "Name them, push only your own records (`{namespace.command} push <id> ...`), or pass --all to commit everything"
         )
     if not _hook_active(root, run, namespace):
         raise AcquaintError(
             f"the pre-push guard is not active in {root} (moved data root, a changed core.hooksPath, or a hook that is not executable); "
             f"run `{namespace.command} init --repo {repo} --existing-only` first"
         )
-    _require_private(repo, run)
+    _require_private(repo, run, namespace)
     _refuse_conflicts(root, run, doing="commit and push")  # nothing is unresolved from here on, so anything after is new
     if plan["changed"]:
         _commit(root, run, plan, message=message, scoped=scoped, ns=namespace)
@@ -662,7 +668,7 @@ def pull(
             "dry_run": True,
             "plan": [f"git pull --rebase --autostash origin {BRANCH}"],
         }
-    _require_private(repo, run)
+    _require_private(repo, run, namespace)
     _refuse_conflicts(root, run, doing="pull")
     _ok(
         run,

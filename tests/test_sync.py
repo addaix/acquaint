@@ -560,3 +560,27 @@ def test_a_namespace_names_its_own_commands_in_errors(store_root, github, script
     assert "acquaint sync init" in sync.status(store_root)["note"]
     assert "notes sync init" in sync.status(store_root, namespace=OTHER_APP)["note"]
     assert "acquaint.repo" in sync.ACQUAINT.hook_text()
+
+
+def test_the_default_namespace_renders_the_hook_every_existing_store_has_installed():
+    """Stores set up before the namespace existed hold this exact text; a changed byte would mark every guard inactive."""
+    from pathlib import Path
+
+    assert sync.ACQUAINT.hook_text() == (Path(__file__).parent / "pre_push_v1.sh").read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {"name": "my_app"},
+        {"name": "1app"},
+        {"subject": "$(touch x)"},
+        {"subject": 'a"; touch x; echo "'},
+        {"command": "app `sync`"},
+        {"store": "line\nbreak"},
+        {"subject": "__NAME__"},
+    ],
+)
+def test_a_namespace_cannot_carry_what_the_shell_or_git_would_misread(fields):
+    with pytest.raises(AcquaintError):
+        sync.SyncNamespace(**fields)
