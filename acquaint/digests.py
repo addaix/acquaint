@@ -35,7 +35,9 @@ bodies).
 
 from __future__ import annotations
 
+import json
 import re
+from collections.abc import Mapping, Sequence
 from string import Template
 from datetime import date, datetime
 from typing import Any
@@ -49,12 +51,14 @@ __all__ = [
     "DIGEST_DIR",
     "SCHEMA",
     "SCOPES",
+    "append_batch",
     "digest_name",
     "digest_problems",
     "digests",
     "find_digest",
     "mark_digest",
     "new_digest",
+    "parse_rows",
 ]
 
 DIGEST_DIR = "digests"
@@ -147,6 +151,34 @@ def new_digest(
     return _summary(entity, name)
 
 
+def _load(entity: Entity, ref: str) -> tuple[dict, dict, str]:
+    """``(summary, frontmatter, body)`` of the digest of ``ref``; raises when it is missing or its frontmatter is broken."""
+    found = find_digest(entity, ref)
+    if found is None:
+        raise AcquaintError(
+            f"{entity.key} has no digest of {ref}; create it first (acquaint digest-new {entity.slug} {ref})"
+        )
+    meta, body, errors = split_frontmatter(entity[found["file"]])
+    if errors:
+        raise AcquaintError(f"{found['path']}: {errors[0]}; fix the frontmatter by hand")
+    return found, meta, body
+
+
+def _moved_watermark(meta: dict, through: str, scope: str, force: bool) -> tuple[dict, Any]:
+    """``(marks, previous)``: the ``through`` mapping with ``scope`` moved to ``through``. Validates only; writes nothing."""
+    if scope not in SCOPES:
+        raise AcquaintError(f"scope is one of {', '.join(SCOPES)}, not {scope!r}")
+    through = _time(through, "through")
+    marks = dict(meta.get("through") or {})
+    previous = marks.get(scope)
+    if previous and _when(through) < _when(previous) and not force:
+        raise AcquaintError(
+            f"{scope} is already processed through {previous}; moving it back to {through} needs force"
+        )
+    marks[scope] = through
+    return marks, previous
+
+
 def mark_digest(
     entity: Entity,
     ref: str,
@@ -157,28 +189,151 @@ def mark_digest(
     today: str | None = None,
 ) -> dict:
     """Move the watermark of ``scope`` to ``through``. Moving it back needs ``force``."""
-    if scope not in SCOPES:
-        raise AcquaintError(f"scope is one of {', '.join(SCOPES)}, not {scope!r}")
-    through = _time(through, "through")
-    found = find_digest(entity, ref)
-    if found is None:
-        raise AcquaintError(
-            f"{entity.key} has no digest of {ref}; create it first (acquaint digest-new {entity.slug} {ref})"
-        )
-    meta, body, errors = split_frontmatter(entity[found["file"]])
-    if errors:
-        raise AcquaintError(f"{found['path']}: {errors[0]}; fix the frontmatter by hand")
-    marks = dict(meta.get("through") or {})
-    previous = marks.get(scope)
-    if previous and _when(through) < _when(previous) and not force:
-        raise AcquaintError(
-            f"{scope} is already processed through {previous}; moving it back to {through} needs force"
-        )
-    marks[scope] = through
-    meta["through"] = marks
+    found, meta, body = _load(entity, ref)
+    meta["through"], previous = _moved_watermark(meta, through, scope, force)
     meta["updated"] = today or date.today().isoformat()
     entity[found["file"]] = join_frontmatter(meta, body)
     return {**_summary(entity, found["file"]), "previous": previous}
+
+
+#: The sections a dated batch can go under: every section of the template, in order.
+BATCH_SECTIONS = ("Orientation", *ANCHORED_SECTIONS)
+
+
+#: What could hide or reveal other items from the lint's reading of the body.
+_HIDING_RE = re.compile(r"<!--|-->|```|~~~|[\r\n]")
+
+
+def _section(name: str) -> str:
+    for section in BATCH_SECTIONS:
+        if name.strip().rstrip(":").lower() == section.lower():
+            return section
+    raise AcquaintError(f"unknown section {name!r}; use {', '.join(BATCH_SECTIONS)}")
+
+
+def _lines_of(section: str, value: Any) -> list[str]:
+    if not isinstance(value, (list, tuple)) or not all(isinstance(x, str) for x in value):
+        raise AcquaintError(f"{section}: expected a list of lines, got {value!r}")
+    return [x.strip() for x in value if x.strip()]
+
+
+def _row_anchor(anchor: str) -> str:
+    """An anchor column as ``[at: …]``: a bare ISO time is wrapped, anything else is kept."""
+    try:
+        _time(anchor, "anchor")
+    except AcquaintError:
+        return anchor
+    return f"[at: {anchor}]"
+
+
+def parse_rows(rows: str | Mapping[str, Sequence[str]]) -> dict[str, list[str]]:
+    """``{section: [line, ...]}`` from a mapping, JSON text, or ``section | line | anchor`` rows (one per line; the anchor is optional).
+
+    >>> parse_rows("takeaways | Agreed to ship | [at: 2026-11-03T10:00:00Z]")
+    {'Takeaways': ['Agreed to ship [at: 2026-11-03T10:00:00Z]']}
+    >>> parse_rows("Index | Kickoff | 2026-11-03T10:00:00Z")
+    {'Index': ['Kickoff [at: 2026-11-03T10:00:00Z]']}
+    >>> parse_rows('{"Themes": ["Pricing [source: thread-1]"]}')
+    {'Themes': ['Pricing [source: thread-1]']}
+    """
+    if isinstance(rows, str) and rows.lstrip().startswith("{"):
+        try:
+            rows = json.loads(rows)
+        except json.JSONDecodeError as error:
+            raise AcquaintError(f"rows is not valid JSON: {error}") from error
+    if isinstance(rows, Mapping):
+        merged: dict[str, list[str]] = {}
+        for key, value in rows.items():
+            merged.setdefault(_section(key), []).extend(_lines_of(key, value))
+        return merged
+    if not isinstance(rows, str):
+        raise AcquaintError("rows must be a mapping {section: [line, ...]}, JSON text, or `section | line | anchor` rows")
+    found: dict[str, list[str]] = {}
+    for number, row in enumerate(rows.splitlines(), 1):
+        if not row.strip():
+            continue
+        cells = [cell.strip() for cell in row.split("|")]
+        if len(cells) < 2 or not (cells[0] and cells[1]):
+            raise AcquaintError(f"rows line {number}: expected `section | line | anchor`, got {row!r}")
+        # first cell the section, last the anchor, whatever is between is the line (it may hold a "|")
+        line, anchor = ("|".join(cells[1:-1]), cells[-1]) if len(cells) > 2 else (cells[1], "")
+        if anchor and not _ANCHOR_RE.search(line):
+            line = f"{line} {_row_anchor(anchor)}"
+        elif anchor:
+            line = f"{line} | {anchor}"
+        found.setdefault(_section(cells[0]), []).append(line)
+    return found
+
+
+def _append_under(body: str, section: str, heading: str, lines: Sequence[str]) -> str:
+    start = re.search(rf"^## {re.escape(section)}:?[ \t]*\r?$", body, re.M)
+    if start is None:
+        raise AcquaintError(f"the digest has no `## {section}` section")
+    following = re.search(r"^## ", body[start.end() :], re.M)
+    end = start.end() + following.start() if following else len(body)
+    if re.search(rf"^### {re.escape(heading)}[ \t]*\r?$", body[start.end() : end], re.M):
+        raise AcquaintError(f"`## {section}` already has a `### {heading}` batch")
+    items = "\n".join(f"- {line}" for line in lines)
+    kept = body[start.end() : end].rstrip("\r\n")
+    tail = "\n" if following else ""
+    return f"{body[: start.end()]}{kept}\n\n### {heading}\n\n{items}\n{tail}{body[end:]}"
+
+
+def _unanchored(body: str) -> int:
+    return sum(rule == "unanchored" for _, _, rule, _ in digest_problems(join_frontmatter({"ref": "x:y"}, body)))
+
+
+def append_batch(
+    entity: Entity,
+    ref: str,
+    *,
+    heading: str,
+    rows: str | Mapping[str, Sequence[str]],
+    through: str | None = None,
+    scope: str = "content",
+    force: bool = False,
+    today: str | None = None,
+) -> dict:
+    """Add a dated batch (``### heading``) at the end of each named section of a digest, in one write.
+
+    ``rows`` is ``{section: [line, ...]}``, JSON text of that, or ``section | line | anchor``
+    rows. Each line becomes one bullet and must be one line. Anything that would add an item
+    :func:`digest_problems` flags as unanchored under Takeaways, Themes, Index or Open threads
+    is refused, and then nothing is written. With ``through`` the watermark of ``scope`` moves
+    in the same write (``scope`` and ``force`` mean nothing without it).
+    """
+    heading = heading.strip().lstrip("#").strip()
+    if not heading or len(heading.splitlines()) != 1 or _HIDING_RE.search(heading):
+        raise AcquaintError("a batch needs a one-line heading, e.g. the date range it covers")
+    batch = {k: v for k, v in parse_rows(rows).items() if v}
+    if not batch:
+        raise AcquaintError("rows has no lines to add")
+    for section, lines in batch.items():
+        for line in lines:
+            if len(line.splitlines()) != 1 or _HIDING_RE.search(line):
+                raise AcquaintError(f"each line is one bullet, with no line break, comment or code fence in it: {line!r}")
+            if section in ANCHORED_SECTIONS and not _ANCHOR_RE.search(line):
+                raise AcquaintError(f"an item under {section} needs [at: <ISO time>] or [source: …]: {line!r}")
+    found, meta, body = _load(entity, ref)
+    before = _unanchored(body)
+    for section in BATCH_SECTIONS:  # template order, so the result does not depend on row order
+        if section in batch:
+            body = _append_under(body, section, heading, batch[section])
+    if _unanchored(body) > before:
+        raise AcquaintError(
+            "an item under Takeaways, Themes, Index or Open threads needs [at: <ISO time>] or [source: …] (a bare line, a sub-bullet, or an anchor inside a comment or code fence does not count)"
+        )
+    previous = None
+    if through is not None:
+        meta["through"], previous = _moved_watermark(meta, through, scope, force)
+    meta["updated"] = today or date.today().isoformat()
+    entity[found["file"]] = join_frontmatter(meta, body)
+    return {
+        **_summary(entity, found["file"]),
+        "previous": previous,
+        "sections": sorted(batch),
+        "lines": sum(map(len, batch.values())),
+    }
 
 
 def digest_problems(text: str) -> list[tuple[str, int | None, str, str]]:

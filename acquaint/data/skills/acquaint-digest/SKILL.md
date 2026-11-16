@@ -45,11 +45,11 @@ The watermark is the time of the **last message processed**, so `--since` repeat
 - **Index**: the conversation cut into dated sections an agent can jump to: `- 2026-07-03 14:02 → 16:40 · the cost model · 48 messages [at: 2026-07-03T14:02:11+02:00]`. Cut at long silences and at changes of subject.
 - **Open threads**: what is waiting, on whom, since when.
 
-Every item under Takeaways, Themes, Index and Open threads ends with `[at: <ISO time of the message>]` (the time as the archive writes it, so `rg -n '^<time>' <transcript>` finds it) or a `[source: …]`. A later batch goes at the end of each section under a `### <date range>` heading; earlier lines are corrected by marking them superseded, never by deleting them.
+Every item under Takeaways, Themes, Index and Open threads ends with `[at: <ISO time of the message>]` (the time as the archive writes it, so `rg -n '^<time>' <transcript>` finds it) or a `[source: …]`. A later batch goes at the end of each section under a `### <date range>` heading, in one call: `acquaint digest-append <id> <ref> --heading '<date range>' --rows '<JSON or rows>' | @<file> [--through <time>]` (it refuses an unanchored line and writes nothing); earlier lines are corrected by marking them superseded, never by deleting them.
 
 What never goes in (the store's `POLICY.md`): whole messages (a quote is 25 words or fewer, with its anchor), health, family and other private matters, moods, anything said in confidence. A stretch of personal conversation is one Index line, "personal, not digested", with its time range and nothing else.
 
-A long backlog: split it by time into slices of a few hundred messages and give each slice to a subagent with these section rules and the transcript path and line range, asking for rows (`section | line | anchor`), not prose. Merge the rows yourself, then write.
+A long backlog: split it by time into slices of a few hundred messages and give each slice to a subagent with these section rules and the transcript path and line range, asking for rows (`section | line | anchor`), not prose. Merge the rows yourself, then hand them to `digest-append`.
 
 ## 4. Style, separately
 
@@ -58,7 +58,7 @@ The same messages are evidence of how the person writes. That is **acquaint-prof
 ## 5. Close the batch
 
 ```bash
-acquaint digest-mark <id> <ref> --through <time of the last message processed>
+acquaint digest-mark <id> <ref> --through <time of the last message processed>   # or digest-append --through, in the same call
 acquaint lint <id>                      # unanchored items and long quotes fail here
 acquaint sync status --json             # then commit or show the diff, as acquaint-profile § Step 5 says
 ```
