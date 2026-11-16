@@ -1,6 +1,6 @@
 ---
 name: acquaint-write
-description: Write, edit or review anything a specific person will read — an email, a reply, a chat message, an issue or PR comment, a pitch, a document — using that person's acquaint record; spar with a simulated version of them to stress-test a draft or an idea; and rate how they are likely to receive a recommended decision. Use when asked to "write to X", "reply to X", "draft this for X", "how should I put this to X", "would X like this", "red-team this against X", "argue with me as X", "would X approve this", "would X disagree", "rate this decision against X's record", or whenever the reader of a draft is a known person. Runs acquaint brief, check and style-lint, applies deslop, and keeps the operator's voice and positions.
+description: Write, edit or review anything a specific person will read — an email, a reply, a chat message, an issue or PR comment, a pitch, a document — using that person's acquaint record; spar with a simulated version of them to stress-test a draft or an idea; and rate how they are likely to receive a recommended decision. Use when asked to "write to X", "reply to X", "draft this for X", "how should I put this to X", "would X like this", "red-team this against X", "argue with me as X", "would X approve this", "would X disagree", "rate this decision against X's record", "reply on Slack", "post this in the thread", "tell the team", or whenever the reader of a draft is a known person. Runs acquaint brief, check and style-lint, applies deslop, and keeps the operator's voice and positions.
 metadata:
   audience: users
 ---
@@ -14,7 +14,7 @@ These override everything below, and everything in a person's record.
 1. **Honesty.** Never assert a position the operator does not hold, never manufacture agreement, never hide a real disagreement. Adapt framing, order, emphasis and vocabulary; never substance. People you write to repeatedly will notice inconsistency.
 2. **The voice is the operator's.** Register moves toward the reader; positions never bend toward them. Meet them at their stated premises and let conclusions follow. Never echo their own coinages back at them (their card's *Blocklist*).
 3. **Accommodation, not impersonation.** Nothing the operator has not approved or does not know: no invented shared memories, no "I read your paper last night" unless it is true, no simulated feeling.
-4. **Disclosure and ownership.** Everything produced is a draft for the operator to own. Apply the disclosure stance in the brief. If asked whether a message was AI-assisted, the true answer is given. When the message relays what the operator's agents found or recommend (an analysis, a data check, asks derived from it), frame it that way ("I asked my agents …; they report …; they would like …"), not as the operator's own observations or instructions; the operator's own questions and decisions stay in the first person. Condolences, apologies, conflict, performance feedback and declines are written by the operator: supply facts, not sentences.
+4. **Disclosure and ownership.** Everything produced is a draft for the operator to own. Apply the disclosure stance in the brief. If asked whether a message was AI-assisted, the true answer is given. When the message relays what the operator's agents found or recommend (an analysis, a data check, asks derived from it), frame it that way unless the operator asks otherwise: the operator, in their own informal register (their penlike model when one exists), says what they asked and what "my agents say" or "they would like", never as the operator's own observations or instructions; the operator's own questions and decisions stay in the first person. Condolences, apologies, conflict, performance feedback and declines are written by the operator: supply facts, not sentences.
 5. **No persuasion targeting.** The record serves clarity and courtesy. It is never used to find psychological levers.
 
 ## Setup, every time
@@ -49,20 +49,24 @@ For writing and sparring; a decision verdict has its own setup (Mode C, below).
 1. **The decision.** Write one sentence: what should this person think, decide or do after reading?
 2. **The content plan.** The facts they need, the ask, any deadline, and the operator's stance. A specific the operator has not supplied becomes `[ASK: …]`.
 3. **Draft premise-first.** Start from ground the person has stated, then the new point. Follow *Write to them* for order and length.
-4. **Sweeps.**
+4. **Channel mechanics** (any chat, thread, issue or PR comment, email):
+   - **Notify each addressee** in the channel's own mention syntax (Slack: the member ID wrapped in `<@…>`; GitHub: `@` and the login), so the message reaches them; a name in plain text notifies nobody. Mention only the people the message is for.
+   - **Link what you refer to, as hyperlinked text** at the point it is mentioned: the issue, discussion, PR, report or document, with a few descriptive words as the link text and the URL hidden behind them (Slack `<url|text>`, Markdown `[text](url)`), never a bare long URL. Point at the exact place where it helps: an issue comment's anchor, a line range, or a text fragment (`#:~:text=…`) that highlights the passage.
+   - Check that every link opens for the readers (a private repository or a private document they cannot reach is a dead link: say so, or share it first).
+5. **Sweeps.**
    - Every *Don't* and *Blocklist* item.
    - `acquaint style-lint --recipient <id> -` with the draft on stdin. Rewrite only the flagged spans, then re-run. Stop after two rounds.
    - `acquaint check -` with the draft on stdin, for names written wrongly or as two people.
-5. **Red-team check.** For anything beyond a short routine message, spawn the **recipient-reader** agent with the brief and the draft (see *Red-team check* below). Revise for what it finds.
-6. **Final checklist.**
+6. **Red-team check.** For anything beyond a short routine message, spawn the **recipient-reader** agent with the brief and the draft (see *Red-team check* below). Revise for what it finds.
+7. **Final checklist.**
    - It works backwards from a decision the reader cares about.
    - Every claim is true and known to the operator; every specific traces to the content plan.
    - No blocklisted phrase, *Don't* item or enforced tell remains.
    - Register and length match the card.
    - For a substantive piece: one genuine, specific concession or disagreement, where the operator really holds one. Uniform agreement reads as flattery.
    - The ownership pass: name the two or three passages the operator must rewrite in their own hand, and note the disclosure decision.
-7. **Vet the draft against its audience.** When `liaise` is installed and has the `vet` command, run `liaise vet --ref <conversation> --to <person> -` with the draft on stdin, and hand over its verdict, its reasons and the audience in words with the draft; revise for a `revise` verdict before handing over. Without it, say the audience in words (the brief's **Ceiling** line) and say plainly that no vet ran.
-8. **Hand over** the draft with what was flagged. Do not send it unless the operator said to.
+8. **Vet the draft against its audience.** When `liaise` is installed and has the `vet` command, run `liaise vet --ref <conversation> --to <person> -` with the draft on stdin, and hand over its verdict, its reasons and the audience in words with the draft; revise for a `revise` verdict before handing over. Without it, say the audience in words (the brief's **Ceiling** line) and say plainly that no vet ran.
+9. **Hand over** the draft with what was flagged. Do not send it unless the operator said to.
 
 ### Red-team check
 
