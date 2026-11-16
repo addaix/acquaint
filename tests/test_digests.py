@@ -208,6 +208,7 @@ def test_the_splice_ignores_section_lines_inside_fences_and_comments(store, put)
     append_batch(ada, REF, heading="w1", rows={"Takeaways": ["x [source: y]"]})
     text = ada[name]
     assert text.rindex("- x [source: y]") > text.rindex("## Takeaways")
+    assert text.index("- x [source: y]") < text.index("## Themes")
     assert text.index("```\n## Takeaways\n### w1\n## Index\n```") < text.index("- x [source: y]")
     assert not [p for p in digest_problems(text) if p[0] == "error"]
 

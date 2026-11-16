@@ -42,7 +42,7 @@ from string import Template
 from datetime import date, datetime
 from typing import Any
 
-from acquaint.records import join_frontmatter, split_frontmatter, visible_lines
+from acquaint.records import join_frontmatter, normalize_newlines, split_frontmatter, visible_lines
 from acquaint.resources import data_text
 from acquaint.store import AcquaintError, Entity
 
@@ -275,6 +275,7 @@ def parse_rows(rows: str | Mapping[str, Sequence[str]]) -> dict[str, list[str]]:
 
 def _append_under(body: str, section: str, heading: str, lines: Sequence[str]) -> str:
     """``body`` with a ``### heading`` block at the end of ``## section``; headings inside code fences or comments do not count."""
+    body = normalize_newlines(body)
     seen = visible_lines(body)
     starts = [n for n, line, code in seen if not code and re.fullmatch(rf"## {re.escape(section)}:?[ \t]*", line)]
     if not starts:
