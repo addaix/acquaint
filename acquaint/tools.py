@@ -797,7 +797,9 @@ def _record_refs(root: Any, ids: list[str]) -> list[str]:
         except AcquaintError:
             if ref.count("/") != 1:
                 raise
-            folders.append(ref)  # e.g. people/ada-lovelace after `forget`; sync validates the shape
+            folders.append(
+                ref
+            )  # e.g. people/ada-lovelace after `forget`; sync validates the shape
     return folders
 
 
