@@ -51,6 +51,7 @@ from acquaint.store import AcquaintError
 
 __all__ = [
     "BRANCH",
+    "STORE_FILES",
     "GITHUB_HOST",
     "github_urls",
     "init",
@@ -431,7 +432,7 @@ def init(
             (root / name).write_text(text, encoding="utf-8", newline="\n")
     hook = _install_hook(root, run)
     try:
-        pushed = push(root, message="acquaint: initialise store", run=run)
+        pushed = push(root, message="acquaint: initialise store", everything=True, run=run)
     except AcquaintError as error:
         raise AcquaintError(
             f"the store is set up for {repo}, but the first push failed: {error}. Fix that, then run `acquaint sync push`"
@@ -446,30 +447,86 @@ def init(
     }
 
 
+#: Files at the top of the store that belong to no record; a scoped push carries them when they changed.
+STORE_FILES = ("_tombstones.yaml",)
+
+
+def _changed_paths(root: Path, run: Runner) -> list[str]:
+    """Every changed or untracked file, one path each (``-uall`` lists the files inside a new folder)."""
+    done = run(["git", "-c", "core.quotePath=false", "status", "--porcelain", "-z", "-uall"], cwd=root)
+    if done.returncode != 0:
+        raise AcquaintError(f"git status failed: {(done.stderr or '').strip()}")
+    out = done.stdout or ""  # not stripped: a leading space is part of the first entry
+    paths: list[str] = []
+    entries = iter(out.split("\0"))
+    for entry in entries:
+        if len(entry) < 4:
+            continue
+        paths.append(entry[3:])
+        if entry[0] in "RC":  # the next entry is the rename's old name
+            next(entries, None)
+    return paths
+
+
+def _entity_of(path: str) -> str | None:
+    """The record folder a path belongs to (``people/ada-lovelace``), or ``None`` for a file at the top of the store."""
+    parts = path.split("/")
+    return "/".join(parts[:2]) if len(parts) > 2 else None
+
+
+def _is_named(entity: str, message: str) -> bool:
+    return entity.rsplit("/", 1)[-1].lower() in message.lower()
+
+
+def _scoped(paths: Sequence[str], folders: Sequence[str]) -> list[str]:
+    inside = tuple(f.rstrip("/") + "/" for f in folders)
+    return [p for p in paths if p.startswith(inside) or p in STORE_FILES]
+
+
 def push(
     root: str | os.PathLike,
     *,
     message: str | None = None,
+    entities: Sequence[str] = (),
+    everything: bool = False,
     dry_run: bool = False,
     run: Runner = run_command,
 ) -> dict[str, Any]:
-    """Commit everything, rebase onto the remote, and push, after re-checking the remote, the guard and the visibility."""
+    """Commit, rebase onto the remote, and push, after re-checking the remote, the guard and the visibility.
+
+    ``entities`` are record folders (``people/ada-lovelace``): only those, plus
+    :data:`STORE_FILES` when they changed, are committed; everything else stays
+    uncommitted, so one session does not sweep up another's unfinished records. Without
+    ``entities`` every change is committed, but when a ``message`` is given it must name
+    each record being committed (its id appears in the text) unless ``everything`` is set;
+    a message naming only some of them is refused, listing the rest. With no ``message``
+    the default one lists the records.
+    """
     root = Path(root)
+    for folder in entities:
+        parts = folder.strip("/").split("/")
+        if len(parts) != 2 or ".." in parts or not all(parts):
+            raise AcquaintError(f"{folder!r} is not a record folder like people/ada-lovelace")
     repo, remote = _configured(root, run)
-    changed = [
-        line
-        for line in _ok(
-            run, ["git", "status", "--porcelain"], cwd=root, what="git status"
-        ).splitlines()
-        if line
-    ]
+    changed = _changed_paths(root, run)
+    if entities:
+        changed = _scoped(changed, entities)
+    touched = sorted({e for e in map(_entity_of, changed) if e})
+    unnamed = [e for e in touched if message and not _is_named(e, message)]
     if dry_run:
         return {
             "repo": repo,
             "dry_run": True,
             "would_commit": len(changed),
+            "entities": touched,
+            "unnamed_in_message": [] if entities or everything else unnamed,
             "conflicted": _conflicted(root, run),
         }
+    if unnamed and not entities and not everything:
+        raise AcquaintError(
+            f"the message does not name {', '.join(unnamed)}, which would be committed with it. "
+            "Name them, push only your own records (`sync push <id> ...`), or pass --all to commit everything"
+        )
     if not _hook_active(root, run):
         raise AcquaintError(
             f"the pre-push guard is not active in {root} (moved data root, a changed core.hooksPath, or a hook that is not executable); "
@@ -479,8 +536,9 @@ def push(
     _refuse_conflicts(root, run, doing="commit and push")
     committed = False
     if changed:
-        _ok(run, ["git", "add", "-A"], cwd=root, what="git add")
         stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
+        listed = ", ".join(e.rsplit("/", 1)[-1] for e in touched) or f"{len(changed)} files"
+        _ok(run, ["git", "add", "-A", "--", *(changed if entities else [])], cwd=root, what="git add")
         _ok(
             run,
             [
@@ -488,7 +546,8 @@ def push(
                 "commit",
                 "-q",
                 "-m",
-                message or f"acquaint: sync {stamp} ({len(changed)} files)",
+                message or f"acquaint: sync {stamp} ({listed})",
+                *(["--only", "--", *changed] if entities else []),
             ],
             cwd=root,
             what="git commit",
@@ -504,10 +563,11 @@ def push(
     if run(["git", "fetch", "-q", "origin", BRANCH], cwd=root).returncode == 0:
         _ok(
             run,
-            ["git", "rebase", "-q", f"origin/{BRANCH}"],
+            ["git", "rebase", "-q", "--autostash", f"origin/{BRANCH}"],
             cwd=root,
             what="rebasing onto the remote",
         )
+        _refuse_conflicts(root, run, doing="finish the rebase")
     _ok(
         run,
         ["git", "push", "-q", "-u", "origin", f"HEAD:{BRANCH}"],
@@ -519,6 +579,7 @@ def push(
         "remote": remote,
         "committed": committed,
         "changed_files": len(changed),
+        "entities": touched,
         "pushed": True,
     }
 
