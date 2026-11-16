@@ -363,3 +363,32 @@ def test_python_push_and_pull_recheck_everything(tmp_path, store_root, github, s
     _git("remote", "set-url", "origin", OTHER_URL, cwd=store_root)
     with pytest.raises(AcquaintError, match="refusing"):
         sync.push(store_root, run=FakeGh())
+
+
+@posix_only
+def test_a_conflicting_autostash_makes_pull_raise_and_push_refuse(tmp_path, store_root, github, scripted_gh):
+    gh = FakeGh()
+    sync.init(store_root, REPO, run=gh)
+    profile = store_root / "people" / "ada-lovelace" / "PROFILE.md"
+    other = tmp_path / "other-clone"
+    assert _git("clone", "-q", "--branch", "main", URL, str(other)).returncode == 0
+    (other / "people" / "ada-lovelace" / "PROFILE.md").write_text("---\nname: Ada Lovelace\naka: [Remote]\n---\n")
+    _git("commit", "-aqm", "remote edit", cwd=other)
+    assert _git("push", "-q", "origin", "main", cwd=other).returncode == 0
+
+    profile.write_text("---\nname: Ada Lovelace\naka: [Local]\n---\n")  # uncommitted, same lines
+    with pytest.raises(AcquaintError, match=r"unresolved conflicts in people/ada-lovelace/PROFILE.md"):
+        sync.pull(store_root, run=gh)
+    assert "<<<<<<<" in profile.read_text()
+    with pytest.raises(AcquaintError, match="unresolved conflicts"):
+        sync.push(store_root, run=gh)
+    assert "<<<<<<<" not in _git("--git-dir", str(github[URL]), "show", "main:people/ada-lovelace/PROFILE.md").stdout
+
+
+@posix_only
+def test_push_refuses_a_record_that_holds_conflict_markers(store_root, github, scripted_gh):
+    gh = FakeGh()
+    sync.init(store_root, REPO, run=gh)
+    (store_root / "people" / "ada-lovelace" / "PROFILE.md").write_text("<<<<<<< Updated upstream\nx\n=======\ny\n>>>>>>> Stashed changes\n")
+    with pytest.raises(AcquaintError, match="unresolved conflicts"):
+        sync.push(store_root, run=gh)

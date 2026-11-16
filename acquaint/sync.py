@@ -221,6 +221,25 @@ def _configured(root: Path, run: Runner) -> tuple[str, str]:
     return repo, remote
 
 
+_MARKER_RE = r"^(<{7}|>{7})( |$)"
+
+
+def _conflicted(root: Path, run: Runner) -> list[str]:
+    """Paths left unresolved in the working tree: unmerged index entries, or files that still hold conflict markers."""
+    unmerged = _lines(root, run, "diff", "--name-only", "--diff-filter=U")
+    marked = _lines(root, run, "grep", "--untracked", "-lE", _MARKER_RE)
+    return sorted({*unmerged, *marked})
+
+
+def _refuse_conflicts(root: Path, run: Runner, *, doing: str) -> None:
+    paths = _conflicted(root, run)
+    if paths:
+        raise AcquaintError(
+            f"refusing to {doing}: unresolved conflicts in {', '.join(paths)}. "
+            "Resolve them in the data root (a kept `git stash` may hold your edits), then try again"
+        )
+
+
 def _hook_path(root: Path, run: Runner) -> Path:
     effective = Path(
         _ok(
@@ -427,6 +446,7 @@ def push(
             f"run `acquaint sync init --repo {repo} --existing-only` first"
         )
     _require_private(repo, run)
+    _refuse_conflicts(root, run, doing="commit and push")
     committed = False
     if changed:
         _ok(run, ["git", "add", "-A"], cwd=root, what="git add")
@@ -492,6 +512,8 @@ def pull(
         cwd=root,
         what="git pull",
     )
+    # `git pull --autostash` exits 0 when re-applying the stash conflicts, leaving markers.
+    _refuse_conflicts(root, run, doing="report the pull as done")
     head = _ok(
         run, ["git", "rev-parse", "--short", "HEAD"], cwd=root, what="git rev-parse"
     )
