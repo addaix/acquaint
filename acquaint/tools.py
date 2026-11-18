@@ -1048,15 +1048,27 @@ def refresh_due(
         store = _store(data_dir)
         found = Entity(store, find_entity(store, entity))
         if SOURCES_FILE not in found:
-            raise AcquaintError(f"{found.slug} has no {SOURCES_FILE}: nothing to refresh from")
+            raise AcquaintError(
+                f"{found.slug} has no {SOURCES_FILE}: nothing to refresh from"
+            )
         status = refresh_status(
             found[SOURCES_FILE],
             found.text(CONFIG_FILE),
             today=date.fromisoformat(today) if today else None,
         )
     except Exception as error:  # noqa: BLE001 - "cannot tell" must never read as "not due"
-        reason = str(error) if isinstance(error, (AcquaintError, ValueError)) else f"{type(error).__name__}: {error}"
-        return {"ok": False, "id": entity, **empty_status(reason), "summary": reason, "text": reason}
+        reason = (
+            str(error)
+            if isinstance(error, (AcquaintError, ValueError))
+            else f"{type(error).__name__}: {error}"
+        )
+        return {
+            "ok": False,
+            "id": entity,
+            **empty_status(reason),
+            "summary": reason,
+            "text": reason,
+        }
     age = status["age"]
     lines = [f"{'corpus':<16} {'watermark':<26} {'newer':>6} {'threshold':>9}"]
     lines.append(
