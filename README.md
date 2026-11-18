@@ -46,7 +46,7 @@ Only `PROFILE.md` is required. A malformed file is reported and skipped; it neve
 
 ## The verbs
 
-The same twenty-one functions are the Python API (`acquaint.tools`), the CLI, and the MCP tools. Each returns a JSON-ready dict.
+The same twenty-four functions are the Python API (`acquaint.tools`), the CLI, and the MCP tools. Each returns a JSON-ready dict.
 
 | Verb | Does |
 |---|---|
@@ -60,6 +60,7 @@ The same twenty-one functions are the Python API (`acquaint.tools`), the CLI, an
 | `review PERSON` | everything that names someone's disclosure standing, with sources and dates: tier entries, links, default tiers and clearances reached through links, seals, rules; exits 1 when an affiliation ended while a permissive tier is still in force. Run it when a collaboration ends, when someone changes role, or before changing a tier |
 | `todo-preflight PROJECT PEOPLE` | before filing a meeting's todos as issues: the project is unambiguous, every participant (comma-separated) is registered and linked to it, and its meta repository (`meta_repo: owner/name`, or `github_org: <org>` meaning `<org>/meta`, in the record's frontmatter) is private now; returns each person's GitHub login and a fix for every problem |
 | `digest ENTITY [REF]` · `digest-new ENTITY REF` · `digest-append ENTITY REF --heading RANGE --rows ROWS [--through TIME]` (a dated batch under every section in one call, anchors enforced; ROWS is JSON, `section | line | anchor` lines, or a file path prefixed with `@`) · `digest-mark ENTITY REF [--through TIME] [--checked TIME] [--scope content\|style --force]` · `digest-sweep ENTITY CHANNEL --checked TIME [--refs REF ...]` | notes on what a conversation said (`digests/<conversation>.md`: orientation, takeaways, themes, a dated index, open threads, every item anchored to a message time) and its watermark per scope; `digest ENTITY REF` gives `since`, the time to hand to `correspond read REF --since` for what is new. The messages stay in correspond's local archive |
+| `refresh-due ENTITY [--today DATE]` | is a record mined from someone's own writing (an operator's views) due for a refresh? Per corpus listed in the record's `refresh.toml`: its watermark in `sources.md`, how many items are newer, the threshold; plus the age of the last refresh-log entry against `max_age_days` (default 7). Sourcers: `jsonl` (a JSON Lines file), `json-folder` (a folder of JSON files, with `items` for a list inside each), `mtime` (files by modification time); a host adds its own via `acquaint.refresh.refresh_status(sourcers=...)`. Reads only: the refresh itself stays a reviewed pass |
 | `lint [ENTITY]` | sources on every preference; tiers, labels and seals set by the operator, with known values and review dates; parseable files; entry-file budget; policy tripwires |
 | `style-lint TEXT [--recipient --tolerance]` | machine-writing tells, enforced by the reader's tolerance of AI-sounding text |
 | `new KIND NAME [--qualifier --description]` | scaffold from a template; readable slug ids (`ada-lovelace`, `john-smith--example-org`) |
@@ -69,7 +70,7 @@ The same twenty-one functions are the Python API (`acquaint.tools`), the CLI, an
 
 `--json` prints the result dict; `-` as the text of `check` or `style-lint` reads stdin.
 
-Exit status: 0 on success; 1 when the result is not ok (the reason is on stderr); 2 for a usage error; 3 when `reach` matched a rule but no usable address is recorded for its channel (the rule is still listed, and the reason says what to add).
+Exit status: 0 on success; 1 when the result is not ok (the reason is on stderr); 2 for a usage error; 3 when `reach` matched a rule but no usable address is recorded for its channel (the rule is still listed, and the reason says what to add). `refresh-due` exits 0 when a refresh is due, 1 when none is, and 4 when it cannot tell (no `sources.md`, an unknown record, an unparseable `refresh.toml`); a corpus it could not count is listed as unchecked, never as zero.
 
 Nothing acts on a guess: a name, alias, handle or email counts only when exactly one record has it exactly, and a partial match comes back as a suggestion. `rename` and `forget` need the exact id.
 

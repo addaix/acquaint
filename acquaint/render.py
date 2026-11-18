@@ -24,6 +24,9 @@ __all__ = ["EXIT_CODES", "exit_code", "render"]
 
 EXIT_CODES = {
     "no_address": 3,  # reach: a rule matched, but no usable address is recorded for its channels
+    "due": 0,  # refresh-due: a refresh is due
+    "not_due": 1,  # refresh-due: nothing is due (a script gates on "exit 0 means go")
+    "unchecked": 4,  # refresh-due: could not tell (no sources.md, an unreadable record or config)
 }
 
 
