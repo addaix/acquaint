@@ -74,6 +74,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/acquaint.mcp.html">acquaint.mcp</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/acquaint.meta.html">acquaint.meta</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/acquaint.records.html">acquaint.records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/acquaint.refresh.html">acquaint.refresh</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/acquaint.render.html">acquaint.render</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/acquaint.resources.html">acquaint.resources</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/acquaint.store.html">acquaint.store</a></li>
@@ -174,7 +175,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 <section id="the-verbs">
 <h2>The verbs<a class="headerlink" href="#the-verbs" title="Link to this heading">#</a></h2>
-<p>The same twenty-one functions are the Python API (<code class="docutils literal notranslate"><span class="pre">acquaint.tools</span></code>), the CLI, and the MCP tools. Each returns a JSON-ready dict.</p>
+<p>The same twenty-four functions are the Python API (<code class="docutils literal notranslate"><span class="pre">acquaint.tools</span></code>), the CLI, and the MCP tools. Each returns a JSON-ready dict.</p>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
 <thead>
@@ -213,29 +214,32 @@ data-aria-dark="Switch to auto color mode">
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">digest</span> <span class="pre">ENTITY</span> <span class="pre">[REF]</span></code> · <code class="docutils literal notranslate"><span class="pre">digest-new</span> <span class="pre">ENTITY</span> <span class="pre">REF</span></code> · <code class="docutils literal notranslate"><span class="pre">digest-append</span> <span class="pre">ENTITY</span> <span class="pre">REF</span> <span class="pre">--heading</span> <span class="pre">RANGE</span> <span class="pre">--rows</span> <span class="pre">ROWS</span> <span class="pre">[--through</span> <span class="pre">TIME]</span></code> (a dated batch under every section in one call, anchors enforced; ROWS is JSON, `section</p></td>
 <td><p>line</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lint</span> <span class="pre">[ENTITY]</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">refresh-due</span> <span class="pre">ENTITY</span> <span class="pre">[--today</span> <span class="pre">DATE]</span></code></p></td>
+<td><p>is a record mined from someone’s own writing (an operator’s views) due for a refresh? Per corpus listed in the record’s <code class="docutils literal notranslate"><span class="pre">refresh.toml</span></code>: its watermark in <code class="docutils literal notranslate"><span class="pre">sources.md</span></code>, how many items are newer, the threshold; plus the age of the last refresh-log entry against <code class="docutils literal notranslate"><span class="pre">max_age_days</span></code> (default 7). Sourcers: <code class="docutils literal notranslate"><span class="pre">jsonl</span></code> (a JSON Lines file), <code class="docutils literal notranslate"><span class="pre">json-folder</span></code> (a folder of JSON files, with <code class="docutils literal notranslate"><span class="pre">items</span></code> for a list inside each), <code class="docutils literal notranslate"><span class="pre">mtime</span></code> (files by modification time); keys <code class="docutils literal notranslate"><span class="pre">watermark_row</span></code> / <code class="docutils literal notranslate"><span class="pre">watermark_where</span></code> pick the table row, <code class="docutils literal notranslate"><span class="pre">missing_ok</span> <span class="pre">=</span> <span class="pre">true</span></code> lets a file not yet created count as nothing new; a host adds its own via <code class="docutils literal notranslate"><span class="pre">acquaint.refresh.refresh_status(sourcers=...)</span></code>. Reads only: the refresh itself stays a reviewed pass</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lint</span> <span class="pre">[ENTITY]</span></code></p></td>
 <td><p>sources on every preference; tiers, labels and seals set by the operator, with known values and review dates; parseable files; entry-file budget; policy tripwires</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">style-lint</span> <span class="pre">TEXT</span> <span class="pre">[--recipient</span> <span class="pre">--tolerance]</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">style-lint</span> <span class="pre">TEXT</span> <span class="pre">[--recipient</span> <span class="pre">--tolerance]</span></code></p></td>
 <td><p>machine-writing tells, enforced by the reader’s tolerance of AI-sounding text</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">KIND</span> <span class="pre">NAME</span> <span class="pre">[--qualifier</span> <span class="pre">--description]</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">KIND</span> <span class="pre">NAME</span> <span class="pre">[--qualifier</span> <span class="pre">--description]</span></code></p></td>
 <td><p>scaffold from a template; readable slug ids (<code class="docutils literal notranslate"><span class="pre">ada-lovelace</span></code>, <code class="docutils literal notranslate"><span class="pre">john-smith--example-org</span></code>)</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rename</span> <span class="pre">ID</span> <span class="pre">TO</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rename</span> <span class="pre">ID</span> <span class="pre">TO</span></code></p></td>
 <td><p>new id or name; links elsewhere rewritten (never inside URLs or logs); old forms kept as aliases</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forget</span> <span class="pre">ID</span> <span class="pre">[--confirm]</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">forget</span> <span class="pre">ID</span> <span class="pre">[--confirm]</span></code></p></td>
 <td><p>remove the whole folder, leaving a salted tombstone so the person is not silently re-created</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sync</span> <span class="pre">init</span> <span class="pre">--repo</span> <span class="pre">OWNER/NAME</span></code> · <code class="docutils literal notranslate"><span class="pre">sync</span> <span class="pre">push</span> <span class="pre">[ID</span> <span class="pre">...]</span> <span class="pre">[-m</span> <span class="pre">MESSAGE]</span> <span class="pre">[--all]</span> <span class="pre">[--allow-markers</span> <span class="pre">PATH</span> <span class="pre">...]</span></code> · <code class="docutils literal notranslate"><span class="pre">sync</span> <span class="pre">pull</span></code> · <code class="docutils literal notranslate"><span class="pre">sync</span> <span class="pre">status</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sync</span> <span class="pre">init</span> <span class="pre">--repo</span> <span class="pre">OWNER/NAME</span></code> · <code class="docutils literal notranslate"><span class="pre">sync</span> <span class="pre">push</span> <span class="pre">[ID</span> <span class="pre">...]</span> <span class="pre">[-m</span> <span class="pre">MESSAGE]</span> <span class="pre">[--all]</span> <span class="pre">[--allow-markers</span> <span class="pre">PATH</span> <span class="pre">...]</span></code> · <code class="docutils literal notranslate"><span class="pre">sync</span> <span class="pre">pull</span></code> · <code class="docutils literal notranslate"><span class="pre">sync</span> <span class="pre">status</span></code></p></td>
 <td><p>private-repository sync, below</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">--json</span></code> prints the result dict; <code class="docutils literal notranslate"><span class="pre">-</span></code> as the text of <code class="docutils literal notranslate"><span class="pre">check</span></code> or <code class="docutils literal notranslate"><span class="pre">style-lint</span></code> reads stdin.</p>
-<p>Exit status: 0 on success; 1 when the result is not ok (the reason is on stderr); 2 for a usage error; 3 when <code class="docutils literal notranslate"><span class="pre">reach</span></code> matched a rule but no usable address is recorded for its channel (the rule is still listed, and the reason says what to add).</p>
+<p>Exit status: 0 on success; 1 when the result is not ok (the reason is on stderr); 2 for a usage error; 3 when <code class="docutils literal notranslate"><span class="pre">reach</span></code> matched a rule but no usable address is recorded for its channel (the rule is still listed, and the reason says what to add). <code class="docutils literal notranslate"><span class="pre">refresh-due</span></code> exits 0 when a refresh is due, 1 when none is, and 4 when it cannot tell (no <code class="docutils literal notranslate"><span class="pre">sources.md</span></code>, an unknown record, an unparseable <code class="docutils literal notranslate"><span class="pre">refresh.toml</span></code>, or nothing due but a corpus it could not count: a corpus is listed as unchecked, never as zero). A scheduler should read <code class="docutils literal notranslate"><span class="pre">outcome</span></code> from <code class="docutils literal notranslate"><span class="pre">--json</span></code> (<code class="docutils literal notranslate"><span class="pre">due</span></code>, <code class="docutils literal notranslate"><span class="pre">not_due</span></code>, <code class="docutils literal notranslate"><span class="pre">unchecked</span></code>, same keys every time) rather than the exit code alone, since a usage or argument error also exits nonzero.</p>
 <p>Nothing acts on a guess: a name, alias, handle or email counts only when exactly one record has it exactly, and a partial match comes back as a suggestion. <code class="docutils literal notranslate"><span class="pre">rename</span></code> and <code class="docutils literal notranslate"><span class="pre">forget</span></code> need the exact id.</p>
 </section>
 <section id="sources">
@@ -337,7 +341,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-17 08:46 UTC from <a href="https://github.com/thorwhalen/acquaint/commit/d2deafa7957e3cc4252443e7f1e34e41854d25cb">d2deafa</a> (main) · acquaint 0.0.31 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-18 15:38 UTC from <a href="https://github.com/thorwhalen/acquaint/commit/b38b6da7a48bdefefff0cb8c4e01ca2b14a4e61e">b38b6da</a> (main) · acquaint 0.0.32 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -372,7 +376,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=c5dbc6bb"></script>
+      <script src="_static/documentation_options.js?v=f2234cd1"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

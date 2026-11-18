@@ -1,4 +1,4 @@
-> built 2026-11-17 08:46 UTC from d2deafa (main) · acquaint 0.0.31. Details: build_info.json
+> built 2026-11-18 15:38 UTC from b38b6da (main) · acquaint 0.0.32. Details: build_info.json
 
 # index.html.md
 
@@ -52,30 +52,31 @@ Only `PROFILE.md` is required. A malformed file is reported and skipped; it neve
 
 ## The verbs
 
-The same twenty-one functions are the Python API (`acquaint.tools`), the CLI, and the MCP tools. Each returns a JSON-ready dict.
+The same twenty-four functions are the Python API (`acquaint.tools`), the CLI, and the MCP tools. Each returns a JSON-ready dict.
 
-| Verb                                                                                                                                                                                                                | Does                                                                                                                                                                                                                                                                                                                                                         |
-|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `who NAME [-f FIELD] [-b]` (`self` names the one person marked `operator: true` in its PROFILE.md frontmatter, for commands that take a name; the ones that rewrite or remove a record need the exact id)           | one field (`email`, `aka`, `label`, `tier`, any frontmatter key, a dotted `clear` fact such as `name.full`), the identity block, or the whole entry file; lists candidates instead of guessing                                                                                                                                                               |
-| `resolve HANDLE`                                                                                                                                                                                                    | `github:octocat`, `email:…` → the person, with the evidence; a handle without its platform, a match by name only, or an inactive identity is reported, never acted on                                                                                                                                                                                        |
-| `check TEXT`                                                                                                                                                                                                        | before publishing: one person written as two (“Ada or Lovelace”), shared names, unknown names                                                                                                                                                                                                                                                                |
-| `reach PERSON [--purpose --urgency --project --message-type --topic]`                                                                                                                                               | ordered channels: the person’s own rules > the operator’s rules > project norms > observed habits > defaults                                                                                                                                                                                                                                                 |
-| `brief PERSON [--purpose --project --ref CONVERSATION | --audience-json - | FILE]`                                                                                                                                  | card, writing style, views, reach, project norms, recent observations, reminders, and what is **not** known; with `--ref` (correspond is asked who can read it; unknown is public) or an audience record, it opens with the ceiling, the records and terms not to identify, how many lines were withheld (never their text), and what they were already told |
-| `remember ENTITY TEXT [--source --kind --disclosed --reactivate]`                                                                                                                                                   | append a dated, sourced observation (or identity, preference, view, rule); an `interaction` may list the records a message identified (`--disclosed project:heron`); an identity equal to an inactive one is refused, naming that entry, unless `--reactivate`                                                                                               |
-| `disclosure ID... [--project SLUG] [--audience-json - | FILE]`                                                                                                                                                      | who may be told what: the tier and clearance in force for each reader, the least clearance, the seals, the terms a gate must scan for, what each was already told, and the gaps                                                                                                                                                                              |
-| `review PERSON`                                                                                                                                                                                                     | everything that names someone’s disclosure standing, with sources and dates: tier entries, links, default tiers and clearances reached through links, seals, rules; exits 1 when an affiliation ended while a permissive tier is still in force. Run it when a collaboration ends, when someone changes role, or before changing a tier                      |
-| `todo-preflight PROJECT PEOPLE`                                                                                                                                                                                     | before filing a meeting’s todos as issues: the project is unambiguous, every participant (comma-separated) is registered and linked to it, and its meta repository (`meta_repo: owner/name`, or `github_org: <org>` meaning `<org>/meta`, in the record’s frontmatter) is private now; returns each person’s GitHub login and a fix for every problem        |
-| `digest ENTITY [REF]` · `digest-new ENTITY REF` · `digest-append ENTITY REF --heading RANGE --rows ROWS [--through TIME]` (a dated batch under every section in one call, anchors enforced; ROWS is JSON, \`section | line                                                                                                                                                                                                                                                                                                                                                         |
-| `lint [ENTITY]`                                                                                                                                                                                                     | sources on every preference; tiers, labels and seals set by the operator, with known values and review dates; parseable files; entry-file budget; policy tripwires                                                                                                                                                                                           |
-| `style-lint TEXT [--recipient --tolerance]`                                                                                                                                                                         | machine-writing tells, enforced by the reader’s tolerance of AI-sounding text                                                                                                                                                                                                                                                                                |
-| `new KIND NAME [--qualifier --description]`                                                                                                                                                                         | scaffold from a template; readable slug ids (`ada-lovelace`, `john-smith--example-org`)                                                                                                                                                                                                                                                                      |
-| `rename ID TO`                                                                                                                                                                                                      | new id or name; links elsewhere rewritten (never inside URLs or logs); old forms kept as aliases                                                                                                                                                                                                                                                             |
-| `forget ID [--confirm]`                                                                                                                                                                                             | remove the whole folder, leaving a salted tombstone so the person is not silently re-created                                                                                                                                                                                                                                                                 |
-| `sync init --repo OWNER/NAME` · `sync push [ID ...] [-m MESSAGE] [--all] [--allow-markers PATH ...]` · `sync pull` · `sync status`                                                                                  | private-repository sync, below                                                                                                                                                                                                                                                                                                                               |
+| Verb                                                                                                                                                                                                                | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `who NAME [-f FIELD] [-b]` (`self` names the one person marked `operator: true` in its PROFILE.md frontmatter, for commands that take a name; the ones that rewrite or remove a record need the exact id)           | one field (`email`, `aka`, `label`, `tier`, any frontmatter key, a dotted `clear` fact such as `name.full`), the identity block, or the whole entry file; lists candidates instead of guessing                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `resolve HANDLE`                                                                                                                                                                                                    | `github:octocat`, `email:…` → the person, with the evidence; a handle without its platform, a match by name only, or an inactive identity is reported, never acted on                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `check TEXT`                                                                                                                                                                                                        | before publishing: one person written as two (“Ada or Lovelace”), shared names, unknown names                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `reach PERSON [--purpose --urgency --project --message-type --topic]`                                                                                                                                               | ordered channels: the person’s own rules > the operator’s rules > project norms > observed habits > defaults                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `brief PERSON [--purpose --project --ref CONVERSATION | --audience-json - | FILE]`                                                                                                                                  | card, writing style, views, reach, project norms, recent observations, reminders, and what is **not** known; with `--ref` (correspond is asked who can read it; unknown is public) or an audience record, it opens with the ceiling, the records and terms not to identify, how many lines were withheld (never their text), and what they were already told                                                                                                                                                                                                                                                                                                                                                              |
+| `remember ENTITY TEXT [--source --kind --disclosed --reactivate]`                                                                                                                                                   | append a dated, sourced observation (or identity, preference, view, rule); an `interaction` may list the records a message identified (`--disclosed project:heron`); an identity equal to an inactive one is refused, naming that entry, unless `--reactivate`                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `disclosure ID... [--project SLUG] [--audience-json - | FILE]`                                                                                                                                                      | who may be told what: the tier and clearance in force for each reader, the least clearance, the seals, the terms a gate must scan for, what each was already told, and the gaps                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `review PERSON`                                                                                                                                                                                                     | everything that names someone’s disclosure standing, with sources and dates: tier entries, links, default tiers and clearances reached through links, seals, rules; exits 1 when an affiliation ended while a permissive tier is still in force. Run it when a collaboration ends, when someone changes role, or before changing a tier                                                                                                                                                                                                                                                                                                                                                                                   |
+| `todo-preflight PROJECT PEOPLE`                                                                                                                                                                                     | before filing a meeting’s todos as issues: the project is unambiguous, every participant (comma-separated) is registered and linked to it, and its meta repository (`meta_repo: owner/name`, or `github_org: <org>` meaning `<org>/meta`, in the record’s frontmatter) is private now; returns each person’s GitHub login and a fix for every problem                                                                                                                                                                                                                                                                                                                                                                     |
+| `digest ENTITY [REF]` · `digest-new ENTITY REF` · `digest-append ENTITY REF --heading RANGE --rows ROWS [--through TIME]` (a dated batch under every section in one call, anchors enforced; ROWS is JSON, \`section | line                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `refresh-due ENTITY [--today DATE]`                                                                                                                                                                                 | is a record mined from someone’s own writing (an operator’s views) due for a refresh? Per corpus listed in the record’s `refresh.toml`: its watermark in `sources.md`, how many items are newer, the threshold; plus the age of the last refresh-log entry against `max_age_days` (default 7). Sourcers: `jsonl` (a JSON Lines file), `json-folder` (a folder of JSON files, with `items` for a list inside each), `mtime` (files by modification time); keys `watermark_row` / `watermark_where` pick the table row, `missing_ok = true` lets a file not yet created count as nothing new; a host adds its own via `acquaint.refresh.refresh_status(sourcers=...)`. Reads only: the refresh itself stays a reviewed pass |
+| `lint [ENTITY]`                                                                                                                                                                                                     | sources on every preference; tiers, labels and seals set by the operator, with known values and review dates; parseable files; entry-file budget; policy tripwires                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `style-lint TEXT [--recipient --tolerance]`                                                                                                                                                                         | machine-writing tells, enforced by the reader’s tolerance of AI-sounding text                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `new KIND NAME [--qualifier --description]`                                                                                                                                                                         | scaffold from a template; readable slug ids (`ada-lovelace`, `john-smith--example-org`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `rename ID TO`                                                                                                                                                                                                      | new id or name; links elsewhere rewritten (never inside URLs or logs); old forms kept as aliases                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `forget ID [--confirm]`                                                                                                                                                                                             | remove the whole folder, leaving a salted tombstone so the person is not silently re-created                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `sync init --repo OWNER/NAME` · `sync push [ID ...] [-m MESSAGE] [--all] [--allow-markers PATH ...]` · `sync pull` · `sync status`                                                                                  | private-repository sync, below                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 `--json` prints the result dict; `-` as the text of `check` or `style-lint` reads stdin.
 
-Exit status: 0 on success; 1 when the result is not ok (the reason is on stderr); 2 for a usage error; 3 when `reach` matched a rule but no usable address is recorded for its channel (the rule is still listed, and the reason says what to add).
+Exit status: 0 on success; 1 when the result is not ok (the reason is on stderr); 2 for a usage error; 3 when `reach` matched a rule but no usable address is recorded for its channel (the rule is still listed, and the reason says what to add). `refresh-due` exits 0 when a refresh is due, 1 when none is, and 4 when it cannot tell (no `sources.md`, an unknown record, an unparseable `refresh.toml`, or nothing due but a corpus it could not count: a corpus is listed as unchecked, never as zero). A scheduler should read `outcome` from `--json` (`due`, `not_due`, `unchecked`, same keys every time) rather than the exit code alone, since a usage or argument error also exits nonzero.
 
 Nothing acts on a guess: a name, alias, handle or email counts only when exactly one record has it exactly, and a partial match comes back as a suggestion. `rename` and `forget` need the exact id.
 
@@ -1007,6 +1008,7 @@ candidates and `ok: false`.
 | [`mcp`](_autosummary/acquaint.mcp.html.md#module-acquaint.mcp)             | MCP over stdio: the same tools, for Claude Desktop and other local MCP clients.                                                                                                  |
 | [`meta`](_autosummary/acquaint.meta.html.md#module-acquaint.meta)           | Where a project's meeting todos may be filed: its declared private meta repository, and the people who belong to it.                                                             |
 | [`records`](_autosummary/acquaint.records.html.md#module-acquaint.records)     | The text formats acquaint stores, as pure functions: frontmatter, sections, items, source tags, slugs, log entries.                                                              |
+| [`refresh`](_autosummary/acquaint.refresh.html.md#module-acquaint.refresh)     | Is a record built from someone's own writing due for a refresh? Per-corpus watermarks against what is newer.                                                                     |
 | [`render`](_autosummary/acquaint.render.html.md#module-acquaint.render)       | Turning a tool's result into terminal output: `(stdout, stderr, exit code)`.                                                                                                     |
 | [`resources`](_autosummary/acquaint.resources.html.md#module-acquaint.resources) | Files shipped inside the package: record templates, the policy tripwires, purpose reminders, the tells catalogue, skills.                                                        |
 | [`store`](_autosummary/acquaint.store.html.md#module-acquaint.store)         | Where records live and how code reaches them: the data root, [`Store`](_autosummary/acquaint.html.md#acquaint.Store) and [`Entity`](_autosummary/acquaint.html.md#acquaint.Entity). |
@@ -1702,6 +1704,164 @@ Every `[source: …]`, `[label: …]` and `[sealed-from: …]` tag in a piece of
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`bool`](https://docs.python.org/3/builtins/functions.html#bool)]]
 
 
+# _autosummary/acquaint.refresh.html.md
+
+# acquaint.refresh
+
+Is a record built from someone’s own writing due for a refresh? Per-corpus watermarks against what is newer.
+
+A record mined from a corpus (an operator’s positions from what they typed to their
+agents, say) goes stale as the person keeps writing. Its `sources.md` holds one
+**watermark** per corpus (the newest item mined), and its **refresh log**. This module
+counts, per corpus, how many items are newer than the watermark, and says whether a
+refresh is due: the last refresh is older than `max_age_days`, or a corpus count has
+reached its `threshold`. It only reads; the refresh itself stays a reviewed pass.
+
+Which corpora a record uses is per-record configuration, `refresh.toml` beside
+`sources.md` (it lives in the private store, so paths there may be machine paths):
+
+```default
+max_age_days = 7                      # default 7
+
+[corpus.questions]
+kind = "json-folder"                  # a sourcer name, see SOURCERS
+path = "~/.local/share/example/questions"
+items = "exchanges"                   # the list of records inside each JSON file
+field = "asked_at"                    # each record's timestamp
+watermark_row = "question store"      # the row of the watermark table in sources.md
+threshold = 100                       # default 100; 0 reports the count, never triggers
+
+[corpus.overrides]
+kind = "jsonl"
+path = "~/.local/share/example/overrides.jsonl"
+field = "at"
+threshold = 10                        # no watermark_row: counted since the last refresh
+missing_ok = true                     # absent file = nothing yet (else it is unchecked)
+```
+
+Other keys: `watermark_where` (text the row’s `Where` cell must contain, when
+several rows share a corpus name), `pattern` (a glob, for the folder sourcers).
+Paths take `~` and `$VARS` and must be absolute. Times without a zone are UTC, and
+so is a date-only watermark’s day.
+
+Why a separate TOML file rather than a block inside `sources.md`: `sources.md` is
+rewritten by every refresh (its candidate replaces the installed one), so a machine block
+in it would be at the mercy of that rewrite; the corpus list changes rarely and is edited
+by hand. The watermarks themselves stay in `sources.md`, the one place a refresh moves
+them, read from its watermark table (a Markdown table under a heading containing
+“Watermark”, with columns `Corpus`, `Where` and `Watermark`; the first ISO date or
+time in the `Watermark` cell is the watermark). The last refresh is the latest date
+that opens an item of the list under the “Refresh log” heading.
+
+A watermark that is a date only means “everything through that day was read”; a time is
+taken as given. A corpus is a **sourcer**: a factory taking the corpus’s TOML table and
+returning `count_since(watermark) -> int`. [`SOURCERS`](_autosummary/acquaint.refresh.html.md#acquaint.refresh.SOURCERS) holds the generic ones (a
+JSONL file, a folder of JSON files, a folder of files by modification time); a host adds
+its own through the `sourcers` argument of [`refresh_status()`](_autosummary/acquaint.refresh.html.md#acquaint.refresh.refresh_status).
+
+```pycon
+>>> from datetime import datetime, timezone
+>>> parse_time("2026-01-02T03:04Z"), parse_time(1767225600000)
+(datetime.datetime(2026, 1, 2, 3, 4, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 1, 0, 0, tzinfo=datetime.timezone.utc))
+>>> watermark_of("2026-01-02 (nothing later)")
+datetime.datetime(2026, 1, 2, 23, 59, 59, 999999, tzinfo=datetime.timezone.utc)
+```
+
+### Module Attributes
+
+| [`SOURCERS`](_autosummary/acquaint.refresh.html.md#acquaint.refresh.SOURCERS)   | The generic sourcers, by the `kind` a corpus names in `refresh.toml`.   |
+|-------------------------------------------------------------|-------------------------------------------------------------------------|
+
+### Functions
+
+| [`empty_status`](_autosummary/acquaint.refresh.html.md#acquaint.refresh.empty_status)(reason, \*[, corpus])             | The shape [`refresh_status()`](_autosummary/acquaint.refresh.html.md#acquaint.refresh.refresh_status) returns, for a record that could not be checked at all (same keys, so a caller has one code path).                                                                |
+|-------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`jsonl_sourcer`](_autosummary/acquaint.refresh.html.md#acquaint.refresh.jsonl_sourcer)(spec)                            | A JSON Lines file (`path`), one record per line, timestamp in `field`.                                                                                                                                                                        |
+| [`json_folder_sourcer`](_autosummary/acquaint.refresh.html.md#acquaint.refresh.json_folder_sourcer)(spec)                      | A folder (`path`) of JSON files matching `pattern` (default `*.json`); each file is one record, or holds a list of them under `items` (a dotted key); timestamp in `field`.                                                                   |
+| [`last_refresh`](_autosummary/acquaint.refresh.html.md#acquaint.refresh.last_refresh)(sources_md)                       | The latest date opening an item of the list under the "Refresh log" heading (a line whose date is no real date is skipped).                                                                                                                   |
+| [`mtime_sourcer`](_autosummary/acquaint.refresh.html.md#acquaint.refresh.mtime_sourcer)(spec)                            | Files under `path` matching `pattern` (a glob, default `*`; `*/memory/*.md` reaches into subfolders), each dated by its modification time.                                                                                                    |
+| [`parse_time`](_autosummary/acquaint.refresh.html.md#acquaint.refresh.parse_time)(value)                              | A timezone-aware UTC datetime from an ISO string (`Z` or an offset; naive is UTC) or an epoch number, or a string of one (seconds or milliseconds); `None` for anything else, out-of-range values included.                                   |
+| [`refresh_status`](_autosummary/acquaint.refresh.html.md#acquaint.refresh.refresh_status)(sources_md[, config_toml, ...]) | Whether a refresh is due, from a record's `sources.md` and `refresh.toml` texts.                                                                                                                                                              |
+| [`watermark_of`](_autosummary/acquaint.refresh.html.md#acquaint.refresh.watermark_of)(text)                             | The first ISO date or time in `text`; a date alone counts as the end of that day, UTC (everything through it was read).                                                                                                                       |
+| [`watermark_rows`](_autosummary/acquaint.refresh.html.md#acquaint.refresh.watermark_rows)(sources_md)                     | The rows of the watermark table (the first table with a `Watermark` column under the first heading containing "watermark" that has one): `{"corpus", "where", "watermark", "text"}`, `watermark` parsed (`None` when the cell holds no date). |
+
+### acquaint.refresh.SOURCERS *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [Callable](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[Mapping](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [Any](https://docs.python.org/3/library/typing.html#typing.Any)]], [Callable](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[datetime](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [None](https://docs.python.org/3/builtins/constants.html#None)], [int](https://docs.python.org/3/builtins/functions.html#int)]]]* *= {'json-folder': <function json_folder_sourcer>, 'jsonl': <function jsonl_sourcer>, 'mtime': <function mtime_sourcer>}*
+
+The generic sourcers, by the `kind` a corpus names in `refresh.toml`.
+
+### acquaint.refresh.empty_status(reason, , corpus='(record)')
+
+The shape [`refresh_status()`](_autosummary/acquaint.refresh.html.md#acquaint.refresh.refresh_status) returns, for a record that could not be checked at all (same keys, so a caller has one code path).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### acquaint.refresh.json_folder_sourcer(spec)
+
+A folder (`path`) of JSON files matching `pattern` (default `*.json`); each file is one record, or holds a list of them under `items` (a dotted key); timestamp in `field`.
+
+* **Return type:**
+  [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`None`](https://docs.python.org/3/builtins/constants.html#None)], [`int`](https://docs.python.org/3/builtins/functions.html#int)]
+
+### acquaint.refresh.jsonl_sourcer(spec)
+
+A JSON Lines file (`path`), one record per line, timestamp in `field`. An unparseable line is skipped; a missing file is an error unless `missing_ok = true`.
+
+* **Return type:**
+  [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`None`](https://docs.python.org/3/builtins/constants.html#None)], [`int`](https://docs.python.org/3/builtins/functions.html#int)]
+
+### acquaint.refresh.last_refresh(sources_md)
+
+The latest date opening an item of the list under the “Refresh log” heading (a line whose date is no real date is skipped).
+
+* **Return type:**
+  [`date`](https://docs.python.org/3/library/datetime.html#datetime.date) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### acquaint.refresh.mtime_sourcer(spec)
+
+Files under `path` matching `pattern` (a glob, default `*`; `*/memory/*.md` reaches into subfolders), each dated by its modification time.
+
+* **Return type:**
+  [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`None`](https://docs.python.org/3/builtins/constants.html#None)], [`int`](https://docs.python.org/3/builtins/functions.html#int)]
+
+### acquaint.refresh.parse_time(value)
+
+A timezone-aware UTC datetime from an ISO string (`Z` or an offset; naive is UTC) or an epoch number, or a string of one (seconds or milliseconds); `None` for anything else, out-of-range values included.
+
+* **Return type:**
+  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### acquaint.refresh.refresh_status(sources_md, config_toml='', \*, today=None, sourcers={'json-folder': <function json_folder_sourcer>, 'jsonl': <function jsonl_sourcer>, 'mtime': <function mtime_sourcer>})
+
+Whether a refresh is due, from a record’s `sources.md` and `refresh.toml` texts.
+
+Returns `{"outcome", "due", "reasons", "age", "corpora", "unchecked", "configured"}`.
+`outcome` is `due` (some trigger fired), `not_due` (none fired and everything
+was checked) or `unchecked` (none fired, but something could not be checked, so
+“not due” cannot be claimed). `age` is the last refresh against `max_age_days`;
+each corpus row has its watermark (and where it came from), the count newer, its
+threshold and whether it triggers. A corpus that could not be counted goes to
+`unchecked` with the reason, never silently to zero, and never takes the others
+down with it.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### acquaint.refresh.watermark_of(text)
+
+The first ISO date or time in `text`; a date alone counts as the end of that day, UTC (everything through it was read). `None` when there is none, or it is no real date.
+
+* **Return type:**
+  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### acquaint.refresh.watermark_rows(sources_md)
+
+The rows of the watermark table (the first table with a `Watermark` column under the first heading containing “watermark” that has one): `{"corpus", "where", "watermark", "text"}`, `watermark` parsed (`None` when the cell holds no date).
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+
 # _autosummary/acquaint.render.html.md
 
 # acquaint.render
@@ -2309,6 +2469,7 @@ with a [`Store`](_autosummary/acquaint.store.html.md#acquaint.store.Store).
 | [`lint`](_autosummary/acquaint.tools.html.md#acquaint.tools.lint)([entity, data_dir])                           | Check records: every preference, view and rule sourced; tiers, labels and seals set by the operator; nothing POLICY.md forbids; files parse; entry files within budget.                                                                                                                                                                  |
 | [`new`](_autosummary/acquaint.tools.html.md#acquaint.tools.new)(kind, name, \*[, qualifier, description, ...]) | Create a person, project, org or group from its template (a readable slug id; `qualifier` separates two of the same name).                                                                                                                                                                                                               |
 | [`reach`](_autosummary/acquaint.tools.html.md#acquaint.tools.reach)(person, \*[, purpose, urgency, ...])         | Ordered channels for reaching someone in a context.                                                                                                                                                                                                                                                                                      |
+| [`refresh_due`](_autosummary/acquaint.tools.html.md#acquaint.tools.refresh_due)(entity, \*[, today, data_dir])         | Is the record due for a refresh from its corpora? Per corpus (`refresh.toml` beside `sources.md`): the watermark in `sources.md`, how many items are newer, the threshold; plus the age of the last refresh against `max_age_days` (default 7).                                                                                          |
 | [`remember`](_autosummary/acquaint.tools.html.md#acquaint.tools.remember)(entity, text, \*[, source, kind, ...])    | Append a dated observation (`observation`, `interaction`, `identity`, `preference`, `view`, `rule`) to an entity's log, with its source.                                                                                                                                                                                                 |
 | [`rename`](_autosummary/acquaint.tools.html.md#acquaint.tools.rename)(entity, to, \*[, data_dir])                 | Change an entity's id (`to` is a slug) or name and id (`to` is a name), rewriting links to it.                                                                                                                                                                                                                                           |
 | [`resolve`](_autosummary/acquaint.tools.html.md#acquaint.tools.resolve)(handle, \*[, data_dir])                    | Map a channel handle (`github:octocat`, `email:ada@example.org`) to the entity it belongs to, with the evidence.                                                                                                                                                                                                                         |
@@ -2332,14 +2493,14 @@ Bases: [`Exception`](https://docs.python.org/3/builtins/exceptions.html#Exceptio
 
 An expected failure with a message meant for the person or agent that asked.
 
-### acquaint.tools.SIDE_EFFECTS *= {'brief': 'read', 'check': 'read', 'digest': 'read', 'digest_append': 'rewrite', 'digest_mark': 'rewrite', 'digest_new': 'create', 'digest_sweep': 'rewrite', 'disclosure': 'read', 'forget': 'destructive', 'lint': 'read', 'new': 'create', 'reach': 'read', 'remember': 'append', 'rename': 'rewrite', 'resolve': 'read', 'review': 'read', 'style_lint': 'read', 'sync_init': 'external', 'sync_pull': 'rewrite', 'sync_push': 'external', 'sync_status': 'external-read', 'todo_preflight': 'external-read', 'who': 'read'}*
+### acquaint.tools.SIDE_EFFECTS *= {'brief': 'read', 'check': 'read', 'digest': 'read', 'digest_append': 'rewrite', 'digest_mark': 'rewrite', 'digest_new': 'create', 'digest_sweep': 'rewrite', 'disclosure': 'read', 'forget': 'destructive', 'lint': 'read', 'new': 'create', 'reach': 'read', 'refresh_due': 'read', 'remember': 'append', 'rename': 'rewrite', 'resolve': 'read', 'review': 'read', 'style_lint': 'read', 'sync_init': 'external', 'sync_pull': 'rewrite', 'sync_push': 'external', 'sync_status': 'external-read', 'todo_preflight': 'external-read', 'who': 'read'}*
 
 What each tool changes, for surfaces that must decide what to expose or confirm.
 `read` changes nothing and stays local; `append` adds to a log; `create` adds a
 record; `rewrite` changes existing records; `destructive` removes data;
 `external-read` queries a remote service; `external` acts on one.
 
-### acquaint.tools.TOOLS *= [<function who>, <function resolve>, <function check>, <function reach>, <function brief>, <function remember>, <function lint>, <function new>, <function rename>, <function forget>, <function sync_init>, <function sync_push>, <function sync_pull>, <function sync_status>, <function style_lint>, <function disclosure>, <function review>, <function todo_preflight>, <function digest>, <function digest_new>, <function digest_append>, <function digest_mark>, <function digest_sweep>]*
+### acquaint.tools.TOOLS *= [<function who>, <function resolve>, <function check>, <function reach>, <function brief>, <function remember>, <function lint>, <function new>, <function rename>, <function forget>, <function sync_init>, <function sync_push>, <function sync_pull>, <function sync_status>, <function style_lint>, <function disclosure>, <function review>, <function todo_preflight>, <function digest>, <function digest_new>, <function digest_append>, <function digest_mark>, <function digest_sweep>, <function refresh_due>]*
 
 Every tool, in the order surfaces list them.
 
@@ -2423,6 +2584,13 @@ Create a person, project, org or group from its template (a readable slug id; `q
 ### acquaint.tools.reach(person, , purpose=None, urgency=None, project=None, message_type=None, topic=None, data_dir=None)
 
 Ordered channels for reaching someone in a context. Only active addresses; returns them, sends nothing. `outcome` is `reachable`, `no_address` (a rule matched, but neither states an address nor finds a usable one recorded for its channels) or `no_channel`. Each channel’s `address_kind` is `stated`, `identity` (the person’s handle, which a conversation-addressed channel does not take) or `None`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### acquaint.tools.refresh_due(entity, , today=None, data_dir=None)
+
+Is the record due for a refresh from its corpora? Per corpus (`refresh.toml` beside `sources.md`): the watermark in `sources.md`, how many items are newer, the threshold; plus the age of the last refresh against `max_age_days` (default 7). `outcome` is `due` (exit 0), `not_due` (exit 1: nothing fired and everything was checked) or `unchecked` (exit 4: nothing fired, but a corpus, the config or the record could not be read; see `unchecked`). The result has the same keys whatever the outcome; a script should read `outcome` from `--json` rather than rely on the exit code alone. Reads only; never refreshes.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -2710,18 +2878,16 @@ True
 
 # About this build
 
-This documentation was built on **2026-11-17 08:46 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/d2deafa7957e3cc4252443e7f1e34e41854d25cb"><code>d2deafa</code></a> on branch <code>main</code>, for **acquaint 0.0.31** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-18 15:38 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/b38b6da7a48bdefefff0cb8c4e01ca2b14a4e61e"><code>b38b6da</code></a> on branch <code>main</code>, for **acquaint 0.0.32** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.31) is behind the latest release on PyPI (0.0.32): `pip install acquaint` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                            |
 |---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/d2deafa7957e3cc4252443e7f1e34e41854d25cb"><code>d2deafa7957e3cc4252443e7f1e34e41854d25cb</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/b38b6da7a48bdefefff0cb8c4e01ca2b14a4e61e"><code>b38b6da7a48bdefefff0cb8c4e01ca2b14a4e61e</code></a> |
 | Branch              | <code>main</code>                                                                                                                                          |
 | Tags at this commit | none                                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                      |
@@ -2732,9 +2898,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/acquaint</code>                                                           |
-| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/44049335702">44049335702</a>  |
+| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/44337536460">44337536460</a>  |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>d2deafa7957e3cc4252443e7f1e34e41854d25cb</code> (in the history of the built commit) |
+| Event commit | <code>b38b6da7a48bdefefff0cb8c4e01ca2b14a4e61e</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2759,13 +2925,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/acquaint/0.0.32/">0.0.32</a>, newer than the documented version (0.0.31).
+Latest release: <a href="https://pypi.org/project/acquaint/0.0.32/">0.0.32</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/acquaint && cd acquaint
-git checkout d2deafa7957e3cc4252443e7f1e34e41854d25cb
+git checkout b38b6da7a48bdefefff0cb8c4e01ca2b14a4e61e
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

@@ -37,6 +37,7 @@ with a [`Store`](acquaint.store.html.md#acquaint.store.Store).
 | [`lint`](#acquaint.tools.lint)([entity, data_dir])                           | Check records: every preference, view and rule sourced; tiers, labels and seals set by the operator; nothing POLICY.md forbids; files parse; entry files within budget.                                                                                                                                                                  |
 | [`new`](#acquaint.tools.new)(kind, name, \*[, qualifier, description, ...]) | Create a person, project, org or group from its template (a readable slug id; `qualifier` separates two of the same name).                                                                                                                                                                                                               |
 | [`reach`](#acquaint.tools.reach)(person, \*[, purpose, urgency, ...])         | Ordered channels for reaching someone in a context.                                                                                                                                                                                                                                                                                      |
+| [`refresh_due`](#acquaint.tools.refresh_due)(entity, \*[, today, data_dir])         | Is the record due for a refresh from its corpora? Per corpus (`refresh.toml` beside `sources.md`): the watermark in `sources.md`, how many items are newer, the threshold; plus the age of the last refresh against `max_age_days` (default 7).                                                                                          |
 | [`remember`](#acquaint.tools.remember)(entity, text, \*[, source, kind, ...])    | Append a dated observation (`observation`, `interaction`, `identity`, `preference`, `view`, `rule`) to an entity's log, with its source.                                                                                                                                                                                                 |
 | [`rename`](#acquaint.tools.rename)(entity, to, \*[, data_dir])                 | Change an entity's id (`to` is a slug) or name and id (`to` is a name), rewriting links to it.                                                                                                                                                                                                                                           |
 | [`resolve`](#acquaint.tools.resolve)(handle, \*[, data_dir])                    | Map a channel handle (`github:octocat`, `email:ada@example.org`) to the entity it belongs to, with the evidence.                                                                                                                                                                                                                         |
@@ -60,14 +61,14 @@ Bases: [`Exception`](https://docs.python.org/3/builtins/exceptions.html#Exceptio
 
 An expected failure with a message meant for the person or agent that asked.
 
-### acquaint.tools.SIDE_EFFECTS *= {'brief': 'read', 'check': 'read', 'digest': 'read', 'digest_append': 'rewrite', 'digest_mark': 'rewrite', 'digest_new': 'create', 'digest_sweep': 'rewrite', 'disclosure': 'read', 'forget': 'destructive', 'lint': 'read', 'new': 'create', 'reach': 'read', 'remember': 'append', 'rename': 'rewrite', 'resolve': 'read', 'review': 'read', 'style_lint': 'read', 'sync_init': 'external', 'sync_pull': 'rewrite', 'sync_push': 'external', 'sync_status': 'external-read', 'todo_preflight': 'external-read', 'who': 'read'}*
+### acquaint.tools.SIDE_EFFECTS *= {'brief': 'read', 'check': 'read', 'digest': 'read', 'digest_append': 'rewrite', 'digest_mark': 'rewrite', 'digest_new': 'create', 'digest_sweep': 'rewrite', 'disclosure': 'read', 'forget': 'destructive', 'lint': 'read', 'new': 'create', 'reach': 'read', 'refresh_due': 'read', 'remember': 'append', 'rename': 'rewrite', 'resolve': 'read', 'review': 'read', 'style_lint': 'read', 'sync_init': 'external', 'sync_pull': 'rewrite', 'sync_push': 'external', 'sync_status': 'external-read', 'todo_preflight': 'external-read', 'who': 'read'}*
 
 What each tool changes, for surfaces that must decide what to expose or confirm.
 `read` changes nothing and stays local; `append` adds to a log; `create` adds a
 record; `rewrite` changes existing records; `destructive` removes data;
 `external-read` queries a remote service; `external` acts on one.
 
-### acquaint.tools.TOOLS *= [<function who>, <function resolve>, <function check>, <function reach>, <function brief>, <function remember>, <function lint>, <function new>, <function rename>, <function forget>, <function sync_init>, <function sync_push>, <function sync_pull>, <function sync_status>, <function style_lint>, <function disclosure>, <function review>, <function todo_preflight>, <function digest>, <function digest_new>, <function digest_append>, <function digest_mark>, <function digest_sweep>]*
+### acquaint.tools.TOOLS *= [<function who>, <function resolve>, <function check>, <function reach>, <function brief>, <function remember>, <function lint>, <function new>, <function rename>, <function forget>, <function sync_init>, <function sync_push>, <function sync_pull>, <function sync_status>, <function style_lint>, <function disclosure>, <function review>, <function todo_preflight>, <function digest>, <function digest_new>, <function digest_append>, <function digest_mark>, <function digest_sweep>, <function refresh_due>]*
 
 Every tool, in the order surfaces list them.
 
@@ -151,6 +152,13 @@ Create a person, project, org or group from its template (a readable slug id; `q
 ### acquaint.tools.reach(person, , purpose=None, urgency=None, project=None, message_type=None, topic=None, data_dir=None)
 
 Ordered channels for reaching someone in a context. Only active addresses; returns them, sends nothing. `outcome` is `reachable`, `no_address` (a rule matched, but neither states an address nor finds a usable one recorded for its channels) or `no_channel`. Each channel’s `address_kind` is `stated`, `identity` (the person’s handle, which a conversation-addressed channel does not take) or `None`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### acquaint.tools.refresh_due(entity, , today=None, data_dir=None)
+
+Is the record due for a refresh from its corpora? Per corpus (`refresh.toml` beside `sources.md`): the watermark in `sources.md`, how many items are newer, the threshold; plus the age of the last refresh against `max_age_days` (default 7). `outcome` is `due` (exit 0), `not_due` (exit 1: nothing fired and everything was checked) or `unchecked` (exit 4: nothing fired, but a corpus, the config or the record could not be read; see `unchecked`). The result has the same keys whatever the outcome; a script should read `outcome` from `--json` rather than rely on the exit code alone. Reads only; never refreshes.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

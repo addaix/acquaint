@@ -54,6 +54,7 @@
    mcp
    meta
    records
+   refresh
    render
    resources
    store

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="plum" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>acquaint.refresh - acquaint</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="acquaint.render" href="acquaint.render.html" /><link rel="prev" title="acquaint.records" href="acquaint.records.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="acquaint.refresh"/>
+    <meta name="twitter:card" content="summary"/>
+  
+<link rel="alternate" type="text/markdown" href="acquaint.refresh.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>acquaint</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/acquaint" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="acquaint.html">acquaint</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="acquaint.deslop.html">acquaint.deslop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="acquaint.digests.html">acquaint.digests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="acquaint.edit.html">acquaint.edit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="acquaint.facts.html">acquaint.facts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="acquaint.lookup.html">acquaint.lookup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="acquaint.mcp.html">acquaint.mcp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="acquaint.meta.html">acquaint.meta</a></li>
+<li class="toctree-l3"><a class="reference internal" href="acquaint.records.html">acquaint.records</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">acquaint.refresh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="acquaint.render.html">acquaint.render</a></li>
+<li class="toctree-l3"><a class="reference internal" href="acquaint.resources.html">acquaint.resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="acquaint.store.html">acquaint.store</a></li>
+<li class="toctree-l3"><a class="reference internal" href="acquaint.sync.html">acquaint.sync</a></li>
+<li class="toctree-l3"><a class="reference internal" href="acquaint.tools.html">acquaint.tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="acquaint.trust.html">acquaint.trust</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#acquaint.refresh.SOURCERS"><code class="docutils literal notranslate"><span class="pre">SOURCERS</span></code></a></li>
+<li><a class="reference internal" href="#acquaint.refresh.empty_status"><code class="docutils literal notranslate"><span class="pre">empty_status()</span></code></a></li>
+<li><a class="reference internal" href="#acquaint.refresh.json_folder_sourcer"><code class="docutils literal notranslate"><span class="pre">json_folder_sourcer()</span></code></a></li>
+<li><a class="reference internal" href="#acquaint.refresh.jsonl_sourcer"><code class="docutils literal notranslate"><span class="pre">jsonl_sourcer()</span></code></a></li>
+<li><a class="reference internal" href="#acquaint.refresh.last_refresh"><code class="docutils literal notranslate"><span class="pre">last_refresh()</span></code></a></li>
+<li><a class="reference internal" href="#acquaint.refresh.mtime_sourcer"><code class="docutils literal notranslate"><span class="pre">mtime_sourcer()</span></code></a></li>
+<li><a class="reference internal" href="#acquaint.refresh.parse_time"><code class="docutils literal notranslate"><span class="pre">parse_time()</span></code></a></li>
+<li><a class="reference internal" href="#acquaint.refresh.refresh_status"><code class="docutils literal notranslate"><span class="pre">refresh_status()</span></code></a></li>
+<li><a class="reference internal" href="#acquaint.refresh.watermark_of"><code class="docutils literal notranslate"><span class="pre">watermark_of()</span></code></a></li>
+<li><a class="reference internal" href="#acquaint.refresh.watermark_rows"><code class="docutils literal notranslate"><span class="pre">watermark_rows()</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">acquaint</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../api.html"><span itemprop="name">API reference</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="acquaint.html"><span itemprop="name">acquaint</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="3" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">acquaint.refresh</strong>
+        <meta itemprop="position" content="4" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <section id="module-acquaint.refresh">
+<span id="acquaint-refresh"></span><h1>acquaint.refresh<a class="headerlink" href="#module-acquaint.refresh" title="Link to this heading">#</a></h1>
+<p>Is a record built from someone’s own writing due for a refresh? Per-corpus watermarks against what is newer.</p>
+<p>A record mined from a corpus (an operator’s positions from what they typed to their
+agents, say) goes stale as the person keeps writing. Its <code class="docutils literal notranslate"><span class="pre">sources.md</span></code> holds one
+<strong>watermark</strong> per corpus (the newest item mined), and its <strong>refresh log</strong>. This module
+counts, per corpus, how many items are newer than the watermark, and says whether a
+refresh is due: the last refresh is older than <code class="docutils literal notranslate"><span class="pre">max_age_days</span></code>, or a corpus count has
+reached its <code class="docutils literal notranslate"><span class="pre">threshold</span></code>. It only reads; the refresh itself stays a reviewed pass.</p>
+<p>Which corpora a record uses is per-record configuration, <code class="docutils literal notranslate"><span class="pre">refresh.toml</span></code> beside
+<code class="docutils literal notranslate"><span class="pre">sources.md</span></code> (it lives in the private store, so paths there may be machine paths):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">max_age_days</span> <span class="o">=</span> <span class="mi">7</span>                      <span class="c1"># default 7</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="p">[</span><span class="n">corpus</span><span class="o">.</span><span class="n">questions</span><span class="p">]</span>
+</span><span data-line="4"><span class="n">kind</span> <span class="o">=</span> <span class="s2">"json-folder"</span>                  <span class="c1"># a sourcer name, see SOURCERS</span>
+</span><span data-line="5"><span class="n">path</span> <span class="o">=</span> <span class="s2">"~/.local/share/example/questions"</span>
+</span><span data-line="6"><span class="n">items</span> <span class="o">=</span> <span class="s2">"exchanges"</span>                   <span class="c1"># the list of records inside each JSON file</span>
+</span><span data-line="7"><span class="n">field</span> <span class="o">=</span> <span class="s2">"asked_at"</span>                    <span class="c1"># each record's timestamp</span>
+</span><span data-line="8"><span class="n">watermark_row</span> <span class="o">=</span> <span class="s2">"question store"</span>      <span class="c1"># the row of the watermark table in sources.md</span>
+</span><span data-line="9"><span class="n">threshold</span> <span class="o">=</span> <span class="mi">100</span>                       <span class="c1"># default 100; 0 reports the count, never triggers</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="p">[</span><span class="n">corpus</span><span class="o">.</span><span class="n">overrides</span><span class="p">]</span>
+</span><span data-line="12"><span class="n">kind</span> <span class="o">=</span> <span class="s2">"jsonl"</span>
+</span><span data-line="13"><span class="n">path</span> <span class="o">=</span> <span class="s2">"~/.local/share/example/overrides.jsonl"</span>
+</span><span data-line="14"><span class="n">field</span> <span class="o">=</span> <span class="s2">"at"</span>
+</span><span data-line="15"><span class="n">threshold</span> <span class="o">=</span> <span class="mi">10</span>                        <span class="c1"># no watermark_row: counted since the last refresh</span>
+</span><span data-line="16"><span class="n">missing_ok</span> <span class="o">=</span> <span class="n">true</span>                     <span class="c1"># absent file = nothing yet (else it is unchecked)</span>
+</span></pre></div>
+</div>
+<p>Other keys: <code class="docutils literal notranslate"><span class="pre">watermark_where</span></code> (text the row’s <code class="docutils literal notranslate"><span class="pre">Where</span></code> cell must contain, when
+several rows share a corpus name), <code class="docutils literal notranslate"><span class="pre">pattern</span></code> (a glob, for the folder sourcers).
+Paths take <code class="docutils literal notranslate"><span class="pre">~</span></code> and <code class="docutils literal notranslate"><span class="pre">$VARS</span></code> and must be absolute. Times without a zone are UTC, and
+so is a date-only watermark’s day.</p>
+<p>Why a separate TOML file rather than a block inside <code class="docutils literal notranslate"><span class="pre">sources.md</span></code>: <code class="docutils literal notranslate"><span class="pre">sources.md</span></code> is
+rewritten by every refresh (its candidate replaces the installed one), so a machine block
+in it would be at the mercy of that rewrite; the corpus list changes rarely and is edited
+by hand. The watermarks themselves stay in <code class="docutils literal notranslate"><span class="pre">sources.md</span></code>, the one place a refresh moves
+them, read from its watermark table (a Markdown table under a heading containing
+“Watermark”, with columns <code class="docutils literal notranslate"><span class="pre">Corpus</span></code>, <code class="docutils literal notranslate"><span class="pre">Where</span></code> and <code class="docutils literal notranslate"><span class="pre">Watermark</span></code>; the first ISO date or
+time in the <code class="docutils literal notranslate"><span class="pre">Watermark</span></code> cell is the watermark). The last refresh is the latest date
+that opens an item of the list under the “Refresh log” heading.</p>
+<p>A watermark that is a date only means “everything through that day was read”; a time is
+taken as given. A corpus is a <strong>sourcer</strong>: a factory taking the corpus’s TOML table and
+returning <code class="docutils literal notranslate"><span class="pre">count_since(watermark)</span> <span class="pre">-&gt;</span> <span class="pre">int</span></code>. <a class="reference internal" href="#acquaint.refresh.SOURCERS" title="acquaint.refresh.SOURCERS"><code class="xref py py-data docutils literal notranslate"><span class="pre">SOURCERS</span></code></a> holds the generic ones (a
+JSONL file, a folder of JSON files, a folder of files by modification time); a host adds
+its own through the <code class="docutils literal notranslate"><span class="pre">sourcers</span></code> argument of <a class="reference internal" href="#acquaint.refresh.refresh_status" title="acquaint.refresh.refresh_status"><code class="xref py py-func docutils literal notranslate"><span class="pre">refresh_status()</span></code></a>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_time</span><span class="p">(</span><span class="s2">"2026-01-02T03:04Z"</span><span class="p">),</span> <span class="n">parse_time</span><span class="p">(</span><span class="mi">1767225600000</span><span class="p">)</span>
+</span><span data-line="3"><span class="go">(datetime.datetime(2026, 1, 2, 3, 4, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 1, 0, 0, tzinfo=datetime.timezone.utc))</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">watermark_of</span><span class="p">(</span><span class="s2">"2026-01-02 (nothing later)"</span><span class="p">)</span>
+</span><span data-line="5"><span class="go">datetime.datetime(2026, 1, 2, 23, 59, 59, 999999, tzinfo=datetime.timezone.utc)</span>
+</span></pre></div>
+</div>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.refresh.SOURCERS" title="acquaint.refresh.SOURCERS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SOURCERS</span></code></a></p></td>
+<td><p>The generic sourcers, by the <code class="docutils literal notranslate"><span class="pre">kind</span></code> a corpus names in <code class="docutils literal notranslate"><span class="pre">refresh.toml</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.refresh.empty_status" title="acquaint.refresh.empty_status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">empty_status</span></code></a>(reason, *[, corpus])</p></td>
+<td><p>The shape <a class="reference internal" href="#acquaint.refresh.refresh_status" title="acquaint.refresh.refresh_status"><code class="xref py py-func docutils literal notranslate"><span class="pre">refresh_status()</span></code></a> returns, for a record that could not be checked at all (same keys, so a caller has one code path).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#acquaint.refresh.jsonl_sourcer" title="acquaint.refresh.jsonl_sourcer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jsonl_sourcer</span></code></a>(spec)</p></td>
+<td><p>A JSON Lines file (<code class="docutils literal notranslate"><span class="pre">path</span></code>), one record per line, timestamp in <code class="docutils literal notranslate"><span class="pre">field</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.refresh.json_folder_sourcer" title="acquaint.refresh.json_folder_sourcer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">json_folder_sourcer</span></code></a>(spec)</p></td>
+<td><p>A folder (<code class="docutils literal notranslate"><span class="pre">path</span></code>) of JSON files matching <code class="docutils literal notranslate"><span class="pre">pattern</span></code> (default <code class="docutils literal notranslate"><span class="pre">*.json</span></code>); each file is one record, or holds a list of them under <code class="docutils literal notranslate"><span class="pre">items</span></code> (a dotted key); timestamp in <code class="docutils literal notranslate"><span class="pre">field</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#acquaint.refresh.last_refresh" title="acquaint.refresh.last_refresh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">last_refresh</span></code></a>(sources_md)</p></td>
+<td><p>The latest date opening an item of the list under the &quot;Refresh log&quot; heading (a line whose date is no real date is skipped).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.refresh.mtime_sourcer" title="acquaint.refresh.mtime_sourcer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mtime_sourcer</span></code></a>(spec)</p></td>
+<td><p>Files under <code class="docutils literal notranslate"><span class="pre">path</span></code> matching <code class="docutils literal notranslate"><span class="pre">pattern</span></code> (a glob, default <code class="docutils literal notranslate"><span class="pre">*</span></code>; <code class="docutils literal notranslate"><span class="pre">*/memory/*.md</span></code> reaches into subfolders), each dated by its modification time.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#acquaint.refresh.parse_time" title="acquaint.refresh.parse_time"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_time</span></code></a>(value)</p></td>
+<td><p>A timezone-aware UTC datetime from an ISO string (<code class="docutils literal notranslate"><span class="pre">Z</span></code> or an offset; naive is UTC) or an epoch number, or a string of one (seconds or milliseconds); <code class="docutils literal notranslate"><span class="pre">None</span></code> for anything else, out-of-range values included.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.refresh.refresh_status" title="acquaint.refresh.refresh_status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">refresh_status</span></code></a>(sources_md[, config_toml, ...])</p></td>
+<td><p>Whether a refresh is due, from a record's <code class="docutils literal notranslate"><span class="pre">sources.md</span></code> and <code class="docutils literal notranslate"><span class="pre">refresh.toml</span></code> texts.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#acquaint.refresh.watermark_of" title="acquaint.refresh.watermark_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">watermark_of</span></code></a>(text)</p></td>
+<td><p>The first ISO date or time in <code class="docutils literal notranslate"><span class="pre">text</span></code>; a date alone counts as the end of that day, UTC (everything through it was read).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#acquaint.refresh.watermark_rows" title="acquaint.refresh.watermark_rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">watermark_rows</span></code></a>(sources_md)</p></td>
+<td><p>The rows of the watermark table (the first table with a <code class="docutils literal notranslate"><span class="pre">Watermark</span></code> column under the first heading containing &quot;watermark&quot; that has one): <code class="docutils literal notranslate"><span class="pre">{&quot;corpus&quot;,</span> <span class="pre">&quot;where&quot;,</span> <span class="pre">&quot;watermark&quot;,</span> <span class="pre">&quot;text&quot;}</span></code>, <code class="docutils literal notranslate"><span class="pre">watermark</span></code> parsed (<code class="docutils literal notranslate"><span class="pre">None</span></code> when the cell holds no date).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="acquaint.refresh.SOURCERS">
+<span class="sig-prename descclassname"><span class="pre">acquaint.refresh.</span></span><span class="sig-name descname"><span class="pre">SOURCERS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.15)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.15)"><span class="pre">Mapping</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.15)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><span class="pre">datetime</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'json-folder':</span> <span class="pre">&lt;function</span> <span class="pre">json_folder_sourcer&gt;,</span> <span class="pre">'jsonl':</span> <span class="pre">&lt;function</span> <span class="pre">jsonl_sourcer&gt;,</span> <span class="pre">'mtime':</span> <span class="pre">&lt;function</span> <span class="pre">mtime_sourcer&gt;}</span></span><a class="headerlink" href="#acquaint.refresh.SOURCERS" title="Link to this definition">#</a></dt>
+<dd><p>The generic sourcers, by the <code class="docutils literal notranslate"><span class="pre">kind</span></code> a corpus names in <code class="docutils literal notranslate"><span class="pre">refresh.toml</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="acquaint.refresh.empty_status">
+<span class="sig-prename descclassname"><span class="pre">acquaint.refresh.</span></span><span class="sig-name descname"><span class="pre">empty_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reason</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">corpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'(record)'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/refresh.html#empty_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.refresh.empty_status" title="Link to this definition">#</a></dt>
+<dd><p>The shape <a class="reference internal" href="#acquaint.refresh.refresh_status" title="acquaint.refresh.refresh_status"><code class="xref py py-func docutils literal notranslate"><span class="pre">refresh_status()</span></code></a> returns, for a record that could not be checked at all (same keys, so a caller has one code path).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="acquaint.refresh.json_folder_sourcer">
+<span class="sig-prename descclassname"><span class="pre">acquaint.refresh.</span></span><span class="sig-name descname"><span class="pre">json_folder_sourcer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/refresh.html#json_folder_sourcer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.refresh.json_folder_sourcer" title="Link to this definition">#</a></dt>
+<dd><p>A folder (<code class="docutils literal notranslate"><span class="pre">path</span></code>) of JSON files matching <code class="docutils literal notranslate"><span class="pre">pattern</span></code> (default <code class="docutils literal notranslate"><span class="pre">*.json</span></code>); each file is one record, or holds a list of them under <code class="docutils literal notranslate"><span class="pre">items</span></code> (a dotted key); timestamp in <code class="docutils literal notranslate"><span class="pre">field</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span>], <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="acquaint.refresh.jsonl_sourcer">
+<span class="sig-prename descclassname"><span class="pre">acquaint.refresh.</span></span><span class="sig-name descname"><span class="pre">jsonl_sourcer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/refresh.html#jsonl_sourcer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.refresh.jsonl_sourcer" title="Link to this definition">#</a></dt>
+<dd><p>A JSON Lines file (<code class="docutils literal notranslate"><span class="pre">path</span></code>), one record per line, timestamp in <code class="docutils literal notranslate"><span class="pre">field</span></code>. An unparseable line is skipped; a missing file is an error unless <code class="docutils literal notranslate"><span class="pre">missing_ok</span> <span class="pre">=</span> <span class="pre">true</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span>], <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="acquaint.refresh.last_refresh">
+<span class="sig-prename descclassname"><span class="pre">acquaint.refresh.</span></span><span class="sig-name descname"><span class="pre">last_refresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sources_md</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/refresh.html#last_refresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.refresh.last_refresh" title="Link to this definition">#</a></dt>
+<dd><p>The latest date opening an item of the list under the “Refresh log” heading (a line whose date is no real date is skipped).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.date" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="acquaint.refresh.mtime_sourcer">
+<span class="sig-prename descclassname"><span class="pre">acquaint.refresh.</span></span><span class="sig-name descname"><span class="pre">mtime_sourcer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/refresh.html#mtime_sourcer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.refresh.mtime_sourcer" title="Link to this definition">#</a></dt>
+<dd><p>Files under <code class="docutils literal notranslate"><span class="pre">path</span></code> matching <code class="docutils literal notranslate"><span class="pre">pattern</span></code> (a glob, default <code class="docutils literal notranslate"><span class="pre">*</span></code>; <code class="docutils literal notranslate"><span class="pre">*/memory/*.md</span></code> reaches into subfolders), each dated by its modification time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span>], <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="acquaint.refresh.parse_time">
+<span class="sig-prename descclassname"><span class="pre">acquaint.refresh.</span></span><span class="sig-name descname"><span class="pre">parse_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/refresh.html#parse_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.refresh.parse_time" title="Link to this definition">#</a></dt>
+<dd><p>A timezone-aware UTC datetime from an ISO string (<code class="docutils literal notranslate"><span class="pre">Z</span></code> or an offset; naive is UTC) or an epoch number, or a string of one (seconds or milliseconds); <code class="docutils literal notranslate"><span class="pre">None</span></code> for anything else, out-of-range values included.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="acquaint.refresh.refresh_status">
+<span class="sig-prename descclassname"><span class="pre">acquaint.refresh.</span></span><span class="sig-name descname"><span class="pre">refresh_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sources_md</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_toml</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">today</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sourcers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'json-folder':</span> <span class="pre">&lt;function</span> <span class="pre">json_folder_sourcer&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'jsonl'</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">&lt;function</span> <span class="pre">jsonl_sourcer&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'mtime'</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">&lt;function</span> <span class="pre">mtime_sourcer&gt;}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/refresh.html#refresh_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.refresh.refresh_status" title="Link to this definition">#</a></dt>
+<dd><p>Whether a refresh is due, from a record’s <code class="docutils literal notranslate"><span class="pre">sources.md</span></code> and <code class="docutils literal notranslate"><span class="pre">refresh.toml</span></code> texts.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">{&quot;outcome&quot;,</span> <span class="pre">&quot;due&quot;,</span> <span class="pre">&quot;reasons&quot;,</span> <span class="pre">&quot;age&quot;,</span> <span class="pre">&quot;corpora&quot;,</span> <span class="pre">&quot;unchecked&quot;,</span> <span class="pre">&quot;configured&quot;}</span></code>.
+<code class="docutils literal notranslate"><span class="pre">outcome</span></code> is <code class="docutils literal notranslate"><span class="pre">due</span></code> (some trigger fired), <code class="docutils literal notranslate"><span class="pre">not_due</span></code> (none fired and everything
+was checked) or <code class="docutils literal notranslate"><span class="pre">unchecked</span></code> (none fired, but something could not be checked, so
+“not due” cannot be claimed). <code class="docutils literal notranslate"><span class="pre">age</span></code> is the last refresh against <code class="docutils literal notranslate"><span class="pre">max_age_days</span></code>;
+each corpus row has its watermark (and where it came from), the count newer, its
+threshold and whether it triggers. A corpus that could not be counted goes to
+<code class="docutils literal notranslate"><span class="pre">unchecked</span></code> with the reason, never silently to zero, and never takes the others
+down with it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="acquaint.refresh.watermark_of">
+<span class="sig-prename descclassname"><span class="pre">acquaint.refresh.</span></span><span class="sig-name descname"><span class="pre">watermark_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/refresh.html#watermark_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.refresh.watermark_of" title="Link to this definition">#</a></dt>
+<dd><p>The first ISO date or time in <code class="docutils literal notranslate"><span class="pre">text</span></code>; a date alone counts as the end of that day, UTC (everything through it was read). <code class="docutils literal notranslate"><span class="pre">None</span></code> when there is none, or it is no real date.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="acquaint.refresh.watermark_rows">
+<span class="sig-prename descclassname"><span class="pre">acquaint.refresh.</span></span><span class="sig-name descname"><span class="pre">watermark_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sources_md</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/acquaint/refresh.html#watermark_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acquaint.refresh.watermark_rows" title="Link to this definition">#</a></dt>
+<dd><p>The rows of the watermark table (the first table with a <code class="docutils literal notranslate"><span class="pre">Watermark</span></code> column under the first heading containing “watermark” that has one): <code class="docutils literal notranslate"><span class="pre">{&quot;corpus&quot;,</span> <span class="pre">&quot;where&quot;,</span> <span class="pre">&quot;watermark&quot;,</span> <span class="pre">&quot;text&quot;}</span></code>, <code class="docutils literal notranslate"><span class="pre">watermark</span></code> parsed (<code class="docutils literal notranslate"><span class="pre">None</span></code> when the cell holds no date).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="acquaint.records.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">acquaint.records</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="acquaint.render.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">acquaint.render</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/acquaint" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=f2234cd1"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
+</html>

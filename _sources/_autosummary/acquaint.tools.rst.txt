@@ -27,6 +27,7 @@ acquaint.tools
       lint
       new
       reach
+      refresh_due
       remember
       rename
       resolve
