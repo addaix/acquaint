@@ -25,6 +25,12 @@ Which corpora a record uses is per-record configuration, ``refresh.toml`` beside
     path = "~/.local/share/example/overrides.jsonl"
     field = "at"
     threshold = 10                        # no watermark_row: counted since the last refresh
+    missing_ok = true                     # absent file = nothing yet (else it is unchecked)
+
+Other keys: ``watermark_where`` (text the row's ``Where`` cell must contain, when
+several rows share a corpus name), ``pattern`` (a glob, for the folder sourcers).
+Paths take ``~`` and ``$VARS`` and must be absolute. Times without a zone are UTC, and
+so is a date-only watermark's day.
 
 Why a separate TOML file rather than a block inside ``sources.md``: ``sources.md`` is
 rewritten by every refresh (its candidate replaces the installed one), so a machine block
@@ -67,6 +73,7 @@ __all__ = [
     "DFLT_THRESHOLD",
     "SOURCERS",
     "SOURCES_FILE",
+    "empty_status",
     "jsonl_sourcer",
     "json_folder_sourcer",
     "last_refresh",
@@ -96,31 +103,34 @@ Sourcer = Callable[[Mapping[str, Any]], Counter]
 
 
 def parse_time(value: Any) -> datetime | None:
-    """A timezone-aware UTC datetime from an ISO string (``Z`` or an offset; naive is UTC) or an epoch number (seconds or milliseconds); ``None`` when it is neither."""
+    """A timezone-aware UTC datetime from an ISO string (``Z`` or an offset; naive is UTC) or an epoch number, or a string of one (seconds or milliseconds); ``None`` for anything else, out-of-range values included."""
     if isinstance(value, bool) or value is None:
         return None
-    if isinstance(value, (int, float)):
-        seconds = value / 1000 if value > _EPOCH_MS_ABOVE else value
-        return datetime.fromtimestamp(seconds, tz=timezone.utc)
-    if not isinstance(value, str):
-        return None
-    text = value.strip()
+    if isinstance(value, str) and re.fullmatch(r"\s*\d+(?:\.\d+)?\s*", value):
+        value = float(value)
     try:
-        moment = datetime.fromisoformat(text.replace("Z", "+00:00"))
-    except ValueError:
+        if isinstance(value, (int, float)):
+            seconds = value / 1000 if value > _EPOCH_MS_ABOVE else value
+            return datetime.fromtimestamp(seconds, tz=timezone.utc)
+        if not isinstance(value, str):
+            return None
+        moment = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except (ValueError, OverflowError, OSError):  # NaN, 1e300, a 13th month
         return None
     return (moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)).astimezone(timezone.utc)
 
 
 def watermark_of(text: str) -> datetime | None:
-    """The first ISO date or time in ``text``; a date alone counts as the end of that day (everything through it was read)."""
+    """The first ISO date or time in ``text``; a date alone counts as the end of that day, UTC (everything through it was read). ``None`` when there is none, or it is no real date."""
     found = _ISO_RE.search(text or "")
     if not found:
         return None
     stamp = found.group(0)
     if len(stamp) == 10:
-        day = date.fromisoformat(stamp)
-        return datetime.combine(day, time.max, tzinfo=timezone.utc)
+        try:
+            return datetime.combine(date.fromisoformat(stamp), time.max, tzinfo=timezone.utc)
+        except ValueError:
+            return None
     return parse_time(stamp)
 
 
@@ -129,7 +139,10 @@ def watermark_of(text: str) -> datetime | None:
 
 def _sections(markdown: str, word: str) -> Iterator[list[str]]:
     """The lines under each heading whose text contains ``word`` (case-insensitive), up to the next heading of the same or a higher level."""
-    lines = markdown.splitlines()
+    lines, fenced = [], False
+    for line in markdown.splitlines():  # a heading inside a code fence is not a heading
+        fenced ^= line.lstrip().startswith(("```", "~~~"))
+        lines.append("" if fenced else line)
     for i, line in enumerate(lines):
         heading = re.match(r"^(#+)\s+(.*)$", line)
         if not heading or word.lower() not in heading.group(2).lower():
@@ -144,25 +157,35 @@ def _sections(markdown: str, word: str) -> Iterator[list[str]]:
 
 
 def _cells(line: str) -> list[str]:
-    return [c.strip() for c in line.strip().strip("|").split("|")]
+    """A table row's cells, split on unescaped pipes only."""
+    inner = re.sub(r"^\s*\|", "", re.sub(r"(?<!\\)\|\s*$", "", line))
+    return [c.strip().replace("\\|", "|") for c in re.split(r"(?<!\\)\|", inner)]
 
 
 def watermark_rows(sources_md: str) -> list[dict]:
-    """The rows of the watermark table: ``{"corpus", "where", "watermark", "text"}``, with ``watermark`` parsed (``None`` when the cell holds no date)."""
-    rows: list[dict] = []
+    """The rows of the watermark table (the first table with a ``Watermark`` column under the first heading containing "watermark" that has one): ``{"corpus", "where", "watermark", "text"}``, ``watermark`` parsed (``None`` when the cell holds no date)."""
     for body in _sections(sources_md, "watermark"):
-        table = [line for line in body if line.lstrip().startswith("|")]
+        table: list[str] = []
+        for line in body:  # the first contiguous table only
+            if line.lstrip().startswith("|"):
+                table.append(line)
+            elif table:
+                break
         if len(table) < 2:
             continue
         header = [c.lower() for c in _cells(table[0])]
         if "watermark" not in header:
             continue
         col = {name: header.index(name) if name in header else None for name in ("corpus", "where", "watermark")}
+        rows: list[dict] = []
         for line in table[1:]:
             cells = _cells(line)
             if all(set(c) <= set("-: ") for c in cells):
                 continue  # the separator row
-            get = lambda name: cells[col[name]] if col[name] is not None and col[name] < len(cells) else ""  # noqa: E731
+
+            def get(name: str) -> str:
+                return cells[col[name]] if col[name] is not None and col[name] < len(cells) else ""
+
             rows.append(
                 {
                     "corpus": get("corpus"),
@@ -171,26 +194,36 @@ def watermark_rows(sources_md: str) -> list[dict]:
                     "watermark": watermark_of(get("watermark")),
                 }
             )
-    return rows
+        return rows
+    return []
 
 
 def last_refresh(sources_md: str) -> date | None:
-    """The latest date opening an item of the list under the "Refresh log" heading."""
+    """The latest date opening an item of the list under the "Refresh log" heading (a line whose date is no real date is skipped)."""
+
+    def day(text: str) -> date | None:
+        try:
+            return date.fromisoformat(text)
+        except ValueError:
+            return None
+
     dates = [
-        date.fromisoformat(found.group(1))
+        found_day
         for body in _sections(sources_md, "refresh log")
         for line in body
-        if (found := re.match(r"^\s*[-*]\s+\**(\d{4}-\d{2}-\d{2})", line))
+        if (found := re.match(r"^\s*[-*]\s+\**(\d{4}-\d{2}-\d{2})", line)) and (found_day := day(found.group(1)))
     ]
     return max(dates, default=None)
 
 
 def _find_row(rows: list[dict], corpus: str, where: str | None) -> dict:
-    """The one row whose Corpus cell contains ``corpus`` and Where cell contains ``where`` (case-insensitive)."""
-    found = [
-        r
-        for r in rows
-        if corpus.lower() in r["corpus"].lower() and (where is None or where.lower() in r["where"].lower())
+    """The one row whose Corpus cell is ``corpus`` (or, failing that, contains it) and whose Where cell contains ``where``; case-insensitive."""
+
+    def at(r: dict) -> bool:
+        return where is None or where.lower() in r["where"].lower()
+
+    found = [r for r in rows if r["corpus"].lower() == corpus.lower() and at(r)] or [
+        r for r in rows if corpus.lower() in r["corpus"].lower() and at(r)
     ]
     wanted = repr(corpus) + (f" where {where!r}" if where else "")
     if not found:
@@ -204,9 +237,22 @@ def _find_row(rows: list[dict], corpus: str, where: str | None) -> dict:
 
 
 def _path(spec: Mapping[str, Any]) -> Path:
-    if not spec.get("path"):
+    """The corpus's ``path``: ``~`` and ``$VARS`` expanded, and absolute (a relative one would depend on where a scheduler starts)."""
+    if not isinstance(spec.get("path"), str) or not spec["path"]:
         raise AcquaintError("the corpus has no path")
-    return Path(os.path.expandvars(str(spec["path"]))).expanduser()
+    path = Path(os.path.expandvars(spec["path"])).expanduser()
+    if not path.is_absolute():
+        raise AcquaintError(f"path {spec['path']!r} is relative; give it from ~ or /")
+    return path
+
+
+def _missing(path: Path, spec: Mapping[str, Any], *, folder: bool) -> bool:
+    """True when the corpus is absent and ``missing_ok`` says that means "nothing yet"; raises when it is absent otherwise."""
+    if path.is_dir() if folder else path.is_file():
+        return False
+    if spec.get("missing_ok") is True:
+        return True
+    raise AcquaintError(f"{path.name}: no such {'folder' if folder else 'file'} (set missing_ok = true if it is not created yet)")
 
 
 def _field(spec: Mapping[str, Any]) -> str:
@@ -221,16 +267,25 @@ def _dig(document: Any, dotted: str | None) -> Any:
     return document
 
 
-def _newer(moments: Iterable[datetime | None], since: datetime | None) -> int:
-    return sum(1 for m in moments if m is not None and (since is None or m > since))
+def _newer(moments: Iterable[datetime | None], since: datetime | None, *, field: str | None = None) -> int:
+    """How many ``moments`` are later than ``since``; raises when there were records and none had a readable time (a misspelt ``field`` must not read as "nothing new")."""
+    seen = dated = newer = 0
+    for moment in moments:
+        seen += 1
+        if moment is not None:
+            dated += 1
+            newer += since is None or moment > since
+    if seen and not dated:
+        raise AcquaintError(f"{seen} record(s), none with a readable time in {field!r}")
+    return newer
 
 
 def jsonl_sourcer(spec: Mapping[str, Any]) -> Counter:
-    """A JSON Lines file (``path``), one record per line, timestamp in ``field``. A missing file counts nothing new; an unparseable line is skipped."""
+    """A JSON Lines file (``path``), one record per line, timestamp in ``field``. An unparseable line is skipped; a missing file is an error unless ``missing_ok = true``."""
     path, field = _path(spec), _field(spec)
 
     def count_since(watermark: datetime | None) -> int:
-        if not path.exists():
+        if _missing(path, spec, folder=False):
             return 0
 
         def moments() -> Iterator[datetime | None]:
@@ -242,7 +297,7 @@ def jsonl_sourcer(spec: Mapping[str, Any]) -> Counter:
                         continue
                     yield parse_time(_dig(record, field)) if isinstance(record, Mapping) else None
 
-        return _newer(moments(), watermark)
+        return _newer(moments(), watermark, field=field)
 
     return count_since
 
@@ -253,8 +308,8 @@ def json_folder_sourcer(spec: Mapping[str, Any]) -> Counter:
     pattern, items = str(spec.get("pattern", "*.json")), spec.get("items")
 
     def count_since(watermark: datetime | None) -> int:
-        if not path.is_dir():
-            raise AcquaintError(f"{path.name}: not a folder")
+        if _missing(path, spec, folder=True):
+            return 0
 
         def moments() -> Iterator[datetime | None]:
             for file in sorted(path.glob(pattern)):
@@ -266,7 +321,7 @@ def json_folder_sourcer(spec: Mapping[str, Any]) -> Counter:
                 records = found if isinstance(found, list) else [found]
                 yield from (parse_time(_dig(r, field)) for r in records if isinstance(r, Mapping))
 
-        return _newer(moments(), watermark)
+        return _newer(moments(), watermark, field=field)
 
     return count_since
 
@@ -276,8 +331,8 @@ def mtime_sourcer(spec: Mapping[str, Any]) -> Counter:
     path, pattern = _path(spec), str(spec.get("pattern", "*"))
 
     def count_since(watermark: datetime | None) -> int:
-        if not path.is_dir():
-            raise AcquaintError(f"{path.name}: not a folder")
+        if _missing(path, spec, folder=True):
+            return 0
         return _newer(
             (parse_time(f.stat().st_mtime) for f in path.glob(pattern) if f.is_file()),
             watermark,
@@ -297,6 +352,23 @@ SOURCERS: dict[str, Sourcer] = {
 # ------------------------------------------------------------------------- status
 
 
+def _is_int(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def empty_status(reason: str, *, corpus: str = "(record)") -> dict:
+    """The shape :func:`refresh_status` returns, for a record that could not be checked at all (same keys, so a caller has one code path)."""
+    return {
+        "outcome": "unchecked",
+        "due": False,
+        "reasons": [],
+        "age": {"last_refresh": None, "days": None, "max_days": None, "triggers": False},
+        "corpora": [],
+        "unchecked": [{"corpus": corpus, "reason": reason}],
+        "configured": False,
+    }
+
+
 def _config(text: str) -> dict:
     try:
         return tomllib.loads(text) if text.strip() else {}
@@ -313,14 +385,22 @@ def refresh_status(
 ) -> dict:
     """Whether a refresh is due, from a record's ``sources.md`` and ``refresh.toml`` texts.
 
-    Returns ``{"due", "reasons", "age", "corpora", "unchecked"}``. ``age`` is the last
-    refresh against ``max_age_days``; each corpus row has its watermark (and where it
-    came from), the count newer, its threshold and whether it triggers. A corpus that
-    could not be counted goes to ``unchecked`` with the reason, never silently to zero.
+    Returns ``{"outcome", "due", "reasons", "age", "corpora", "unchecked", "configured"}``.
+    ``outcome`` is ``due`` (some trigger fired), ``not_due`` (none fired and everything
+    was checked) or ``unchecked`` (none fired, but something could not be checked, so
+    "not due" cannot be claimed). ``age`` is the last refresh against ``max_age_days``;
+    each corpus row has its watermark (and where it came from), the count newer, its
+    threshold and whether it triggers. A corpus that could not be counted goes to
+    ``unchecked`` with the reason, never silently to zero, and never takes the others
+    down with it.
     """
     config = _config(config_toml)
     today = today or datetime.now(timezone.utc).date()
-    max_age = int(config.get("max_age_days", DFLT_MAX_AGE_DAYS))
+    unchecked: list[dict] = []
+    max_age = config.get("max_age_days", DFLT_MAX_AGE_DAYS)
+    if not _is_int(max_age) or max_age < 1:
+        unchecked.append({"corpus": "(age)", "reason": f"max_age_days must be a whole number of days, not {max_age!r}"})
+        max_age = DFLT_MAX_AGE_DAYS
     last = last_refresh(sources_md)
     age_days = (today - last).days if last else None
     age = {
@@ -336,20 +416,30 @@ def refresh_status(
         if age["triggers"]
         else []
     )
+    if age_days is not None and age_days < 0:
+        unchecked.append({"corpus": "(age)", "reason": f"the last refresh-log date {last.isoformat()} is in the future"})
     since_last = datetime.combine(last, time.max, tzinfo=timezone.utc) if last else None
     rows = watermark_rows(sources_md)
-    corpora, unchecked = [], []
-    corpus_specs = config.get("corpus") or {}
+    corpora = []
+    corpus_specs = config.get("corpus", {})
     if not isinstance(corpus_specs, Mapping):
-        raise AcquaintError(f"{CONFIG_FILE}: [corpus.<name>] tables expected")
+        corpus_specs = {}
+        unchecked.append({"corpus": "(config)", "reason": f"{CONFIG_FILE}: [corpus.<name>] tables expected"})
     for name, spec in corpus_specs.items():
-        threshold = int(spec.get("threshold", DFLT_THRESHOLD))
         try:
+            if not isinstance(spec, Mapping):
+                raise AcquaintError(f"[corpus.{name}] must be a table")
+            threshold = spec.get("threshold", DFLT_THRESHOLD)
+            if not _is_int(threshold) or threshold < 0:
+                raise AcquaintError(f"threshold must be a whole number (0 reports only), not {threshold!r}")
             kind = spec.get("kind")
-            if kind not in sourcers:
+            if not isinstance(kind, str) or kind not in sourcers:
                 raise AcquaintError(f"unknown kind {kind!r}; known: {', '.join(sorted(sourcers))}")
-            if spec.get("watermark_row"):
-                row = _find_row(rows, str(spec["watermark_row"]), spec.get("watermark_where"))
+            if "watermark_row" in spec:
+                where = spec.get("watermark_where")
+                if not isinstance(spec["watermark_row"], str) or not (where is None or isinstance(where, str)):
+                    raise AcquaintError("watermark_row and watermark_where must be text")
+                row = _find_row(rows, spec["watermark_row"], where)
                 if row["watermark"] is None:
                     raise AcquaintError(f"the watermark cell {row['text']!r} holds no date")
                 watermark, stamp = row["watermark"], _ISO_RE.search(row["text"]).group(0)
@@ -357,8 +447,11 @@ def refresh_status(
             else:
                 watermark, stamp, origin = since_last, age["last_refresh"], "last refresh"
             newer = sourcers[kind](spec)(watermark)
-        except (AcquaintError, OSError) as error:
-            unchecked.append({"corpus": name, "reason": str(error)})
+            if not _is_int(newer) or newer < 0:
+                raise AcquaintError(f"the {kind} sourcer returned {newer!r}, not a count")
+        except Exception as error:  # noqa: BLE001 - one corpus that breaks must not hide the others
+            reason = str(error) if isinstance(error, AcquaintError) else f"{type(error).__name__}: {error}"
+            unchecked.append({"corpus": name, "reason": reason[:300]})
             continue
         triggers = threshold > 0 and newer >= threshold
         corpora.append(
@@ -376,6 +469,7 @@ def refresh_status(
         if triggers:
             reasons.append(f"{name}: {newer} new item(s) past the watermark (threshold {threshold})")
     return {
+        "outcome": "due" if reasons else "unchecked" if unchecked else "not_due",
         "due": bool(reasons),
         "reasons": reasons,
         "age": age,

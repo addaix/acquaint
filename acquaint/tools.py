@@ -46,7 +46,7 @@ from acquaint.lookup import (
     reach_channels,
     resolve_handle,
 )
-from acquaint.refresh import CONFIG_FILE, SOURCES_FILE, refresh_status
+from acquaint.refresh import CONFIG_FILE, SOURCES_FILE, empty_status, refresh_status
 from acquaint.review import review_person
 from acquaint.store import ENTRY_FILE, AcquaintError, Entity, Store, data_dir as _data_dir
 from acquaint.trust import effective_tier, entity_label
@@ -1043,9 +1043,9 @@ def digest_append(
 def refresh_due(
     entity: str, *, today: str | None = None, data_dir: str | None = None
 ) -> dict:
-    """Is the record due for a refresh from its corpora? Per corpus (``refresh.toml`` beside ``sources.md``): the watermark in ``sources.md``, how many items are newer, the threshold; plus the age of the last refresh against ``max_age_days`` (default 7). ``outcome`` is ``due`` (exit 0), ``not_due`` (exit 1) or ``unchecked`` (exit 4: no ``sources.md``, or the record or its config could not be read). Reads only; never refreshes."""
-    store = _store(data_dir)
+    """Is the record due for a refresh from its corpora? Per corpus (``refresh.toml`` beside ``sources.md``): the watermark in ``sources.md``, how many items are newer, the threshold; plus the age of the last refresh against ``max_age_days`` (default 7). ``outcome`` is ``due`` (exit 0), ``not_due`` (exit 1: nothing fired and everything was checked) or ``unchecked`` (exit 4: nothing fired, but a corpus, the config or the record could not be read; see ``unchecked``). The result has the same keys whatever the outcome; a script should read ``outcome`` from ``--json`` rather than rely on the exit code alone. Reads only; never refreshes."""
     try:
+        store = _store(data_dir)
         found = Entity(store, find_entity(store, entity))
         if SOURCES_FILE not in found:
             raise AcquaintError(f"{found.slug} has no {SOURCES_FILE}: nothing to refresh from")
@@ -1054,8 +1054,9 @@ def refresh_due(
             found.text(CONFIG_FILE),
             today=date.fromisoformat(today) if today else None,
         )
-    except (AcquaintError, ValueError) as error:
-        return {"ok": False, "outcome": "unchecked", "id": entity, "summary": str(error)}
+    except Exception as error:  # noqa: BLE001 - "cannot tell" must never read as "not due"
+        reason = str(error) if isinstance(error, (AcquaintError, ValueError)) else f"{type(error).__name__}: {error}"
+        return {"ok": False, "id": entity, **empty_status(reason), "summary": reason, "text": reason}
     age = status["age"]
     lines = [f"{'corpus':<16} {'watermark':<26} {'newer':>6} {'threshold':>9}"]
     lines.append(
@@ -1071,14 +1072,13 @@ def refresh_due(
     lines += [f"{u['corpus']:<16} unchecked: {u['reason']}" for u in status["unchecked"]]
     if not status["configured"]:
         lines.append(f"(no {CONFIG_FILE}: only the age of the refresh log is checked)")
-    summary = (
-        f"{found.slug}: refresh due ({'; '.join(status['reasons'])})"
-        if status["due"]
-        else f"{found.slug}: no refresh due"
-    )
+    summary = {
+        "due": f"{found.slug}: refresh due ({'; '.join(status['reasons'])})",
+        "not_due": f"{found.slug}: no refresh due",
+        "unchecked": f"{found.slug}: cannot tell; nothing checked is due, but {len(status['unchecked'])} item(s) could not be checked",
+    }[status["outcome"]]
     return {
-        "ok": True,
-        "outcome": "due" if status["due"] else "not_due",
+        "ok": status["outcome"] != "unchecked",
         "id": found.slug,
         **status,
         "summary": summary,
