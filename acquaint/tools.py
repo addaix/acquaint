@@ -46,6 +46,7 @@ from acquaint.lookup import (
     reach_channels,
     resolve_handle,
 )
+from acquaint.refresh import CONFIG_FILE, SOURCES_FILE, empty_status, refresh_status
 from acquaint.review import review_person
 from acquaint.store import ENTRY_FILE, AcquaintError, Entity, Store, data_dir as _data_dir
 from acquaint.trust import effective_tier, entity_label
@@ -66,6 +67,7 @@ __all__ = [
     "lint",
     "new",
     "reach",
+    "refresh_due",
     "remember",
     "rename",
     "resolve",
@@ -1038,6 +1040,52 @@ def digest_append(
     }
 
 
+def refresh_due(
+    entity: str, *, today: str | None = None, data_dir: str | None = None
+) -> dict:
+    """Is the record due for a refresh from its corpora? Per corpus (``refresh.toml`` beside ``sources.md``): the watermark in ``sources.md``, how many items are newer, the threshold; plus the age of the last refresh against ``max_age_days`` (default 7). ``outcome`` is ``due`` (exit 0), ``not_due`` (exit 1: nothing fired and everything was checked) or ``unchecked`` (exit 4: nothing fired, but a corpus, the config or the record could not be read; see ``unchecked``). The result has the same keys whatever the outcome; a script should read ``outcome`` from ``--json`` rather than rely on the exit code alone. Reads only; never refreshes."""
+    try:
+        store = _store(data_dir)
+        found = Entity(store, find_entity(store, entity))
+        if SOURCES_FILE not in found:
+            raise AcquaintError(f"{found.slug} has no {SOURCES_FILE}: nothing to refresh from")
+        status = refresh_status(
+            found[SOURCES_FILE],
+            found.text(CONFIG_FILE),
+            today=date.fromisoformat(today) if today else None,
+        )
+    except Exception as error:  # noqa: BLE001 - "cannot tell" must never read as "not due"
+        reason = str(error) if isinstance(error, (AcquaintError, ValueError)) else f"{type(error).__name__}: {error}"
+        return {"ok": False, "id": entity, **empty_status(reason), "summary": reason, "text": reason}
+    age = status["age"]
+    lines = [f"{'corpus':<16} {'watermark':<26} {'newer':>6} {'threshold':>9}"]
+    lines.append(
+        f"{'(age)':<16} {(age['last_refresh'] or '(none)') + ' (last refresh)':<26} "
+        f"{'' if age['days'] is None else str(age['days']) + 'd':>6} {str(age['max_days']) + 'd':>9}"
+        + ("  *" if age["triggers"] else "")
+    )
+    lines += [
+        f"{c['corpus']:<16} {c['watermark_stamp'] or '(none)':<26} {c['newer']:>6} "
+        f"{c['threshold'] or '-':>9}" + ("  *" if c["triggers"] else "")
+        for c in status["corpora"]
+    ]
+    lines += [f"{u['corpus']:<16} unchecked: {u['reason']}" for u in status["unchecked"]]
+    if not status["configured"]:
+        lines.append(f"(no {CONFIG_FILE}: only the age of the refresh log is checked)")
+    summary = {
+        "due": f"{found.slug}: refresh due ({'; '.join(status['reasons'])})",
+        "not_due": f"{found.slug}: no refresh due",
+        "unchecked": f"{found.slug}: cannot tell; nothing checked is due, but {len(status['unchecked'])} item(s) could not be checked",
+    }[status["outcome"]]
+    return {
+        "ok": status["outcome"] != "unchecked",
+        "id": found.slug,
+        **status,
+        "summary": summary,
+        "text": "\n".join([summary, *lines]),
+    }
+
+
 #: Every tool, in the order surfaces list them.
 TOOLS = [
     who,
@@ -1063,6 +1111,7 @@ TOOLS = [
     digest_append,
     digest_mark,
     digest_sweep,
+    refresh_due,
 ]
 
 #: What each tool changes, for surfaces that must decide what to expose or confirm.
@@ -1093,4 +1142,5 @@ SIDE_EFFECTS = {
     "digest_append": "rewrite",
     "digest_mark": "rewrite",
     "digest_sweep": "rewrite",
+    "refresh_due": "read",
 }

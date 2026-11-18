@@ -74,3 +74,7 @@ The shape of `views.md` for an operator record:
 ```
 
 How to read them goes to `PROFILE.md` · Read them, as for any record. Keep each file within the lint budget; prefer fewer, stronger lines.
+
+## Keeping it current
+
+`sources.md` ends every corpus with its watermark (the newest item mined), in a table under a heading containing "Watermark" (columns `Corpus`, `Where`, `Watermark`), and keeps a dated "Refresh log" list. A refresh mines only what is newer than each watermark, then moves it. To know when one is due, list the corpora in `refresh.toml` beside `sources.md` (which sourcer, its path, the timestamp field, the table row its watermark is in, a threshold) and run `acquaint refresh-due <id>`: it exits 0 when the last refresh is older than `max_age_days` or a corpus has reached its threshold, and `--json` gives the per-corpus counts to an agent. A scheduler that runs it reports "refresh due" where the operator's agents look; it never rewrites the record, because aggregation and its backtest stay a reviewed pass.
