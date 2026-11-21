@@ -1,4 +1,4 @@
-> built 2026-11-18 15:38 UTC from b38b6da (main) · acquaint 0.0.32. Details: build_info.json
+> built 2026-11-21 15:43 UTC from d7d3fcf (main) · acquaint 0.0.33. Details: build_info.json
 
 # index.html.md
 
@@ -136,7 +136,7 @@ acquaint sync init --repo <owner>/<name>
 
 `sync status` also reports `auto_commit`: true only while the repository is private, owned by a person rather than an organisation, has that person as its only collaborator and no pending invitation. The `acquaint-profile` skill then commits and pushes profile edits straight away; otherwise it leaves them uncommitted for the operator to review. `auto_commit_reason` says which condition decided.
 
-What this does **not** protect: a private repository is access control, not encryption (the host can read everything); `git push --no-verify` skips the hook; whoever controls the repository’s git config or the `gh` on `PATH` controls what the guard sees; moving the data root disables the hook until `sync init --existing-only` runs again; file names and commit messages contain people’s names; deleting a folder does not remove it from history or other clones. `git-remote-gcrypt` would encrypt contents, names and history; it is the planned upgrade, but the guard does not support it yet, so `sync init` refuses `gcrypt::` URLs ([#13](https://github.com/thorwhalen/acquaint/issues/13)).
+What this does **not** protect: a private repository is access control, not encryption (the host can read everything); `git push --no-verify` skips the hook; whoever controls the repository’s git config or the `gh` on `PATH` controls what the guard sees; moving the data root disables the hook until `sync init --existing-only` runs again; file names and commit messages contain people’s names; deleting a folder does not remove it from history or other clones. `git-remote-gcrypt` would encrypt contents, names and history; it is the planned upgrade, but the guard does not support it yet, so `sync init` refuses `gcrypt::` URLs ([#13](https://github.com/addaix/acquaint/issues/13)).
 
 ## Python
 
@@ -156,7 +156,7 @@ Store(files={})  # any MutableMapping[str, str] of files: a dict, a remote store
 
 ## Design
 
-The seams, surfaces and deliberate non-seams are in [Discussion #1](https://github.com/thorwhalen/acquaint/discussions/1).
+The seams, surfaces and deliberate non-seams are in [Discussion #1](https://github.com/addaix/acquaint/discussions/1).
 
 <p class="epythet-aggregates">This documentation as a single file: <a href="acquaint.md">acquaint.md</a> (Markdown, for agents).</p>
 
@@ -2878,29 +2878,29 @@ True
 
 # About this build
 
-This documentation was built on **2026-11-18 15:38 UTC** from commit <a href="https://github.com/thorwhalen/acquaint/commit/b38b6da7a48bdefefff0cb8c4e01ca2b14a4e61e"><code>b38b6da</code></a> on branch <code>main</code>, for **acquaint 0.0.32** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-21 15:43 UTC** from commit <a href="https://github.com/addaix/acquaint/commit/d7d3fcfd096744d90207f234211749a55862d5ed"><code>d7d3fcf</code></a> on branch <code>main</code>, for **acquaint 0.0.33** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
-|                     |                                                                                                                                                            |
-|---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/acquaint/commit/b38b6da7a48bdefefff0cb8c4e01ca2b14a4e61e"><code>b38b6da7a48bdefefff0cb8c4e01ca2b14a4e61e</code></a> |
-| Branch              | <code>main</code>                                                                                                                                          |
-| Tags at this commit | none                                                                                                                                                       |
-| Working tree        | clean                                                                                                                                                      |
-| Remote              | <code>https://github.com/thorwhalen/acquaint</code>                                                                                                        |
+|                     |                                                                                                                                                        |
+|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Commit              | <a href="https://github.com/addaix/acquaint/commit/d7d3fcfd096744d90207f234211749a55862d5ed"><code>d7d3fcfd096744d90207f234211749a55862d5ed</code></a> |
+| Branch              | <code>main</code>                                                                                                                                      |
+| Tags at this commit | none                                                                                                                                                   |
+| Working tree        | clean                                                                                                                                                  |
+| Remote              | <code>https://github.com/addaix/acquaint</code>                                                                                                        |
 
 ## Continuous integration
 
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
-| Repository   | <code>thorwhalen/acquaint</code>                                                           |
-| Run          | <a href="https://github.com/thorwhalen/acquaint/actions/runs/44337536460">44337536460</a>  |
+| Repository   | <code>addaix/acquaint</code>                                                               |
+| Run          | <a href="https://github.com/addaix/acquaint/actions/runs/44920529908">44920529908</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>b38b6da7a48bdefefff0cb8c4e01ca2b14a4e61e</code> (in the history of the built commit) |
+| Event commit | <code>d7d3fcfd096744d90207f234211749a55862d5ed</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2925,13 +2925,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/acquaint/0.0.32/">0.0.32</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/acquaint/0.0.33/">0.0.33</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
-git clone https://github.com/thorwhalen/acquaint && cd acquaint
-git checkout b38b6da7a48bdefefff0cb8c4e01ca2b14a4e61e
+git clone https://github.com/addaix/acquaint && cd acquaint
+git checkout d7d3fcfd096744d90207f234211749a55862d5ed
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
@@ -2958,80 +2958,80 @@ Skills are folders holding a `SKILL.md` (the [Agent Skills](https://agentskills.
 Who someone is, how to reach them, and how to write to them, from the operator’s local people records (acquaint). Use whenever a person, project, org or group is named in a task — to get a handle, email or alias; to check whether two names are the same person before writing them as two; before drafting anything a specific person will read; and to record something learned about someone, with its source. Triggers on “who is X”, “what’s X’s email/handle/GitHub”, “is X the same person as Y”, “how do I reach X”, “remember that X…”, “brief me on X”, “process my chat with X”, and on any name in prose about to be published. Routes heavier work to acquaint-write, acquaint-read, acquaint-profile, acquaint-digest (process a conversation into notes), acquaint-sync, acquaint-meeting-todos and deslop. Query one record; never read the whole store.
 
 ```bash
-gh skill install thorwhalen/acquaint acquaint --agent claude-code
+gh skill install addaix/acquaint acquaint --agent claude-code
 ```
 
-Source: [`acquaint/data/skills/acquaint`](https://github.com/thorwhalen/acquaint/tree/HEAD/acquaint/data/skills/acquaint) (bundled with the pip package).
+Source: [`acquaint/data/skills/acquaint`](https://github.com/addaix/acquaint/tree/HEAD/acquaint/data/skills/acquaint) (bundled with the pip package).
 
 ### `acquaint-digest`
 
 Process a communication with a person or an organisation into their acquaint record - a WhatsApp export, an email thread, a GitHub or Slack conversation - so agents can find what was said later. Extract it with correspond, keep the raw messages in correspond’s local archive, find what is new since the last time (the digest’s watermark), and write takeaways, themes, an index of dated sections and open threads, each anchored to a message time. Use when asked to “process this chat/export/thread/conversation with X”, “what’s new from X”, “catch up on my messages with X”, “what did X and I agree”, “digest”, “take notes on”, “index this conversation”, “key takeaways from my chat with X”, or when a file named like “WhatsApp Chat - <name>” or an email export about a known person or company shows up. Routes style mining to acquaint-profile.
 
 ```bash
-gh skill install thorwhalen/acquaint acquaint-digest --agent claude-code
+gh skill install addaix/acquaint acquaint-digest --agent claude-code
 ```
 
-Source: [`acquaint/data/skills/acquaint-digest`](https://github.com/thorwhalen/acquaint/tree/HEAD/acquaint/data/skills/acquaint-digest) (bundled with the pip package).
+Source: [`acquaint/data/skills/acquaint-digest`](https://github.com/addaix/acquaint/tree/HEAD/acquaint/data/skills/acquaint-digest) (bundled with the pip package).
 
 ### `acquaint-meeting-todos`
 
 Turn the todos from a meeting into GitHub issues for a company or project the operator works on — one manual-task issue per participant in the project’s private meta repository, items copied verbatim, each linked to the notes and to the issue or page it concerns. Use when given meeting notes, minutes, a transcript, a Slack thread or an email with “next steps”, “action items” or “todos” and asked to “put these in issues”, “file the meeting todos”, “make issues from the next steps”, “assign the action items”, or “track what everyone said they’d do”. Checks first, through acquaint, that the project is unambiguous, that every participant is registered and belongs to it, and that its declared meta repository is private; when any of these fails, it tells the user what is missing and how to fix it, and files nothing.
 
 ```bash
-gh skill install thorwhalen/acquaint acquaint-meeting-todos --agent claude-code
+gh skill install addaix/acquaint acquaint-meeting-todos --agent claude-code
 ```
 
-Source: [`acquaint/data/skills/acquaint-meeting-todos`](https://github.com/thorwhalen/acquaint/tree/HEAD/acquaint/data/skills/acquaint-meeting-todos) (bundled with the pip package).
+Source: [`acquaint/data/skills/acquaint-meeting-todos`](https://github.com/addaix/acquaint/tree/HEAD/acquaint/data/skills/acquaint-meeting-todos) (bundled with the pip package).
 
 ### `acquaint-profile`
 
 Build, research, update or consolidate a profile in acquaint — gather a person’s own writing, extract observable communication habits with evidence, and write sourced lines into their entry file, writing card and views. Use when asked to “make a profile of X”, “research how X writes”, “update X’s profile”, “what do we know about how X communicates”, “consolidate X’s observations”, “turn these notes into a profile”, or before a high-stakes message to someone whose record is thin. Runs parallel profile-reader agents on one extraction brief. Records behaviour with sources, never personality labels or sensitive categories.
 
 ```bash
-gh skill install thorwhalen/acquaint acquaint-profile --agent claude-code
+gh skill install addaix/acquaint acquaint-profile --agent claude-code
 ```
 
-Source: [`acquaint/data/skills/acquaint-profile`](https://github.com/thorwhalen/acquaint/tree/HEAD/acquaint/data/skills/acquaint-profile) (bundled with the pip package).
+Source: [`acquaint/data/skills/acquaint-profile`](https://github.com/addaix/acquaint/tree/HEAD/acquaint/data/skills/acquaint-profile) (bundled with the pip package).
 
 ### `acquaint-read`
 
 Interpret a message from a specific person using their acquaint record — what they are saying and asking, what they likely mean and how strongly, how it differs from their usual, and what to do next — and judge, with evidence and never as an accusation, whether it was AI-processed. Use when asked “what does X mean by this”, “read this message from X”, “how should I take X’s reply”, “is X unhappy with this”, “did X write this with AI”, or when a reply from a known person arrives during a task. Records anything newly learned with acquaint remember, sourced.
 
 ```bash
-gh skill install thorwhalen/acquaint acquaint-read --agent claude-code
+gh skill install addaix/acquaint acquaint-read --agent claude-code
 ```
 
-Source: [`acquaint/data/skills/acquaint-read`](https://github.com/thorwhalen/acquaint/tree/HEAD/acquaint/data/skills/acquaint-read) (bundled with the pip package).
+Source: [`acquaint/data/skills/acquaint-read`](https://github.com/addaix/acquaint/tree/HEAD/acquaint/data/skills/acquaint-read) (bundled with the pip package).
 
 ### `acquaint-sync`
 
 Set up, use and check private sync of the acquaint profile store through a private GitHub repository. Use when asked to “sync my profiles”, “back up my acquaint store”, “set up profiles on the server”, “use my profiles on another machine”, “is my profile store private”, “push/pull profiles”, or when acquaint sync status reports a problem. Covers what the visibility guard does and, plainly, what it does not protect, plus the git-remote-gcrypt upgrade.
 
 ```bash
-gh skill install thorwhalen/acquaint acquaint-sync --agent claude-code
+gh skill install addaix/acquaint acquaint-sync --agent claude-code
 ```
 
-Source: [`acquaint/data/skills/acquaint-sync`](https://github.com/thorwhalen/acquaint/tree/HEAD/acquaint/data/skills/acquaint-sync) (bundled with the pip package).
+Source: [`acquaint/data/skills/acquaint-sync`](https://github.com/addaix/acquaint/tree/HEAD/acquaint/data/skills/acquaint-sync) (bundled with the pip package).
 
 ### `acquaint-write`
 
 Write, edit or review anything a specific person will read — an email, a reply, a chat message, an issue or PR comment, a pitch, a document — using that person’s acquaint record; spar with a simulated version of them to stress-test a draft or an idea; and rate how they are likely to receive a recommended decision. Use when asked to “write to X”, “reply to X”, “draft this for X”, “how should I put this to X”, “would X like this”, “red-team this against X”, “argue with me as X”, “would X approve this”, “would X disagree”, “rate this decision against X’s record”, “reply on Slack”, “post this in the thread”, “tell the team”, or whenever the reader of a draft is a known person. Runs acquaint brief, check and style-lint, applies deslop, and keeps the operator’s voice and positions.
 
 ```bash
-gh skill install thorwhalen/acquaint acquaint-write --agent claude-code
+gh skill install addaix/acquaint acquaint-write --agent claude-code
 ```
 
-Source: [`acquaint/data/skills/acquaint-write`](https://github.com/thorwhalen/acquaint/tree/HEAD/acquaint/data/skills/acquaint-write) (bundled with the pip package).
+Source: [`acquaint/data/skills/acquaint-write`](https://github.com/addaix/acquaint/tree/HEAD/acquaint/data/skills/acquaint-write) (bundled with the pip package).
 
 ### `deslop`
 
 Write and edit prose that carries no machine-writing tells and sounds like its author, calibrated to the reader. Use whenever drafting or editing text a person will read — emails, messages, READMEs, docs, posts, pitches, reports — and whenever the user mentions AI slop, AI tells, “sounds like AI”, “make it sound human”, “my voice”, or asks to de-AI a draft; also whenever another skill asks for it (acquaint-write does). Runs the deterministic acquaint style-lint check at the reader’s tolerance of AI-sounding text, then judgment passes for rhythm, specificity and ownership. Never fakes humanity and never invents specifics.
 
 ```bash
-gh skill install thorwhalen/acquaint deslop --agent claude-code
+gh skill install addaix/acquaint deslop --agent claude-code
 ```
 
-Source: [`acquaint/data/skills/deslop`](https://github.com/thorwhalen/acquaint/tree/HEAD/acquaint/data/skills/deslop) (bundled with the pip package).
+Source: [`acquaint/data/skills/deslop`](https://github.com/addaix/acquaint/tree/HEAD/acquaint/data/skills/deslop) (bundled with the pip package).
 
 The bundled skills are also on disk after `pip install acquaint`, under the package’s `data/skills/` directory; link them into an agent without network access with `skill link-skills <that directory>`.
 
@@ -3043,28 +3043,28 @@ Subagents are Markdown files with a frontmatter (`name`, `description`, `tools`)
 
 Parallel extraction worker for the acquaint-profile skill. Reads one batch of a person’s own writing and returns evidence rows (dimension, observation, short quote, anchor, date) exactly as the skill’s extraction brief specifies — never a summary, never personality labels or sensitive categories. Spawn several at once, one batch each.
 
-Source: [`acquaint/data/agents/profile-reader.md`](https://github.com/thorwhalen/acquaint/tree/HEAD/acquaint/data/agents/profile-reader.md); tools: `Read, Grep, Glob, WebFetch`.
+Source: [`acquaint/data/agents/profile-reader.md`](https://github.com/addaix/acquaint/tree/HEAD/acquaint/data/agents/profile-reader.md); tools: `Read, Grep, Glob, WebFetch`.
 
 ### `recipient-reader`
 
 Simulates how a specific, known person is likely to read a draft, answer an idea, or receive a recommended decision, grounded only in the acquaint brief it is handed. Used by the acquaint-write skill for its red-team check (a report on a draft, without rewriting it), for sparring (arguing from the person’s documented positions), and for a decision verdict (disagreement risk, cited reason, coverage). Always presented as a simulation; every point cites the brief line it rests on.
 
-Source: [`acquaint/data/agents/recipient-reader.md`](https://github.com/thorwhalen/acquaint/tree/HEAD/acquaint/data/agents/recipient-reader.md); tools: `Read`.
+Source: [`acquaint/data/agents/recipient-reader.md`](https://github.com/addaix/acquaint/tree/HEAD/acquaint/data/agents/recipient-reader.md); tools: `Read`.
 
 ## Instruction files
 
 Files agents read before working in this repository.
 
-- [`.claude/CLAUDE.md`](https://github.com/thorwhalen/acquaint/tree/HEAD/.claude/CLAUDE.md): read by Claude Code
+- [`.claude/CLAUDE.md`](https://github.com/addaix/acquaint/tree/HEAD/.claude/CLAUDE.md): read by Claude Code
 
 ## Machine-readable documentation
 
 This site publishes the same documentation in forms that fit an agent’s context window:
 
-- [`llms.txt`](https://thorwhalen.github.io/acquaint/llms.txt): an index of every page with a one-line description ([llms.txt](https://llmstxt.org) format)
-- [`acquaint.md`](https://thorwhalen.github.io/acquaint/acquaint.md): the whole documentation as one Markdown file
+- [`llms.txt`](https://addaix.github.io/acquaint/llms.txt): an index of every page with a one-line description ([llms.txt](https://llmstxt.org) format)
+- [`acquaint.md`](https://addaix.github.io/acquaint/acquaint.md): the whole documentation as one Markdown file
 - `<page>.html.md`: a rendered Markdown twin of every page, advertised from each page’s `<head>` with `<link rel="alternate" type="text/markdown">`
-- [`objects.inv`](https://thorwhalen.github.io/acquaint/objects.inv): the Sphinx inventory: a symbol-to-URL index (`sphobjinv convert plain objects.inv -`)
+- [`objects.inv`](https://addaix.github.io/acquaint/objects.inv): the Sphinx inventory: a symbol-to-URL index (`sphobjinv convert plain objects.inv -`)
 
 
 # api.html.md

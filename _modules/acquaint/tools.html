@@ -37,7 +37,7 @@
   <input type="text" name="q" placeholder="Search" />
   <kbd>/</kbd>
 </form><div class="sy-head-socials">
-  <a href="https://github.com/thorwhalen/acquaint" aria-label="GitHub">
+  <a href="https://github.com/addaix/acquaint" aria-label="GitHub">
     <iconify-icon icon="simple-icons:github"></iconify-icon>
   </a></div></div>
     </div>
@@ -1249,103 +1249,115 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="1048">        <span class="n">store</span> <span class="o">=</span> <span class="n">_store</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
 </span><span data-line="1049">        <span class="n">found</span> <span class="o">=</span> <span class="n">Entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">find_entity</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">entity</span><span class="p">))</span>
 </span><span data-line="1050">        <span class="k">if</span> <span class="n">SOURCES_FILE</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">found</span><span class="p">:</span>
-</span><span data-line="1051">            <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2"> has no </span><span class="si">{</span><span class="n">SOURCES_FILE</span><span class="si">}</span><span class="s2">: nothing to refresh from"</span><span class="p">)</span>
-</span><span data-line="1052">        <span class="n">status</span> <span class="o">=</span> <span class="n">refresh_status</span><span class="p">(</span>
-</span><span data-line="1053">            <span class="n">found</span><span class="p">[</span><span class="n">SOURCES_FILE</span><span class="p">],</span>
-</span><span data-line="1054">            <span class="n">found</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">CONFIG_FILE</span><span class="p">),</span>
-</span><span data-line="1055">            <span class="n">today</span><span class="o">=</span><span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">today</span><span class="p">)</span> <span class="k">if</span> <span class="n">today</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1056">        <span class="p">)</span>
-</span><span data-line="1057">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 - "cannot tell" must never read as "not due"</span>
-</span><span data-line="1058">        <span class="n">reason</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="p">(</span><span class="n">AcquaintError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">))</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="1059">        <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"id"</span><span class="p">:</span> <span class="n">entity</span><span class="p">,</span> <span class="o">**</span><span class="n">empty_status</span><span class="p">(</span><span class="n">reason</span><span class="p">),</span> <span class="s2">"summary"</span><span class="p">:</span> <span class="n">reason</span><span class="p">,</span> <span class="s2">"text"</span><span class="p">:</span> <span class="n">reason</span><span class="p">}</span>
-</span><span data-line="1060">    <span class="n">age</span> <span class="o">=</span> <span class="n">status</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span>
-</span><span data-line="1061">    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'corpus'</span><span class="si">:</span><span class="s2">&lt;16</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'watermark'</span><span class="si">:</span><span class="s2">&lt;26</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'newer'</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'threshold'</span><span class="si">:</span><span class="s2">&gt;9</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
-</span><span data-line="1062">    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="1063">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'(age)'</span><span class="si">:</span><span class="s2">&lt;16</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="p">(</span><span class="n">age</span><span class="p">[</span><span class="s1">'last_refresh'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'(none)'</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">' (last refresh)'</span><span class="si">:</span><span class="s2">&lt;26</span><span class="si">}</span><span class="s2"> "</span>
-</span><span data-line="1064">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">''</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">age</span><span class="p">[</span><span class="s1">'days'</span><span class="p">]</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="kc">None</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="nb">str</span><span class="p">(</span><span class="n">age</span><span class="p">[</span><span class="s1">'days'</span><span class="p">])</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">'d'</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">age</span><span class="p">[</span><span class="s1">'max_days'</span><span class="p">])</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">'d'</span><span class="si">:</span><span class="s2">&gt;9</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="1065">        <span class="o">+</span> <span class="p">(</span><span class="s2">"  *"</span> <span class="k">if</span> <span class="n">age</span><span class="p">[</span><span class="s2">"triggers"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="1066">    <span class="p">)</span>
-</span><span data-line="1067">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
-</span><span data-line="1068">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">c</span><span class="p">[</span><span class="s1">'corpus'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;16</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">c</span><span class="p">[</span><span class="s1">'watermark_stamp'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'(none)'</span><span class="si">:</span><span class="s2">&lt;26</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">c</span><span class="p">[</span><span class="s1">'newer'</span><span class="p">]</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2"> "</span>
-</span><span data-line="1069">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">c</span><span class="p">[</span><span class="s1">'threshold'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'-'</span><span class="si">:</span><span class="s2">&gt;9</span><span class="si">}</span><span class="s2">"</span> <span class="o">+</span> <span class="p">(</span><span class="s2">"  *"</span> <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="s2">"triggers"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="1070">        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">status</span><span class="p">[</span><span class="s2">"corpora"</span><span class="p">]</span>
-</span><span data-line="1071">    <span class="p">]</span>
-</span><span data-line="1072">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">u</span><span class="p">[</span><span class="s1">'corpus'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;16</span><span class="si">}</span><span class="s2"> unchecked: </span><span class="si">{</span><span class="n">u</span><span class="p">[</span><span class="s1">'reason'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">status</span><span class="p">[</span><span class="s2">"unchecked"</span><span class="p">]]</span>
-</span><span data-line="1073">    <span class="k">if</span> <span class="ow">not</span> <span class="n">status</span><span class="p">[</span><span class="s2">"configured"</span><span class="p">]:</span>
-</span><span data-line="1074">        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"(no </span><span class="si">{</span><span class="n">CONFIG_FILE</span><span class="si">}</span><span class="s2">: only the age of the refresh log is checked)"</span><span class="p">)</span>
-</span><span data-line="1075">    <span class="n">summary</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="1076">        <span class="s2">"due"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2">: refresh due (</span><span class="si">{</span><span class="s1">'; '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">status</span><span class="p">[</span><span class="s1">'reasons'</span><span class="p">])</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
-</span><span data-line="1077">        <span class="s2">"not_due"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2">: no refresh due"</span><span class="p">,</span>
-</span><span data-line="1078">        <span class="s2">"unchecked"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2">: cannot tell; nothing checked is due, but </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">status</span><span class="p">[</span><span class="s1">'unchecked'</span><span class="p">])</span><span class="si">}</span><span class="s2"> item(s) could not be checked"</span><span class="p">,</span>
-</span><span data-line="1079">    <span class="p">}[</span><span class="n">status</span><span class="p">[</span><span class="s2">"outcome"</span><span class="p">]]</span>
-</span><span data-line="1080">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="1081">        <span class="s2">"ok"</span><span class="p">:</span> <span class="n">status</span><span class="p">[</span><span class="s2">"outcome"</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"unchecked"</span><span class="p">,</span>
-</span><span data-line="1082">        <span class="s2">"id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="p">,</span>
-</span><span data-line="1083">        <span class="o">**</span><span class="n">status</span><span class="p">,</span>
-</span><span data-line="1084">        <span class="s2">"summary"</span><span class="p">:</span> <span class="n">summary</span><span class="p">,</span>
-</span><span data-line="1085">        <span class="s2">"text"</span><span class="p">:</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">summary</span><span class="p">,</span> <span class="o">*</span><span class="n">lines</span><span class="p">]),</span>
-</span><span data-line="1086">    <span class="p">}</span></div>
+</span><span data-line="1051">            <span class="k">raise</span> <span class="n">AcquaintError</span><span class="p">(</span>
+</span><span data-line="1052">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2"> has no </span><span class="si">{</span><span class="n">SOURCES_FILE</span><span class="si">}</span><span class="s2">: nothing to refresh from"</span>
+</span><span data-line="1053">            <span class="p">)</span>
+</span><span data-line="1054">        <span class="n">status</span> <span class="o">=</span> <span class="n">refresh_status</span><span class="p">(</span>
+</span><span data-line="1055">            <span class="n">found</span><span class="p">[</span><span class="n">SOURCES_FILE</span><span class="p">],</span>
+</span><span data-line="1056">            <span class="n">found</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">CONFIG_FILE</span><span class="p">),</span>
+</span><span data-line="1057">            <span class="n">today</span><span class="o">=</span><span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">today</span><span class="p">)</span> <span class="k">if</span> <span class="n">today</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1058">        <span class="p">)</span>
+</span><span data-line="1059">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 - "cannot tell" must never read as "not due"</span>
+</span><span data-line="1060">        <span class="n">reason</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="1061">            <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+</span><span data-line="1062">            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="p">(</span><span class="n">AcquaintError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">))</span>
+</span><span data-line="1063">            <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="1064">        <span class="p">)</span>
+</span><span data-line="1065">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="1066">            <span class="s2">"ok"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="1067">            <span class="s2">"id"</span><span class="p">:</span> <span class="n">entity</span><span class="p">,</span>
+</span><span data-line="1068">            <span class="o">**</span><span class="n">empty_status</span><span class="p">(</span><span class="n">reason</span><span class="p">),</span>
+</span><span data-line="1069">            <span class="s2">"summary"</span><span class="p">:</span> <span class="n">reason</span><span class="p">,</span>
+</span><span data-line="1070">            <span class="s2">"text"</span><span class="p">:</span> <span class="n">reason</span><span class="p">,</span>
+</span><span data-line="1071">        <span class="p">}</span>
+</span><span data-line="1072">    <span class="n">age</span> <span class="o">=</span> <span class="n">status</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span>
+</span><span data-line="1073">    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'corpus'</span><span class="si">:</span><span class="s2">&lt;16</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'watermark'</span><span class="si">:</span><span class="s2">&lt;26</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'newer'</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'threshold'</span><span class="si">:</span><span class="s2">&gt;9</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+</span><span data-line="1074">    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="1075">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'(age)'</span><span class="si">:</span><span class="s2">&lt;16</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="p">(</span><span class="n">age</span><span class="p">[</span><span class="s1">'last_refresh'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'(none)'</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">' (last refresh)'</span><span class="si">:</span><span class="s2">&lt;26</span><span class="si">}</span><span class="s2"> "</span>
+</span><span data-line="1076">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">''</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">age</span><span class="p">[</span><span class="s1">'days'</span><span class="p">]</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="kc">None</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="nb">str</span><span class="p">(</span><span class="n">age</span><span class="p">[</span><span class="s1">'days'</span><span class="p">])</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">'d'</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">age</span><span class="p">[</span><span class="s1">'max_days'</span><span class="p">])</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">'d'</span><span class="si">:</span><span class="s2">&gt;9</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="1077">        <span class="o">+</span> <span class="p">(</span><span class="s2">"  *"</span> <span class="k">if</span> <span class="n">age</span><span class="p">[</span><span class="s2">"triggers"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="1078">    <span class="p">)</span>
+</span><span data-line="1079">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
+</span><span data-line="1080">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">c</span><span class="p">[</span><span class="s1">'corpus'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;16</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">c</span><span class="p">[</span><span class="s1">'watermark_stamp'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'(none)'</span><span class="si">:</span><span class="s2">&lt;26</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">c</span><span class="p">[</span><span class="s1">'newer'</span><span class="p">]</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2"> "</span>
+</span><span data-line="1081">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">c</span><span class="p">[</span><span class="s1">'threshold'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'-'</span><span class="si">:</span><span class="s2">&gt;9</span><span class="si">}</span><span class="s2">"</span> <span class="o">+</span> <span class="p">(</span><span class="s2">"  *"</span> <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="s2">"triggers"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="1082">        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">status</span><span class="p">[</span><span class="s2">"corpora"</span><span class="p">]</span>
+</span><span data-line="1083">    <span class="p">]</span>
+</span><span data-line="1084">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">u</span><span class="p">[</span><span class="s1">'corpus'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;16</span><span class="si">}</span><span class="s2"> unchecked: </span><span class="si">{</span><span class="n">u</span><span class="p">[</span><span class="s1">'reason'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">status</span><span class="p">[</span><span class="s2">"unchecked"</span><span class="p">]]</span>
+</span><span data-line="1085">    <span class="k">if</span> <span class="ow">not</span> <span class="n">status</span><span class="p">[</span><span class="s2">"configured"</span><span class="p">]:</span>
+</span><span data-line="1086">        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"(no </span><span class="si">{</span><span class="n">CONFIG_FILE</span><span class="si">}</span><span class="s2">: only the age of the refresh log is checked)"</span><span class="p">)</span>
+</span><span data-line="1087">    <span class="n">summary</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="1088">        <span class="s2">"due"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2">: refresh due (</span><span class="si">{</span><span class="s1">'; '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">status</span><span class="p">[</span><span class="s1">'reasons'</span><span class="p">])</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+</span><span data-line="1089">        <span class="s2">"not_due"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2">: no refresh due"</span><span class="p">,</span>
+</span><span data-line="1090">        <span class="s2">"unchecked"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="si">}</span><span class="s2">: cannot tell; nothing checked is due, but </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">status</span><span class="p">[</span><span class="s1">'unchecked'</span><span class="p">])</span><span class="si">}</span><span class="s2"> item(s) could not be checked"</span><span class="p">,</span>
+</span><span data-line="1091">    <span class="p">}[</span><span class="n">status</span><span class="p">[</span><span class="s2">"outcome"</span><span class="p">]]</span>
+</span><span data-line="1092">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="1093">        <span class="s2">"ok"</span><span class="p">:</span> <span class="n">status</span><span class="p">[</span><span class="s2">"outcome"</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"unchecked"</span><span class="p">,</span>
+</span><span data-line="1094">        <span class="s2">"id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">slug</span><span class="p">,</span>
+</span><span data-line="1095">        <span class="o">**</span><span class="n">status</span><span class="p">,</span>
+</span><span data-line="1096">        <span class="s2">"summary"</span><span class="p">:</span> <span class="n">summary</span><span class="p">,</span>
+</span><span data-line="1097">        <span class="s2">"text"</span><span class="p">:</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">summary</span><span class="p">,</span> <span class="o">*</span><span class="n">lines</span><span class="p">]),</span>
+</span><span data-line="1098">    <span class="p">}</span></div>
 
-</span><span data-line="1087">
-</span><span data-line="1088">
-</span><span data-line="1089"><span class="c1">#: Every tool, in the order surfaces list them.</span>
-</span><span data-line="1090"><span class="n">TOOLS</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="1091">    <span class="n">who</span><span class="p">,</span>
-</span><span data-line="1092">    <span class="n">resolve</span><span class="p">,</span>
-</span><span data-line="1093">    <span class="n">check</span><span class="p">,</span>
-</span><span data-line="1094">    <span class="n">reach</span><span class="p">,</span>
-</span><span data-line="1095">    <span class="n">brief</span><span class="p">,</span>
-</span><span data-line="1096">    <span class="n">remember</span><span class="p">,</span>
-</span><span data-line="1097">    <span class="n">lint</span><span class="p">,</span>
-</span><span data-line="1098">    <span class="n">new</span><span class="p">,</span>
-</span><span data-line="1099">    <span class="n">rename</span><span class="p">,</span>
-</span><span data-line="1100">    <span class="n">forget</span><span class="p">,</span>
-</span><span data-line="1101">    <span class="n">sync_init</span><span class="p">,</span>
-</span><span data-line="1102">    <span class="n">sync_push</span><span class="p">,</span>
-</span><span data-line="1103">    <span class="n">sync_pull</span><span class="p">,</span>
-</span><span data-line="1104">    <span class="n">sync_status</span><span class="p">,</span>
-</span><span data-line="1105">    <span class="n">style_lint</span><span class="p">,</span>
-</span><span data-line="1106">    <span class="n">disclosure</span><span class="p">,</span>
-</span><span data-line="1107">    <span class="n">review</span><span class="p">,</span>
-</span><span data-line="1108">    <span class="n">todo_preflight</span><span class="p">,</span>
-</span><span data-line="1109">    <span class="n">digest</span><span class="p">,</span>
-</span><span data-line="1110">    <span class="n">digest_new</span><span class="p">,</span>
-</span><span data-line="1111">    <span class="n">digest_append</span><span class="p">,</span>
-</span><span data-line="1112">    <span class="n">digest_mark</span><span class="p">,</span>
-</span><span data-line="1113">    <span class="n">digest_sweep</span><span class="p">,</span>
-</span><span data-line="1114">    <span class="n">refresh_due</span><span class="p">,</span>
-</span><span data-line="1115"><span class="p">]</span>
-</span><span data-line="1116">
-</span><span data-line="1117"><span class="c1">#: What each tool changes, for surfaces that must decide what to expose or confirm.</span>
-</span><span data-line="1118"><span class="c1">#: ``read`` changes nothing and stays local; ``append`` adds to a log; ``create`` adds a</span>
-</span><span data-line="1119"><span class="c1">#: record; ``rewrite`` changes existing records; ``destructive`` removes data;</span>
-</span><span data-line="1120"><span class="c1">#: ``external-read`` queries a remote service; ``external`` acts on one.</span>
-</span><span data-line="1121"><span class="n">SIDE_EFFECTS</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="1122">    <span class="s2">"who"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="1123">    <span class="s2">"resolve"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="1124">    <span class="s2">"check"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="1125">    <span class="s2">"reach"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="1126">    <span class="s2">"brief"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="1127">    <span class="s2">"lint"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="1128">    <span class="s2">"style_lint"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="1129">    <span class="s2">"disclosure"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="1130">    <span class="s2">"review"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="1131">    <span class="s2">"remember"</span><span class="p">:</span> <span class="s2">"append"</span><span class="p">,</span>
-</span><span data-line="1132">    <span class="s2">"new"</span><span class="p">:</span> <span class="s2">"create"</span><span class="p">,</span>
-</span><span data-line="1133">    <span class="s2">"rename"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
-</span><span data-line="1134">    <span class="s2">"sync_pull"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
-</span><span data-line="1135">    <span class="s2">"forget"</span><span class="p">:</span> <span class="s2">"destructive"</span><span class="p">,</span>
-</span><span data-line="1136">    <span class="s2">"sync_status"</span><span class="p">:</span> <span class="s2">"external-read"</span><span class="p">,</span>
-</span><span data-line="1137">    <span class="s2">"sync_init"</span><span class="p">:</span> <span class="s2">"external"</span><span class="p">,</span>
-</span><span data-line="1138">    <span class="s2">"sync_push"</span><span class="p">:</span> <span class="s2">"external"</span><span class="p">,</span>
-</span><span data-line="1139">    <span class="s2">"todo_preflight"</span><span class="p">:</span> <span class="s2">"external-read"</span><span class="p">,</span>
-</span><span data-line="1140">    <span class="s2">"digest"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="1141">    <span class="s2">"digest_new"</span><span class="p">:</span> <span class="s2">"create"</span><span class="p">,</span>
-</span><span data-line="1142">    <span class="s2">"digest_append"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
-</span><span data-line="1143">    <span class="s2">"digest_mark"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
-</span><span data-line="1144">    <span class="s2">"digest_sweep"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
-</span><span data-line="1145">    <span class="s2">"refresh_due"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
-</span><span data-line="1146"><span class="p">}</span>
+</span><span data-line="1099">
+</span><span data-line="1100">
+</span><span data-line="1101"><span class="c1">#: Every tool, in the order surfaces list them.</span>
+</span><span data-line="1102"><span class="n">TOOLS</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="1103">    <span class="n">who</span><span class="p">,</span>
+</span><span data-line="1104">    <span class="n">resolve</span><span class="p">,</span>
+</span><span data-line="1105">    <span class="n">check</span><span class="p">,</span>
+</span><span data-line="1106">    <span class="n">reach</span><span class="p">,</span>
+</span><span data-line="1107">    <span class="n">brief</span><span class="p">,</span>
+</span><span data-line="1108">    <span class="n">remember</span><span class="p">,</span>
+</span><span data-line="1109">    <span class="n">lint</span><span class="p">,</span>
+</span><span data-line="1110">    <span class="n">new</span><span class="p">,</span>
+</span><span data-line="1111">    <span class="n">rename</span><span class="p">,</span>
+</span><span data-line="1112">    <span class="n">forget</span><span class="p">,</span>
+</span><span data-line="1113">    <span class="n">sync_init</span><span class="p">,</span>
+</span><span data-line="1114">    <span class="n">sync_push</span><span class="p">,</span>
+</span><span data-line="1115">    <span class="n">sync_pull</span><span class="p">,</span>
+</span><span data-line="1116">    <span class="n">sync_status</span><span class="p">,</span>
+</span><span data-line="1117">    <span class="n">style_lint</span><span class="p">,</span>
+</span><span data-line="1118">    <span class="n">disclosure</span><span class="p">,</span>
+</span><span data-line="1119">    <span class="n">review</span><span class="p">,</span>
+</span><span data-line="1120">    <span class="n">todo_preflight</span><span class="p">,</span>
+</span><span data-line="1121">    <span class="n">digest</span><span class="p">,</span>
+</span><span data-line="1122">    <span class="n">digest_new</span><span class="p">,</span>
+</span><span data-line="1123">    <span class="n">digest_append</span><span class="p">,</span>
+</span><span data-line="1124">    <span class="n">digest_mark</span><span class="p">,</span>
+</span><span data-line="1125">    <span class="n">digest_sweep</span><span class="p">,</span>
+</span><span data-line="1126">    <span class="n">refresh_due</span><span class="p">,</span>
+</span><span data-line="1127"><span class="p">]</span>
+</span><span data-line="1128">
+</span><span data-line="1129"><span class="c1">#: What each tool changes, for surfaces that must decide what to expose or confirm.</span>
+</span><span data-line="1130"><span class="c1">#: ``read`` changes nothing and stays local; ``append`` adds to a log; ``create`` adds a</span>
+</span><span data-line="1131"><span class="c1">#: record; ``rewrite`` changes existing records; ``destructive`` removes data;</span>
+</span><span data-line="1132"><span class="c1">#: ``external-read`` queries a remote service; ``external`` acts on one.</span>
+</span><span data-line="1133"><span class="n">SIDE_EFFECTS</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="1134">    <span class="s2">"who"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1135">    <span class="s2">"resolve"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1136">    <span class="s2">"check"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1137">    <span class="s2">"reach"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1138">    <span class="s2">"brief"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1139">    <span class="s2">"lint"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1140">    <span class="s2">"style_lint"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1141">    <span class="s2">"disclosure"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1142">    <span class="s2">"review"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1143">    <span class="s2">"remember"</span><span class="p">:</span> <span class="s2">"append"</span><span class="p">,</span>
+</span><span data-line="1144">    <span class="s2">"new"</span><span class="p">:</span> <span class="s2">"create"</span><span class="p">,</span>
+</span><span data-line="1145">    <span class="s2">"rename"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
+</span><span data-line="1146">    <span class="s2">"sync_pull"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
+</span><span data-line="1147">    <span class="s2">"forget"</span><span class="p">:</span> <span class="s2">"destructive"</span><span class="p">,</span>
+</span><span data-line="1148">    <span class="s2">"sync_status"</span><span class="p">:</span> <span class="s2">"external-read"</span><span class="p">,</span>
+</span><span data-line="1149">    <span class="s2">"sync_init"</span><span class="p">:</span> <span class="s2">"external"</span><span class="p">,</span>
+</span><span data-line="1150">    <span class="s2">"sync_push"</span><span class="p">:</span> <span class="s2">"external"</span><span class="p">,</span>
+</span><span data-line="1151">    <span class="s2">"todo_preflight"</span><span class="p">:</span> <span class="s2">"external-read"</span><span class="p">,</span>
+</span><span data-line="1152">    <span class="s2">"digest"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1153">    <span class="s2">"digest_new"</span><span class="p">:</span> <span class="s2">"create"</span><span class="p">,</span>
+</span><span data-line="1154">    <span class="s2">"digest_append"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
+</span><span data-line="1155">    <span class="s2">"digest_mark"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
+</span><span data-line="1156">    <span class="s2">"digest_sweep"</span><span class="p">:</span> <span class="s2">"rewrite"</span><span class="p">,</span>
+</span><span data-line="1157">    <span class="s2">"refresh_due"</span><span class="p">:</span> <span class="s2">"read"</span><span class="p">,</span>
+</span><span data-line="1158"><span class="p">}</span>
 </span></pre></div>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -1367,13 +1379,13 @@ data-aria-dark="Switch to auto color mode">
   </p>
 </div>
       <div class="sy-foot-socials">
-  <a href="https://github.com/thorwhalen/acquaint" aria-label="GitHub">
+  <a href="https://github.com/addaix/acquaint" aria-label="GitHub">
     <iconify-icon icon="simple-icons:github"></iconify-icon>
   </a></div>
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=f2234cd1"></script>
+      <script src="../../_static/documentation_options.js?v=565bc8c8"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

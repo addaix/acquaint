@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
-  "built_at": "2026-11-18T15:38:13Z",
+  "built_at": "2026-11-21T15:43:29Z",
   "package": {
     "name": "acquaint",
-    "version": "0.0.32",
+    "version": "0.0.33",
     "display_name": "acquaint",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "b38b6da7a48bdefefff0cb8c4e01ca2b14a4e61e",
-    "short_commit": "b38b6da",
+    "commit": "d7d3fcfd096744d90207f234211749a55862d5ed",
+    "short_commit": "d7d3fcf",
     "branch": "main",
     "tags": [],
     "dirty": false,
-    "remote_url": "https://github.com/thorwhalen/acquaint",
-    "commit_url": "https://github.com/thorwhalen/acquaint/commit/b38b6da7a48bdefefff0cb8c4e01ca2b14a4e61e",
+    "remote_url": "https://github.com/addaix/acquaint",
+    "commit_url": "https://github.com/addaix/acquaint/commit/d7d3fcfd096744d90207f234211749a55862d5ed",
     "error": null
   },
   "ci": {
     "provider": "github",
-    "repository": "thorwhalen/acquaint",
-    "sha": "b38b6da7a48bdefefff0cb8c4e01ca2b14a4e61e",
+    "repository": "addaix/acquaint",
+    "sha": "d7d3fcfd096744d90207f234211749a55862d5ed",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "44337536460",
-    "run_url": "https://github.com/thorwhalen/acquaint/actions/runs/44337536460",
+    "run_id": "44920529908",
+    "run_url": "https://github.com/addaix/acquaint/actions/runs/44920529908",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -60,11 +60,11 @@
   },
   "pypi": {
     "checked": true,
-    "latest": "0.0.32",
+    "latest": "0.0.33",
     "relation": "same",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/acquaint && cd acquaint\ngit checkout b38b6da7a48bdefefff0cb8c4e01ca2b14a4e61e\npip install \"epythet==0.2.22\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/addaix/acquaint && cd acquaint\ngit checkout d7d3fcfd096744d90207f234211749a55862d5ed\npip install \"epythet==0.2.22\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": true,
