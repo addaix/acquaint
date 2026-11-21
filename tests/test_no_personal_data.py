@@ -30,7 +30,7 @@ PLACEHOLDER_DOMAINS = {"example.org", "example.com", "example.net"}
 #: git's SSH user in remote URLs (GitHub, and GitLab as an example of a refused host); not mailboxes.
 ALLOWED_ADDRESSES = {"git" + "@" + "github.com", "git" + "@" + "gitlab.com"}
 #: Fictional placeholders and this project's own GitHub owners.
-ALLOWED_OWNERS = {"example", "example-org", "octocat", "owner", "thorwhalen", "i2mint"}
+ALLOWED_OWNERS = {"example", "example-org", "octocat", "owner", "thorwhalen", "i2mint", "addaix"}
 
 EMAIL_RE = re.compile(r"[A-Za-z0-9_.+-]+@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+)")
 #: Home directories (a Mac user, a Linux user, root on a server), per-user temporary
