@@ -54,7 +54,7 @@ A fresh clone has **no hook** until `sync init` runs in it: hooks are not part o
 
 ## The encryption upgrade (not yet)
 
-`git-remote-gcrypt` would encrypt contents, file names and history on the remote. It is the planned upgrade, but the v0.1 guard refuses its internal push, so `sync init` refuses `gcrypt::` URLs for now: https://github.com/thorwhalen/acquaint/issues/13. Until then, treat the private repository as readable by the host.
+`git-remote-gcrypt` would encrypt contents, file names and history on the remote. It is the planned upgrade, but the v0.1 guard refuses its internal push, so `sync init` refuses `gcrypt::` URLs for now: https://github.com/addaix/acquaint/issues/13. Until then, treat the private repository as readable by the host.
 
 ## Never
 

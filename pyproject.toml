@@ -33,10 +33,10 @@ dependencies = [
 text = "mit"
 
 [project.urls]
-Homepage = "https://github.com/thorwhalen/acquaint"
-Repository = "https://github.com/thorwhalen/acquaint"
-Documentation = "https://thorwhalen.github.io/acquaint"
-Issues = "https://github.com/thorwhalen/acquaint/issues"
+Homepage = "https://github.com/addaix/acquaint"
+Repository = "https://github.com/addaix/acquaint"
+Documentation = "https://addaix.github.io/acquaint"
+Issues = "https://github.com/addaix/acquaint/issues"
 
 [project.scripts]
 acquaint = "acquaint.__main__:main"
