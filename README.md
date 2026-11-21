@@ -131,7 +131,7 @@ acquaint sync init --repo <owner>/<name>
 
 `sync status` also reports `auto_commit`: true only while the repository is private, owned by a person rather than an organisation, has that person as its only collaborator and no pending invitation. The `acquaint-profile` skill then commits and pushes profile edits straight away; otherwise it leaves them uncommitted for the operator to review. `auto_commit_reason` says which condition decided.
 
-What this does **not** protect: a private repository is access control, not encryption (the host can read everything); `git push --no-verify` skips the hook; whoever controls the repository's git config or the `gh` on `PATH` controls what the guard sees; moving the data root disables the hook until `sync init --existing-only` runs again; file names and commit messages contain people's names; deleting a folder does not remove it from history or other clones. `git-remote-gcrypt` would encrypt contents, names and history; it is the planned upgrade, but the guard does not support it yet, so `sync init` refuses `gcrypt::` URLs ([#13](https://github.com/thorwhalen/acquaint/issues/13)).
+What this does **not** protect: a private repository is access control, not encryption (the host can read everything); `git push --no-verify` skips the hook; whoever controls the repository's git config or the `gh` on `PATH` controls what the guard sees; moving the data root disables the hook until `sync init --existing-only` runs again; file names and commit messages contain people's names; deleting a folder does not remove it from history or other clones. `git-remote-gcrypt` would encrypt contents, names and history; it is the planned upgrade, but the guard does not support it yet, so `sync init` refuses `gcrypt::` URLs ([#13](https://github.com/addaix/acquaint/issues/13)).
 
 ## Python
 
@@ -151,4 +151,4 @@ Store(files={})  # any MutableMapping[str, str] of files: a dict, a remote store
 
 ## Design
 
-The seams, surfaces and deliberate non-seams are in [Discussion #1](https://github.com/thorwhalen/acquaint/discussions/1).
+The seams, surfaces and deliberate non-seams are in [Discussion #1](https://github.com/addaix/acquaint/discussions/1).
