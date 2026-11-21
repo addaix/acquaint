@@ -1,4 +1,4 @@
-> built 2026-11-21 15:43 UTC from d7d3fcf (main) · acquaint 0.0.33. Details: build_info.json
+> built 2026-11-21 17:26 UTC from 9580cbe (main) · acquaint 0.0.33. Details: build_info.json
 
 # index.html.md
 
@@ -2878,7 +2878,7 @@ True
 
 # About this build
 
-This documentation was built on **2026-11-21 15:43 UTC** from commit <a href="https://github.com/addaix/acquaint/commit/d7d3fcfd096744d90207f234211749a55862d5ed"><code>d7d3fcf</code></a> on branch <code>main</code>, for **acquaint 0.0.33** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-21 17:26 UTC** from commit <a href="https://github.com/addaix/acquaint/commit/9580cbe66b2a15d3f8b16fdeed506694d2bf61ed"><code>9580cbe</code></a> on branch <code>main</code>, for **acquaint 0.0.33** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -2887,7 +2887,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/addaix/acquaint/commit/d7d3fcfd096744d90207f234211749a55862d5ed"><code>d7d3fcfd096744d90207f234211749a55862d5ed</code></a> |
+| Commit              | <a href="https://github.com/addaix/acquaint/commit/9580cbe66b2a15d3f8b16fdeed506694d2bf61ed"><code>9580cbe66b2a15d3f8b16fdeed506694d2bf61ed</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -2898,9 +2898,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>addaix/acquaint</code>                                                               |
-| Run          | <a href="https://github.com/addaix/acquaint/actions/runs/44920529908">44920529908</a>      |
+| Run          | <a href="https://github.com/addaix/acquaint/actions/runs/44929879683">44929879683</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>d7d3fcfd096744d90207f234211749a55862d5ed</code> (in the history of the built commit) |
+| Event commit | <code>9580cbe66b2a15d3f8b16fdeed506694d2bf61ed</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2931,7 +2931,7 @@ Latest release: <a href="https://pypi.org/project/acquaint/0.0.33/">0.0.33</a>, 
 
 ```bash
 git clone https://github.com/addaix/acquaint && cd acquaint
-git checkout d7d3fcfd096744d90207f234211749a55862d5ed
+git checkout 9580cbe66b2a15d3f8b16fdeed506694d2bf61ed
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

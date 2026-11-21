@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "built_at": "2026-11-21T15:43:29Z",
+  "built_at": "2026-11-21T17:26:15Z",
   "package": {
     "name": "acquaint",
     "version": "0.0.33",
@@ -9,24 +9,24 @@
   },
   "git": {
     "available": true,
-    "commit": "d7d3fcfd096744d90207f234211749a55862d5ed",
-    "short_commit": "d7d3fcf",
+    "commit": "9580cbe66b2a15d3f8b16fdeed506694d2bf61ed",
+    "short_commit": "9580cbe",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/addaix/acquaint",
-    "commit_url": "https://github.com/addaix/acquaint/commit/d7d3fcfd096744d90207f234211749a55862d5ed",
+    "commit_url": "https://github.com/addaix/acquaint/commit/9580cbe66b2a15d3f8b16fdeed506694d2bf61ed",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "addaix/acquaint",
-    "sha": "d7d3fcfd096744d90207f234211749a55862d5ed",
+    "sha": "9580cbe66b2a15d3f8b16fdeed506694d2bf61ed",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "44920529908",
-    "run_url": "https://github.com/addaix/acquaint/actions/runs/44920529908",
+    "run_id": "44929879683",
+    "run_url": "https://github.com/addaix/acquaint/actions/runs/44929879683",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -64,7 +64,7 @@
     "relation": "same",
     "error": null
   },
-  "reproduce": "git clone https://github.com/addaix/acquaint && cd acquaint\ngit checkout d7d3fcfd096744d90207f234211749a55862d5ed\npip install \"epythet==0.2.22\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/addaix/acquaint && cd acquaint\ngit checkout 9580cbe66b2a15d3f8b16fdeed506694d2bf61ed\npip install \"epythet==0.2.22\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": true,
