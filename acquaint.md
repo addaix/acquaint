@@ -1,4 +1,4 @@
-> built 2026-11-21 17:26 UTC from 9580cbe (main) · acquaint 0.0.33. Details: build_info.json
+> built 2026-11-25 09:18 UTC from ce818fe (main) · acquaint 0.0.34. Details: build_info.json
 
 # index.html.md
 
@@ -2878,16 +2878,18 @@ True
 
 # About this build
 
-This documentation was built on **2026-11-21 17:26 UTC** from commit <a href="https://github.com/addaix/acquaint/commit/9580cbe66b2a15d3f8b16fdeed506694d2bf61ed"><code>9580cbe</code></a> on branch <code>main</code>, for **acquaint 0.0.33** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-25 09:18 UTC** from commit <a href="https://github.com/addaix/acquaint/commit/ce818feeb59777cf6b7fc2420b54510e2fc1e260"><code>ce818fe</code></a> on branch <code>main</code>, for **acquaint 0.0.34** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.34) is behind the latest release on PyPI (0.0.35): `pip install acquaint` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/addaix/acquaint/commit/9580cbe66b2a15d3f8b16fdeed506694d2bf61ed"><code>9580cbe66b2a15d3f8b16fdeed506694d2bf61ed</code></a> |
+| Commit              | <a href="https://github.com/addaix/acquaint/commit/ce818feeb59777cf6b7fc2420b54510e2fc1e260"><code>ce818feeb59777cf6b7fc2420b54510e2fc1e260</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -2898,15 +2900,15 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>addaix/acquaint</code>                                                               |
-| Run          | <a href="https://github.com/addaix/acquaint/actions/runs/44929879683">44929879683</a>      |
+| Run          | <a href="https://github.com/addaix/acquaint/actions/runs/45583922326">45583922326</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>9580cbe66b2a15d3f8b16fdeed506694d2bf61ed</code> (in the history of the built commit) |
+| Event commit | <code>ce818feeb59777cf6b7fc2420b54510e2fc1e260</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.22  |
+| epythet  | 0.2.25  |
 | Sphinx   | 9.1.1   |
 | docutils | 0.22.4  |
 | Python   | 3.12.16 |
@@ -2925,14 +2927,14 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/acquaint/0.0.33/">0.0.33</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/acquaint/0.0.35/">0.0.35</a>, newer than the documented version (0.0.34).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/addaix/acquaint && cd acquaint
-git checkout 9580cbe66b2a15d3f8b16fdeed506694d2bf61ed
-pip install "epythet==0.2.22"
+git checkout ce818feeb59777cf6b7fc2420b54510e2fc1e260
+pip install "epythet==0.2.25"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 
