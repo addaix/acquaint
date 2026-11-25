@@ -53,6 +53,7 @@ For writing and sparring; a decision verdict has its own setup (Mode C, below).
 4. **Channel mechanics** (any chat, thread, issue or PR comment, email):
    - **Notify each addressee** in the channel's own mention syntax (Slack: the member ID wrapped in `<@…>`; GitHub: `@` and the login), so the message reaches them; a name in plain text notifies nobody. Mention only the people the message is for.
    - **Link what you refer to, as hyperlinked text** at the point it is mentioned: the issue, discussion, PR, report or document, with a few descriptive words as the link text and the URL hidden behind them (Slack `<url|text>`, Markdown `[text](url)`), never a bare long URL. Point at the exact place where it helps: an issue comment's anchor, a line range, or a text fragment (`#:~:text=…`) that highlights the passage.
+   - **A draft shown to the operator for approval uses Markdown links** (`[text](url)`), which render in a terminal, an annals page and a phone; convert them to the channel's syntax only in the text you post. A Slack `<url|text>` shown in a terminal becomes a link to `url|text`, which opens a broken page.
    - Check that every link opens for the readers (a private repository or a private document they cannot reach is a dead link: say so, or share it first).
 5. **Sweeps.**
    - Every *Don't* and *Blocklist* item.
