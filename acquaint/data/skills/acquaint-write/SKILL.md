@@ -70,6 +70,7 @@ For writing and sparring; a decision verdict has its own setup (Mode C, below).
    - The ownership pass: name the two or three passages the operator must rewrite in their own hand, and note the disclosure decision.
 8. **Vet the draft against its audience.** When `liaise` is installed and has the `vet` command, run `liaise vet --ref <conversation> --to <person> -` with the draft on stdin, and hand over its verdict, its reasons and the audience in words with the draft; revise for a `revise` verdict before handing over. Without it, say the audience in words (the brief's **Ceiling** line) and say plainly that no vet ran.
 9. **Hand over** the draft with what was flagged. Do not send it unless the operator said to.
+10. **Re-read before sending, not only before drafting.** This holds whenever you post, including when the operator approved the content in advance or the message reached you relayed. Right before posting, re-read the conversation from your last read up to now: every reply in the thread, and any message the recipient points to ("I posted it in another thread"). Follow those pointers. A claim of absence ("never came", "you didn't send", "still waiting on") is checked against this fresh read, never against an earlier scan or a time-bounded search. If anything new bears on the draft, do not post: hand it back with what changed.
 
 ### Red-team check
 
