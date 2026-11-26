@@ -1,4 +1,4 @@
-> built 2026-11-25 09:18 UTC from ce818fe (main) · acquaint 0.0.34. Details: build_info.json
+> built 2026-11-26 21:55 UTC from b2d9561 (main) · acquaint 0.0.35. Details: build_info.json
 
 # index.html.md
 
@@ -2878,18 +2878,16 @@ True
 
 # About this build
 
-This documentation was built on **2026-11-25 09:18 UTC** from commit <a href="https://github.com/addaix/acquaint/commit/ce818feeb59777cf6b7fc2420b54510e2fc1e260"><code>ce818fe</code></a> on branch <code>main</code>, for **acquaint 0.0.34** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-26 21:55 UTC** from commit <a href="https://github.com/addaix/acquaint/commit/b2d956140ca0e6192a965765e3463e286fb20d6d"><code>b2d9561</code></a> on branch <code>main</code>, for **acquaint 0.0.35** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.34) is behind the latest release on PyPI (0.0.35): `pip install acquaint` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/addaix/acquaint/commit/ce818feeb59777cf6b7fc2420b54510e2fc1e260"><code>ce818feeb59777cf6b7fc2420b54510e2fc1e260</code></a> |
+| Commit              | <a href="https://github.com/addaix/acquaint/commit/b2d956140ca0e6192a965765e3463e286fb20d6d"><code>b2d956140ca0e6192a965765e3463e286fb20d6d</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -2900,9 +2898,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>addaix/acquaint</code>                                                               |
-| Run          | <a href="https://github.com/addaix/acquaint/actions/runs/45583922326">45583922326</a>      |
+| Run          | <a href="https://github.com/addaix/acquaint/actions/runs/45901157435">45901157435</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>ce818feeb59777cf6b7fc2420b54510e2fc1e260</code> (in the history of the built commit) |
+| Event commit | <code>b2d956140ca0e6192a965765e3463e286fb20d6d</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2927,13 +2925,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/acquaint/0.0.35/">0.0.35</a>, newer than the documented version (0.0.34).
+Latest release: <a href="https://pypi.org/project/acquaint/0.0.35/">0.0.35</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/addaix/acquaint && cd acquaint
-git checkout ce818feeb59777cf6b7fc2420b54510e2fc1e260
+git checkout b2d956140ca0e6192a965765e3463e286fb20d6d
 pip install "epythet==0.2.25"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
